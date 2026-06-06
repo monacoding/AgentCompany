@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/agentcompany/agent-company"
+    "url": "https://github.com/monacoding/AgentCompany.git"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -210,7 +210,8 @@
     "package": "npm run build && vsce package --out releases",
     "package:slim": "npm run build && vsce package --no-dependencies --out releases",
     "release": "bash scripts/release.sh",
-    "release:install": "bash scripts/release.sh"
+    "release:install": "bash scripts/release.sh",
+    "release:git": "bash scripts/git-push.sh"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
