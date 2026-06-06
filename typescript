@@ -1,0 +1,19 @@
+// src/orchestrator/index.ts
+import { ExternalApiExecutor } from '../external-api/executor';
+import { shouldTryExternalApi } from '../external-api/auto-detect';
+import { ExternalApiService } from '../services/external-api';
+import { ImageApiService } from '../services/image-api'; // New Service Import
+
+// Example usage in orchestrator logic
+const imageApiService = new ImageApiService('YOUR_API_KEY_HERE');
+
+async function handleImageProcessing() {
+  try {
+    const result = await imageApiService.processImage('/path/to/image');
+    console.log('Image processed result:', result);
+  } catch (error) {
+    console.error('Error processing image', error);
+  }
+}
+
+handleImageProcessing();

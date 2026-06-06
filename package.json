@@ -1,0 +1,232 @@
+{
+  "name": "agent-company",
+  "displayName": "AgentCompany",
+  "description": "AI 회사 운영 플랫폼 — Cursor/VS Code 내부에서 AI 직원을 관리하고 업무를 수행합니다.",
+  "version": "1.7.58",
+  "publisher": "agentcompany",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcompany/agent-company"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "orchestrator",
+    "cursor",
+    "copilot"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentCompany.openDashboard",
+        "title": "AgentCompany: Open Dashboard",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "agentCompany.openSettings",
+        "title": "AgentCompany: Open Settings"
+      },
+      {
+        "command": "agentCompany.createAgent",
+        "title": "AgentCompany: Create Agent"
+      },
+      {
+        "command": "agentCompany.createTask",
+        "title": "AgentCompany: Create Task"
+      },
+      {
+        "command": "agentCompany.openCeoChat",
+        "title": "AgentCompany: Open CEO Command",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "agentCompany.openAgentsRoot",
+        "title": "AgentCompany: Open Agent Data Folder",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentCompany.openAgentFolder",
+        "title": "AgentCompany: Open Agent Folder"
+      },
+      {
+        "command": "agentCompany.createEnvFile",
+        "title": "AgentCompany: Create .env File"
+      },
+      {
+        "command": "agentCompany.requestIdeas",
+        "title": "AgentCompany: Request Agent Ideas"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentCompany",
+          "title": "AgentCompany",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentCompany": [
+        {
+          "type": "webview",
+          "id": "agentCompany.dashboard",
+          "name": "Dashboard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AgentCompany",
+      "properties": {
+        "agentCompany.defaultProvider": {
+          "type": "string",
+          "default": "openai",
+          "enum": [
+            "openai",
+            "anthropic",
+            "gemini",
+            "openrouter",
+            "ollama",
+            "runpod",
+            "custom"
+          ],
+          "description": "Default LLM provider for agents"
+        },
+        "agentCompany.defaultModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Default model for agents"
+        },
+        "agentCompany.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key for agent LLM calls"
+        },
+        "agentCompany.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for agent LLM calls"
+        },
+        "agentCompany.ollamaBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server base URL"
+        },
+        "agentCompany.telegramEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Telegram notifications"
+        },
+        "agentCompany.telegramBotToken": {
+          "type": "string",
+          "default": "",
+          "description": "Telegram bot token from @BotFather"
+        },
+        "agentCompany.telegramChatId": {
+          "type": "string",
+          "default": "",
+          "description": "Telegram chat ID for notifications"
+        },
+        "agentCompany.crawl4aiBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:11235",
+          "description": "Crawl4AI Docker API base URL for 원영 Research Agent"
+        },
+        "agentCompany.crawl4aiAutoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-start Crawl4AI Docker when 원영 agent is activated"
+        },
+        "agentCompany.crawl4aiContainerName": {
+          "type": "string",
+          "default": "crawl4ai",
+          "description": "Docker container name for Crawl4AI"
+        },
+        "agentCompany.crawl4aiImage": {
+          "type": "string",
+          "default": "unclecode/crawl4ai:latest",
+          "description": "Docker image for Crawl4AI"
+        },
+        "agentCompany.crawl4aiPort": {
+          "type": "number",
+          "default": 11235,
+          "description": "Host port mapped to Crawl4AI container"
+        },
+        "agentCompany.kiloCliCommand": {
+          "type": "string",
+          "default": "kilo",
+          "description": "Kilo CLI command for 모나 Kilo Code Agent (npm install -g @kilocode/cli)"
+        },
+        "agentCompany.kiloAutoMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use --auto flag when running kilo run"
+        },
+        "agentCompany.kiloCliAutoCheck": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check Kilo CLI availability when 모나 agent is activated"
+        },
+        "agentCompany.proactiveIdeasEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "에이전트가 주기적으로 CEO에게 아이디어를 먼저 제안"
+        },
+        "agentCompany.proactiveIdeasIntervalMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "description": "아이디어 자동 제안 주기 (분)"
+        },
+        "agentCompany.telegramInboundEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "텔레그램에서 보낸 메시지를 CEO 명령으로 수신"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npm run build:extension && npm run build:webview",
+    "build:extension": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:sql.js --format=cjs --platform=node",
+    "build:webview": "vite build --config webview/vite.config.ts",
+    "watch": "concurrently \"npm run watch:extension\" \"npm run watch:webview\"",
+    "watch:extension": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:sql.js --format=cjs --platform=node --watch",
+    "watch:webview": "vite build --config webview/vite.config.ts --watch",
+    "lint": "tsc --noEmit",
+    "package": "npm run build && vsce package --out releases",
+    "package:slim": "npm run build && vsce package --no-dependencies --out releases",
+    "release": "bash scripts/release.sh",
+    "release:install": "bash scripts/release.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@types/vscode": "^1.85.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vscode/vsce": "^2.24.0",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sql.js": "^1.10.2"
+  }
+}

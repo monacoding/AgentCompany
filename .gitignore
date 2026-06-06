@@ -1,0 +1,10 @@
+node_modules/
+dist/
+webview/dist/
+*.vsix
+!releases/
+.vscode-test/
+*.db
+.DS_Store
+*.log
+.env

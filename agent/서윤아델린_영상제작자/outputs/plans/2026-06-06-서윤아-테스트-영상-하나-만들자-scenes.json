@@ -1,0 +1,46 @@
+[
+  {
+    "sceneId": 1,
+    "durationSec": 3,
+    "visual": "빠르게 전환되는 AI 작업 화면, 시각적으로 강렬한 이미지",
+    "narration": "여러분은 AI가 작업하는 모습을 본 적이 있나요?",
+    "imagePrompt": "vivid and rapid AI interface transitions, visually striking images.",
+    "videoPrompt": "fast transitions of AI working screens with vibrant visuals.",
+    "sfx": "dramatic whoosh sound"
+  },
+  {
+    "sceneId": 2,
+    "durationSec": 27,
+    "visual": "AI 시스템의 작동 모습, 키보드 타이핑, 코드 스니펫, AI가 이미지 생성하는 과정",
+    "narration": "AI가 어떻게 작동하는지 궁금하시죠? 이 시스템은 아주 짧은 시간 안에 복잡한 작업을 해결합니다. 지금 그 비밀을 공개합니다!",
+    "imagePrompt": "AI system operations, keyboard typing, code snippets, AI generating images.",
+    "videoPrompt": "AI system functioning with keyboard typing, code snippets, and rapid image generation.",
+    "sfx": "soft electronic typing and beeping"
+  },
+  {
+    "sceneId": 3,
+    "durationSec": 30,
+    "visual": "다양한 AI 활용 사례 — 자동 생성되는 애니메이션, 스타일 변환 영상, TTS로 만들어진 인상적인 오디오 클립",
+    "narration": "AI는 단순한 도구가 아닙니다. 그것은 창의적인 결과를 만들어내는 새로운 방법입니다.",
+    "imagePrompt": "various AI applications, auto-generated animations, style-transformed videos, impressive TTS audio clips.",
+    "videoPrompt": "showcase of AI applications including animations, style transformation, and TTS audio.",
+    "sfx": "inspirational music track"
+  },
+  {
+    "sceneId": 4,
+    "durationSec": 30,
+    "visual": "미래의 영상 제작 기술 상상도, 증강 현실과 혼합된 AI 영상",
+    "narration": "AI가 가져올 혁신적인 미래가 기대되지 않나요? 영상 제작의 다음 페이지를 경험해보세요.",
+    "imagePrompt": "future video production technology concepts, AI combined with augmented reality.",
+    "videoPrompt": "concept visuals of future video tech with AI and augmented reality.","sfx": "futuristic soundscape"
+  },
+  {
+    "sceneId": 5,
+    "durationSec": 15,
+    "visual": "구독 버튼 강조, 채널 브랜딩 요소 삽입",
+    "narration": "더 많은 AI 콘텐츠가 기대된다면, 구독을 눌러주세요! 함께 기술의 미래를 탐험해요.",
+    "imagePrompt": "subscribe button emphasis with channel branding elements.",
+    "videoPrompt": "highlighted subscribe button with channel branding.",
+    "sfx": "click sound"
+  }
+]

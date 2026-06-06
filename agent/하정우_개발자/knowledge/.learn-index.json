@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "files": {
+    "cross-agent-file-transfer.md": {
+      "hash": "bd6b1a1b9e181e28",
+      "mtimeMs": 1780768629736.9006,
+      "size": 26833,
+      "learnedAt": "2026-06-06T17:58:11.239Z"
+    },
+    "owner-data-path.md": {
+      "hash": "925105bb34b41577",
+      "mtimeMs": 1780768629742.8904,
+      "size": 18917,
+      "learnedAt": "2026-06-06T17:58:19.205Z"
+    }
+  }
+}

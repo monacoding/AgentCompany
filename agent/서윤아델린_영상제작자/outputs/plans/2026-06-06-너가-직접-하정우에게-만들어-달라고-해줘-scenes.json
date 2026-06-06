@@ -1,0 +1,59 @@
+[
+  {
+    "sceneId": 1,
+    "durationSec": 10,
+    "visual": "빠르게 편집된 하정우의 주요 영화 장면 모음.",
+    "narration": "하정우—그는 단순한 배우가 아닙니다. 그는 우리를 그가 창조한 세계로 몰입시키는 예술가입니다.",
+    "imagePrompt": "하정우의 다양한 영화 장면이 빠르게 교차하는 모음",
+    "videoPrompt": "Major movie scenes of Ha Jung Woo rapidly edited together"
+  },
+  {
+    "sceneId": 2,
+    "durationSec": 80,
+    "visual": "하정우의 인터뷰 장면과, 그가 연기한 다양한 캐릭터의 모습이 교차되는 장면.",
+    "narration": "그는 각 캐릭터를 만들기 위해 어떤 과정들을 거칠까요?",
+    "imagePrompt": "Ha Jung Woo interview combined with scenes of various characters he has played",
+    "videoPrompt": "Interview segments of Ha Jung Woo interwoven with character portrayals"
+  },
+  {
+    "sceneId": 3,
+    "durationSec": 90,
+    "visual": "그의 초기작부터 최근작까지 커리어 하이라이트 장면.",
+    "narration": "끊임없는 도전과 변화, 하정우의 배우로서의 여정은 항상 진화해왔습니다.",
+    "imagePrompt": "Career highlights from Ha Jung Woo's early works to recent projects",
+    "videoPrompt": "Chronological highlights of Ha Jung Woo's acting career"
+  },
+  {
+    "sceneId": 4,
+    "durationSec": 90,
+    "visual": "하정우의 영화 촬영 현장 비하인드 사진 및 영상 클립.",
+    "narration": "촬영장에서의 그의 모습은 어떨까요? 그의 팀과의 호흡은 그가 만드는 세계의 기초입니다.",
+    "imagePrompt": "Ha Jung Woo on movie sets behind the scenes",
+    "videoPrompt": "Behind the scenes footage showing Ha Jung Woo's leadership on set"
+  },
+  {
+    "sceneId": 5,
+    "durationSec": 80,
+    "visual": "하정우가 자신의 연기 철학과 미래 계획을 이야기하는 인터뷰.",
+    "narration": "그의 철학, 그리고 앞으로의 목표는 무엇인가요?",
+    "imagePrompt": "Interview with Ha Jung Woo discussing his acting philosophy and future goals",
+    "videoPrompt": "Ha Jung Woo discussing his philosophy and vision in an interview"
+  },
+  {
+    "sceneId": 6,
+    "durationSec": 40,
+    "visual": "시청자와의 소통을 유도하는 그래픽.",
+    "narration": "하정우의 여정을 함께 하셨다면, 그의 작품에 대한 여러분의 생각을 댓글로 남겨주세요.",
+    "imagePrompt": "Engaging graphics inviting viewer interaction",
+    "videoPrompt": "Call to action inviting viewer's thoughts on Ha Jung Woo's works"
+  },
+  {
+    "sceneId": 7,
+    "durationSec": 30,
+    "visual": "엔딩 크레딧과 추가 영상 추천.",
+    "narration": null,
+    "imagePrompt": "Ending credits and video recommendations with soft background music",
+    "videoPrompt": "Credits rolling with calm background music and recommended videos",
+    "sfx": "Soft background music"
+  }
+]

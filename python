@@ -1,0 +1,24 @@
+import PyPDF2
+
+def extract_math_section(input_pdf, output_pdf, start_page, end_page):
+    with open(input_pdf, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        writer = PyPDF2.PdfWriter()
+
+        for page_num in range(start_page-1, end_page):
+            page = reader.pages[page_num]
+            writer.add_page(page)
+
+        with open(output_pdf, 'wb') as output_file:
+            writer.write(output_file)
+
+# 설정해야 하는 값들: 시작 페이지와 끝 페이지
+korean_start_page = 20  # 예시 값
+korean_end_page = 40  # 예시 값
+
+# 실제 경로와 파일명 설정
+input_pdf_path = '/path/to/seojun/suneung_math_section.pdf'
+output_pdf_path = '/Users/gimtaehyeong/Desktop/coding/1. Monaedu/math_section.pdf'
+
+# 함수 호출
+extract_math_section(input_pdf_path, output_pdf_path, korean_start_page, korean_end_page)

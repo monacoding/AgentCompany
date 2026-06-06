@@ -1,0 +1,62 @@
+[
+    {
+        "sceneId": 1,
+        "durationSec": 3,
+        "visual": "빠르게 스크롤하는 스마트폰 화면, 눈동자 클로즈업",
+        "narration": "당신의 뇌는 지금 디지털로 연결되어 있나요?",
+        "imagePrompt": "스마트폰 화면을 빠르게 스크롤하는 모습과 눈동자 클로즈업, 현대적이고 몰입감 있는 느낌.",
+        "videoPrompt": "스마트폰 화면 스크롤, 눈동자 클로즈업, 빠른 전환",
+        "sfx": "디지털 글리치 소리"
+    },
+    {
+        "sceneId": 2,
+        "durationSec": 4,
+        "visual": "AI 뇌 네트워크 애니메이션",
+        "narration": "우리의 일상은 점점 더 깊게 디지털 세상과 연결되고 있습니다.",
+        "imagePrompt": "디지털 뇌 네트워크 애니메이션, 복잡하고 매혹적인 색상의 네트워크 연결 이미지.",
+        "videoPrompt": "AI 뇌 네트워크 애니메이션, 유동적인 움직임"
+    },
+    {
+        "sceneId": 3,
+        "durationSec": 5,
+        "visual": "소셜 미디어 알림, 메신저 앱 채팅",
+        "narration": "이제, 디지털은 선택이 아닌 필수가 되었습니다.",
+        "imagePrompt": "소셜 미디어 알림과 메신저 앱 채팅, 현대적이고 빠른 생활의 이미지.",
+        "videoPrompt": "소셜 미디어 알림 팝업, 메신저 채팅 애니메이션",
+        "sfx": "알림 소리"
+    },
+    {
+        "sceneId": 4,
+        "durationSec": 6,
+        "visual": "AR/VR을 사용하는 청년들",
+        "narration": "하지만, 이 연결은 우리에게 새로운 가능성을 열어줍니다.",
+        "imagePrompt": "AR/VR 기기를 착용한 청년들, 미래 기술을 체험하는 모습.",
+        "videoPrompt": "AR/VR 체험 장면, 인터랙티브 테크놀로지"
+    },
+    {
+        "sceneId": 5,
+        "durationSec": 7,
+        "visual": "컴퓨터 코드 스크린, AI 학습 장면",
+        "narration": "AI가 이끄는 혁신은 상상을 초월합니다.",
+        "imagePrompt": "컴퓨터 코드와 AI 학습 씬, 창의적이고 집중적인 분위기.",
+        "videoPrompt": "AI 코드 작성과 학습 과정, 컴퓨터 화면",
+        "sfx": "타자 소리"
+    },
+    {
+        "sceneId": 6,
+        "durationSec": 5,
+        "visual": "사람들이 웃고 공유하는 장면",
+        "narration": "당신은 이 시대의 주인공입니다. 무엇을 만들어낼 건가요?",
+        "imagePrompt": "함께 웃고 있는 사람들, 공유하고 소통하는 모습, 따뜻하고 공감 가득한 이미지.",
+        "videoPrompt": "사람들이 웃고 있다고 상호작용하는 장면"
+    },
+    {
+        "sceneId": 7,
+        "durationSec": 5,
+        "visual": "영상 마지막 로고 및 구독 버튼",
+        "imagePrompt": "로그와 구독 버튼, 깨끗하고 간결한 디자인.",
+        "videoPrompt": "마무리 로고, 구독 버튼 애니메이션",
+        "sfx": "마무리 효과음",
+        "narration": "구독하고 다음 이야기를 만나보세요!"
+    }
+]

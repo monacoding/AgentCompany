@@ -1,0 +1,2127 @@
+import { AgentManager, canAgentEnterWorking } from '../agents';
+import {
+  AgentFolderEngine,
+  buildOwnerFolderDeliveryMessage,
+  copySelectedFiles,
+  copySelectedFilesToOwner,
+  formatFoundFilePaths,
+  formatTransferredPaths,
+  searchFilesInAgentDb,
+  searchModeForAttempt,
+} from '../agent-folders';
+import { KnowledgeLearner } from '../agent-folders/knowledge-learner';
+import {
+  ChatService,
+  buildCollabThreadId,
+  buildDelegateAckMessage,
+  buildDelegateCompleteMessage,
+  buildDelegatePermissionAsk,
+  buildDelegatePermissionDenied,
+  buildDelegatePermissionGranted,
+  buildDelegateRequestMessage,
+  buildDelegateWorkingMessage,
+  buildFileMatchConfirmationAsk,
+  buildOwnFolderDeliveryCompleteMessage,
+  buildOwnFolderFileMatchAsk,
+  buildFileTransferCompleteMessage,
+  buildFileTransferFailedMessage,
+  detectOwnFolderFileRequest,
+  buildFileTransferReceivedMessage,
+  detectChatEmotion,
+  detectCrossAgentFileRequest,
+  detectDelegationSuggestion,
+  formatChatReply,
+  isContextDependentCommand,
+  resolveCommandWithContext,
+  generateFileTransferDialogue,
+  interpretCeoCommand,
+  isImplementationPlanReply,
+  sanitizeAcknowledgmentForPendingWork,
+} from '../chat';
+import type {
+  CeoCommandInterpretation,
+  CrossAgentFileRequest,
+  OwnFolderFileRequest,
+  ResolvedCommand,
+} from '../chat';
+import type { CeoChatMessage, ChatWorkingDetail } from '../chat/types';
+import { MemoryEngine } from '../memory';
+import { NotificationEngine } from '../notifications';
+import { ProviderEngine, runWithLlmAgent } from '../providers';
+import { KiloAgent, isDevTaskQuery, isKiloAgent } from '../kilo';
+import { ProductionAgent, isProductionAgent, isProductionTaskQuery } from '../production';
+import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research';
+import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
+import { getAutoAssignThreshold, routeCommand, SECRETARY_AGENT, SecretaryMessages, isSecretaryAgent } from '../secretary';
+import { ExternalApiExecutor } from '../external-api/executor';
+import { shouldTryExternalApi } from '../external-api/auto-detect';
+import { ExternalApiService } from '../services/external-api';
+import { LlmStatusService } from '../services/llm-status';
+import { TaskEngine } from '../tasks';
+import { AgentRole, Agent, OrchestratorResult, ROLE_DESCRIPTIONS, Task } from '../types';
+import { generateId } from '../utils';
+import { WorkspaceActionExecutor } from '../workspace/action-executor';
+import { buildWorkspacePrompt, parseAgentOutput } from '../workspace/action-parser';
+import { WorkspaceEngine } from '../workspace';
+import { OrgEngine, CEO_NODE_ID, buildCeoFinalReport, reviewAndSummarizeForManager, parseManagerReview, ManagerReviewStep } from '../org';
+import { parseCeoMention } from './mention-parser';
+import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-display';
+import { CeoChatPanel } from '../webview/CeoChatPanel';
+
+const MAX_ORG_REVISIONS = 5;
+
+const ROLE_TASK_MAP: Record<string, AgentRole[]> = {
+  default: ['pm', 'backend', 'frontend', 'qa'],
+  api: ['pm', 'backend', 'qa'],
+  ui: ['pm', 'frontend', 'qa'],
+  docs: ['pm', 'writer'],
+  deploy: ['pm', 'devops'],
+  research: ['pm', 'researcher'],
+};
+
+export class Orchestrator {
+  private collabMirrorThreadId: string | null = null;
+  private collabSourceAgentId: string | null = null;
+  private workspaceExecutor: WorkspaceActionExecutor;
+  private researchAgent: ResearchAgent;
+  private productionAgent: ProductionAgent;
+  private kiloAgent: KiloAgent;
+  private externalApiExecutor: ExternalApiExecutor;
+
+  constructor(
+    private agentManager: AgentManager,
+    private taskEngine: TaskEngine,
+    private memory: MemoryEngine,
+    private workspace: WorkspaceEngine,
+    private providers: ProviderEngine,
+    private notifications: NotificationEngine,
+    private crawl4aiDocker: Crawl4AiDockerService,
+    private chat: ChatService,
+    private externalApis: ExternalApiService,
+    private agentFolders: AgentFolderEngine,
+    private knowledgeLearner: KnowledgeLearner,
+    private orgEngine: OrgEngine,
+    private llmStatus: LlmStatusService
+  ) {
+    this.workspaceExecutor = new WorkspaceActionExecutor(workspace, memory);
+    this.researchAgent = new ResearchAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
+    this.productionAgent = new ProductionAgent(memory, providers, agentFolders, knowledgeLearner);
+    this.kiloAgent = new KiloAgent(memory, providers, workspace, agentFolders);
+    this.externalApiExecutor = new ExternalApiExecutor(externalApis, providers, memory, agentFolders);
+  }
+
+  private trySetAgentWorking(agent: Agent): boolean {
+    if (!canAgentEnterWorking(agent)) {
+      this.agentSay(agent, '현재 offline 상태입니다. Activate 후 다시 시도해 주세요.', 'agent', 'failed');
+      return false;
+    }
+    this.agentManager.setStatus(agent.id, 'working');
+    return true;
+  }
+
+  getSecretary(): Agent | null {
+    return (
+      this.agentManager.getAll().find((a) => isSecretaryAgent(a)) ??
+      this.agentManager.getByRole('pm').find((a) => !a.name.includes('Alex')) ??
+      this.agentManager.getByRole('pm')[0] ??
+      null
+    );
+  }
+
+  async executeCommand(command: string): Promise<OrchestratorResult> {
+    const agentNames = collectAgentMentionNames(this.agentManager.getAll());
+    const mention = parseCeoMention(command, agentNames);
+
+    if (mention) {
+      if (!mention.command) {
+        this.agentSay(this.getSecretary(), SecretaryMessages.emptyMention(), 'system');
+        return { taskId: '', success: false, message: 'Empty direct command' };
+      }
+
+      const agent =
+        this.agentManager.getAll().find((a) => a.name === mention.agentName) ??
+        this.agentManager.findByMention(mention.agentName);
+
+      if (!agent) {
+        this.agentSay(
+          this.getSecretary(),
+          SecretaryMessages.unknownMention(mention.agentName),
+          'system'
+        );
+        return { taskId: '', success: false, message: `Unknown agent: ${mention.agentName}` };
+      }
+
+      return this.executeDirectCommand(agent, mention.command, command);
+    }
+
+    return this.executeViaSecretary(command);
+  }
+
+  async executeConfirmedDelegate(pendingId: string): Promise<OrchestratorResult> {
+    const pending = this.chat.getPending();
+    if (!pending || pending.pendingId !== pendingId) {
+      return { taskId: '', success: false, message: 'No pending delegation' };
+    }
+
+    this.chat.resolveConfirmationByPendingId(pendingId, 'confirmed');
+    this.chat.clearPending();
+
+    if (pending.kind === 'file-match' && pending.sourceAgentId) {
+      try {
+        return await this.executeConfirmedFileMatch(pending);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const agent = this.agentManager.get(pending.sourceAgentId);
+        if (agent) {
+          this.finalizeFileDelivery(agent, false, `사장님, 파일 전달 중 문제가 생겼어요.\n\n${message}`);
+        }
+        return { taskId: '', success: false, message };
+      }
+    }
+
+    if (pending.kind === 'agent-collab' && pending.sourceAgentId) {
+      return this.executeConfirmedAgentDelegate(pending);
+    }
+
+    const agent = this.agentManager.get(pending.agentId);
+    if (!agent) {
+      return { taskId: '', success: false, message: 'Agent not found' };
+    }
+
+    this.agentSay(this.getSecretary(), SecretaryMessages.confirmedDelegate(agent.name), 'agent');
+    return this.executeDirectCommand(agent, pending.command, `@${agent.name} ${pending.command}`);
+  }
+
+  private async executeConfirmedAgentDelegate(pending: {
+    agentId: string;
+    agentName: string;
+    command: string;
+    sourceAgentId?: string;
+    sourceAgentName?: string;
+    collabThreadId?: string;
+    fileTransfer?: boolean;
+    fileHint?: string;
+    fileSummary?: string;
+    filePermissionAsk?: string;
+    fileCollabRequest?: string;
+  }): Promise<OrchestratorResult> {
+    const source = pending.sourceAgentId
+      ? this.agentManager.get(pending.sourceAgentId)
+      : null;
+    const target = this.agentManager.get(pending.agentId);
+    if (!source || !target) {
+      return { taskId: '', success: false, message: 'Agent not found' };
+    }
+
+    if (pending.fileTransfer) {
+      return this.executeCrossAgentFileTransfer(
+        source,
+        target,
+        pending.fileHint ?? pending.command,
+        pending.fileCollabRequest,
+        pending.command
+      );
+    }
+
+    const collabThreadId =
+      pending.collabThreadId ?? buildCollabThreadId(source.id, target.id);
+
+    this.agentSay(source, buildDelegatePermissionGranted(source, target), 'agent', 'done', undefined, true);
+
+    this.chat.push({
+      threadId: collabThreadId,
+      senderId: source.id,
+      senderName: formatAgentLabel(source),
+      senderRole: source.title?.trim() || source.role,
+      content: buildDelegateRequestMessage(source, target, pending.command),
+      type: 'agent',
+      status: 'done',
+    });
+
+    this.chat.requestOpenCollabPanel(collabThreadId, source.id, target.id);
+    CeoChatPanel.refreshThread(collabThreadId);
+
+    this.collabMirrorThreadId = collabThreadId;
+    this.collabSourceAgentId = source.id;
+    try {
+      const fullCommand = `@${target.name} ${pending.command}`;
+      return await this.executeDirectCommand(target, pending.command, fullCommand);
+    } finally {
+      this.collabMirrorThreadId = null;
+      this.collabSourceAgentId = null;
+    }
+  }
+
+  rejectDelegate(pendingId: string): void {
+    const pending = this.chat.getPending();
+    if (!pending || pending.pendingId !== pendingId) return;
+
+    if (pending.kind === 'file-match' && pending.fileMatchPending) {
+      this.chat.resolveConfirmationByPendingId(pendingId, 'rejected');
+      this.chat.clearPending();
+      void this.rejectFileMatchAndReSearch(pending);
+      return;
+    }
+
+    this.chat.clearPending();
+
+    if (pending.kind === 'agent-collab' && pending.sourceAgentId) {
+      const source = this.agentManager.get(pending.sourceAgentId);
+      const target = this.agentManager.get(pending.agentId);
+      if (source && target) {
+        this.agentSay(source, buildDelegatePermissionDenied(source, target), 'agent', 'done', undefined, true);
+      }
+      return;
+    }
+
+    this.agentSay(this.getSecretary(), SecretaryMessages.rejectedDelegate(), 'agent');
+  }
+
+  private async executeViaSecretary(command: string): Promise<OrchestratorResult> {
+    const secretary = this.getSecretary();
+
+    if (shouldTryExternalApi(command, this.externalApis.getEnabled()) && secretary) {
+      this.agentWorking(
+        secretary,
+        `${SecretaryMessages.acknowledgeCommand()}\n등록된 API를 자동으로 연동해서 확인해 볼게요~ ✨`
+      );
+      return this.executeDirectCommand(secretary, command, command);
+    }
+
+    if (secretary) {
+      this.agentWorking(secretary, SecretaryMessages.acknowledgeCommand());
+    }
+
+    const route = routeCommand(command, this.agentManager.getAll());
+    if (!route) {
+      if (secretary) this.agentClearWorking(secretary);
+      this.agentSay(secretary, SecretaryMessages.noActiveAgents(), 'agent', 'failed');
+      return { taskId: '', success: false, message: 'No agents available' };
+    }
+
+    const target = this.agentManager.get(route.agentId);
+    if (!target) {
+      if (secretary) this.agentClearWorking(secretary);
+      this.agentSay(secretary, SecretaryMessages.agentNotFound(), 'agent', 'failed');
+      return { taskId: '', success: false, message: 'Agent not found' };
+    }
+
+    const softenedRoute = {
+      ...route,
+      reason: SecretaryMessages.softenReason(route.reason),
+    };
+
+    if (route.confidence >= getAutoAssignThreshold()) {
+      if (secretary) this.agentClearWorking(secretary);
+      this.agentSay(
+        secretary,
+        SecretaryMessages.autoDelegate(softenedRoute, target.name),
+        'agent',
+        'done'
+      );
+      return this.executeDirectCommand(target, command, command);
+    }
+
+    if (secretary) this.agentClearWorking(secretary);
+
+    const pendingId = generateId();
+    this.chat.setPending({
+      pendingId,
+      command,
+      agentId: target.id,
+      agentName: target.name,
+    });
+
+    const secretaryId = secretary?.id ?? 'secretary';
+
+    this.chat.push({
+      threadId: secretaryId,
+      senderId: secretary?.id ?? null,
+      senderName: SECRETARY_AGENT.name,
+      senderRole: 'pm',
+      content: SecretaryMessages.askConfirmation(softenedRoute, target.name),
+      type: 'confirmation',
+      status: 'pending',
+      confirmation: { pendingId, command, agentId: target.id, agentName: target.name },
+    });
+
+    return {
+      taskId: '',
+      success: true,
+      message: 'Awaiting CEO confirmation',
+    };
+  }
+
+  private resolveCeoCommandForAgent(agentId: string, command: string): ResolvedCommand {
+    return resolveCommandWithContext(command, this.chat.getMessages(agentId));
+  }
+
+  private async tryOfferFileTransferFromCommand(
+    agent: Agent,
+    resolved: ResolvedCommand,
+    rawCommand: string,
+    interpretation?: CeoCommandInterpretation
+  ): Promise<OrchestratorResult | null> {
+    const allAgents = this.agentManager.getAll();
+    const effective = resolved.effective;
+
+    const ownFileReq = detectOwnFolderFileRequest(effective, agent, allAgents);
+    if (ownFileReq) {
+      return this.offerOwnFolderFileMatch(agent, ownFileReq, rawCommand);
+    }
+
+    const crossFileReq = detectCrossAgentFileRequest(
+      effective,
+      agent,
+      (mention) => this.agentManager.findByMention(mention),
+      allAgents
+    );
+    if (crossFileReq) {
+      return this.offerCrossAgentFileTransfer(agent, crossFileReq, rawCommand, interpretation);
+    }
+
+    return null;
+  }
+
+  private async executeDirectCommand(
+    agent: Agent,
+    command: string,
+    fullCommand: string
+  ): Promise<OrchestratorResult> {
+    if (!this.collabMirrorThreadId) {
+      this.chat.requestOpenPanel(agent.id, agent.name);
+    }
+
+    const resolved = this.resolveCeoCommandForAgent(agent.id, command);
+    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
+    if (fileEarly) return fileEarly;
+
+    const interpretation = await this.interpretCeoCommandWithPersona(agent, command, resolved);
+    const acknowledgment = sanitizeAcknowledgmentForPendingWork(
+      interpretation.acknowledgment,
+      interpretation.suggestedAction
+    );
+    if (acknowledgment.trim()) {
+      this.agentSay(
+        agent,
+        acknowledgment,
+        'agent',
+        'done',
+        { ceoMessage: command },
+        true
+      );
+    }
+
+    if (
+      interpretation.suggestedAction === 'conversation_complete' ||
+      interpretation.suggestedAction === 'needs_clarification'
+    ) {
+      const fileFromContext = await this.tryOfferFileTransferFromCommand(
+        agent,
+        resolved,
+        command,
+        interpretation
+      );
+      if (fileFromContext) return fileFromContext;
+
+      this.memory.logActivity(agent.id, null, `사장 지시 인지: ${command.slice(0, 80)}`);
+      return {
+        taskId: '',
+        success: true,
+        message: 'CEO command acknowledged',
+      };
+    }
+
+    const fileLate = await this.tryOfferFileTransferFromCommand(
+      agent,
+      {
+        ...resolved,
+        effective: interpretation.understoodTask?.trim() || resolved.effective,
+      },
+      command,
+      interpretation
+    );
+    if (fileLate) return fileLate;
+
+    if (interpretation.suggestedAction === 'cross_agent_file') {
+      const crossOnly = detectCrossAgentFileRequest(
+        resolved.effective,
+        agent,
+        (mention) => this.agentManager.findByMention(mention),
+        this.agentManager.getAll()
+      );
+      if (crossOnly) {
+        return await this.offerCrossAgentFileTransfer(agent, crossOnly, command, interpretation);
+      }
+    }
+
+    if (this.isConversationalCommand(command)) {
+      if (isResearchAgent(agent) && isResearchTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
+      }
+      if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
+      }
+      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
+      }
+      return {
+        taskId: '',
+        success: true,
+        message: 'CEO command acknowledged via persona',
+      };
+    }
+    if (this.orgEngine.shouldUseHierarchicalReport(agent.id)) {
+      const chain = this.orgEngine.getReportingChain(agent.id);
+      return this.executeHierarchicalCommand(agent, command, fullCommand, chain);
+    }
+    return this.executeDirectCommandFlat(agent, command, fullCommand, true);
+  }
+
+  /** 모든 사장 지시 — 페르소나 기반 LLM 인지 */
+  private async interpretCeoCommandWithPersona(
+    agent: Agent,
+    command: string,
+    resolved?: ResolvedCommand
+  ): Promise<CeoCommandInterpretation> {
+    if (!this.trySetAgentWorking(agent)) {
+      return {
+        acknowledgment: '현재 offline 상태라 말씀을 제대로 받지 못했어요. Activate 후 다시 말씀해 주세요.',
+        understoodTask: command,
+        suggestedAction: 'needs_clarification',
+      };
+    }
+
+    this.agentWorking(agent, '사장님 말씀 이해 중…', undefined, {
+      pipeline: '인지',
+      step: '지시 파악',
+      summary: '페르소나에 맞게 사장님 지시를 이해하고 있습니다.',
+      log: [
+        `에이전트: ${formatAgentLabel(agent)}`,
+        `명령: ${command.slice(0, 200)}`,
+      ],
+    });
+
+    const resolvedCmd = resolved ?? this.resolveCeoCommandForAgent(agent.id, command);
+    const taskForLlm = resolvedCmd.usedContext
+      ? `${command}\n[이전 맥락: ${resolvedCmd.contextSummary}]`
+      : command;
+
+    try {
+      return await interpretCeoCommand(
+        this.providers,
+        this.agentFolders,
+        this.knowledgeLearner,
+        agent,
+        taskForLlm,
+        this.buildChatContext(agent.id)
+      );
+    } finally {
+      this.agentClearWorking(agent);
+      const current = this.agentManager.get(agent.id);
+      if (current?.status === 'working') {
+        this.agentManager.setStatus(agent.id, 'idle');
+      }
+      CeoChatPanel.refreshThread(agent.id);
+    }
+  }
+
+  /** 인사·짧은 대화 — 태스크/조직 보고 없이 바로 답변 */
+  private isConversationalCommand(command: string): boolean {
+    const text = command.trim();
+    if (!text || text.length > 300) return false;
+    if (isContextDependentCommand(text)) return false;
+    if (
+      /```|\.(ts|tsx|js|py|md|json)|create|implement|fix|build|deploy|write|research|refactor|조사|구현|작성|수정|배포|리팩터|파일|코드|버그|찾|검색|다운|pdf|크롤|리서치|수집|확인|알아봐|수능|기출|제작|만들|쇼츠|숏폼|대본|기획해|스토리보드|썸네일|브리프/i.test(
+        text
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  private async executeConversationalReply(
+    agent: Agent,
+    command: string
+  ): Promise<OrchestratorResult> {
+    this.chat.requestOpenPanel(agent.id, agent.name);
+
+    const resolved = this.resolveCeoCommandForAgent(agent.id, command);
+    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
+    if (fileEarly) return fileEarly;
+
+    if (!this.trySetAgentWorking(agent)) {
+      return { taskId: '', success: false, message: `Agent "${agent.name}" is offline` };
+    }
+
+    this.agentWorking(agent, '답변 준비 중…', undefined, {
+      pipeline: '대화',
+      step: '답변 준비',
+      summary: '사장님 메시지를 읽고 답변을 준비하고 있어요.',
+      log: [
+        `에이전트: ${formatAgentLabel(agent)}`,
+        `역할: ${agent.title?.trim() || agent.role}`,
+        `처리: 최근 대화 맥락 + 지식 베이스를 참고해 자연스러운 답변 생성`,
+        `명령: ${command.slice(0, 200)}`,
+      ],
+    });
+    try {
+      await this.knowledgeLearner.syncAgent(agent);
+      const folderContext = await this.agentFolders.buildPromptContext(agent);
+      const chatContext = this.buildChatContext(agent.id);
+      const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
+${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
+${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
+
+사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
+**주어 없는 후속 말**(전달해줘, 해줘 등)은 **최근 대화**와 합쳐 의도를 파악하세요. 맥락상 파일·업무 요청이면 "요청해볼게요" 같은 막연한 답 대신 구체적으로 이해했다고 답하세요.
+사장님이 짜증·분노·질책을 하면 밝게 넘기지 말고 사과·수정·조용히 대기 등 상황에 맞게 답하세요. 이모지는 남발하지 마세요.`;
+
+      const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+        { role: 'system', content: systemPrompt },
+      ];
+      if (chatContext) {
+        messages.push({ role: 'user', content: `최근 대화:\n${chatContext}` });
+      }
+      const userLine = resolved.usedContext
+        ? `${command}\n[이전 맥락: ${resolved.contextSummary}]`
+        : command;
+      messages.push({ role: 'user', content: userLine });
+
+      const response = await runWithLlmAgent(agent.id, () =>
+        this.providers.chat(agent.provider, messages, {
+          type: agent.provider,
+          model: agent.model,
+        })
+      );
+
+      const raw = response.content.trim();
+      const reply = formatChatReply(raw) || raw || '네, 사장님.';
+      this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', { ceoMessage: command });
+      this.memory.logActivity(agent.id, null, `대화 응답: ${command.slice(0, 80)}`);
+
+      return { taskId: '', success: true, message: 'Conversational reply sent' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.agentSay(agent, `오류: ${message}`, 'agent', 'failed');
+      return { taskId: '', success: false, message };
+    } finally {
+      this.agentClearWorking(agent);
+      const current = this.agentManager.get(agent.id);
+      if (current?.status === 'working') {
+        this.agentManager.setStatus(agent.id, 'idle');
+      }
+      CeoChatPanel.refreshThread(agent.id);
+    }
+  }
+
+  /** 조직도(저장됨): 부하 작업 → 직속 상사 → … → CEO 최종 보고 */
+  private async executeHierarchicalCommand(
+    worker: Agent,
+    command: string,
+    fullCommand: string,
+    chain: string[]
+  ): Promise<OrchestratorResult> {
+    this.chat.requestOpenPanel(worker.id, worker.name);
+
+    const parentTask = this.taskEngine.create({
+      title: fullCommand,
+      description: `CEO command (조직 보고) → ${worker.name}: ${command}`,
+    });
+    this.taskEngine.transition(parentTask.id, 'working');
+
+    const subTask = this.taskEngine.create({
+      title: `[${worker.name}] ${command}`,
+      description: worker.description || ROLE_DESCRIPTIONS[worker.role],
+      agentId: worker.id,
+      parentTaskId: parentTask.id,
+    });
+
+    if (worker.status === 'offline') {
+      this.agentSay(worker, '현재 offline 상태입니다.', 'agent', 'failed');
+      this.taskEngine.transition(subTask.id, 'failed');
+      this.taskEngine.transition(parentTask.id, 'failed');
+      return { taskId: parentTask.id, success: false, message: 'Worker offline', subTasks: [subTask] };
+    }
+
+    this.agentWorking(worker, `"${command}" — 작업 중…`);
+    try {
+      await this.runAgentTask(worker.id, subTask.id);
+    } finally {
+      this.agentClearWorking(worker);
+    }
+
+    const subResult = this.taskEngine.get(subTask.id);
+    const workerRawResult = subResult?.result?.trim() || '';
+    let rollingSummary = workerRawResult || '작업 결과 없음';
+    const workerSuccess = subResult?.status !== 'failed';
+
+    if (!workerSuccess) {
+      this.agentSay(worker, '작업 중 오류가 발생했습니다.', 'agent', 'failed');
+      this.taskEngine.transition(parentTask.id, 'failed');
+      return { taskId: parentTask.id, success: false, message: 'Worker task failed', subTasks: [subTask] };
+    }
+
+    const reviewSteps: ManagerReviewStep[] = [];
+    const managerIds = this.orgEngine.getOrderedManagers(worker.id);
+    let revisionCount = 0;
+    let chainComplete = false;
+
+    while (!chainComplete && revisionCount <= MAX_ORG_REVISIONS) {
+      reviewSteps.length = 0;
+      chainComplete = true;
+      let subordinate: Agent = worker;
+
+      for (const managerId of managerIds) {
+        const manager = this.agentManager.get(managerId);
+        if (!manager) {
+          this.memory.logActivity(worker.id, parentTask.id, `조직 보고: 상사 ${managerId} 없음 — 건너뜀`);
+          continue;
+        }
+        if (manager.status === 'offline') {
+          this.memory.logActivity(worker.id, parentTask.id, `조직 보고: ${manager.name} offline — 검토 건너뜀`);
+          continue;
+        }
+
+        this.chat.requestOpenPanel(manager.id, manager.name);
+        this.agentWorking(manager, `${formatAgentLabel(subordinate)} 업무 검토 중… (본인 기준)`);
+
+        let parsed;
+        try {
+          const managerContext = await this.agentFolders.buildPromptContext(manager);
+          const fullReview = await runWithLlmAgent(manager.id, () =>
+            reviewAndSummarizeForManager(
+              manager,
+              subordinate,
+              command,
+              rollingSummary,
+              this.providers,
+              managerContext
+            )
+          );
+          parsed = parseManagerReview(fullReview);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          this.agentSay(manager, `검토 중 오류: ${msg}`, 'agent', 'failed');
+          this.memory.logActivity(worker.id, parentTask.id, `조직 보고: ${manager.name} 검토 오류 — ${msg}`);
+          this.agentClearWorking(manager);
+          continue;
+        } finally {
+          this.agentClearWorking(manager);
+        }
+
+        if (parsed.approved) {
+          rollingSummary = parsed.upwardSummary;
+          reviewSteps.push({
+            manager,
+            subordinate,
+            fullReview: parsed.fullReview,
+            upwardSummary: rollingSummary,
+            approved: true,
+            revisionRound: revisionCount > 0 ? revisionCount : undefined,
+          });
+          subordinate = manager;
+          continue;
+        }
+
+        const feedback =
+          parsed.revisionFeedback.trim() ||
+          parsed.reviewComment.trim() ||
+          '품질 기준에 미치지 않습니다. CEO 지시와 피드백을 반영해 다시 작업해 주세요.';
+
+        revisionCount++;
+        if (revisionCount > MAX_ORG_REVISIONS) {
+          reviewSteps.push({
+            manager,
+            subordinate,
+            fullReview: `${parsed.fullReview}\n\n_(최대 재작업 ${MAX_ORG_REVISIONS}회 초과 — 현재 결과로 보고)_`,
+            upwardSummary: rollingSummary,
+            approved: false,
+            revisionRound: revisionCount,
+          });
+          this.memory.logActivity(
+            worker.id,
+            parentTask.id,
+            `조직 보고: ${manager.name} 반려 — 수정 한도 초과`
+          );
+          chainComplete = true;
+          break;
+        }
+
+        this.memory.logActivity(
+          worker.id,
+          parentTask.id,
+          `조직 보고: ${manager.name} 반려 → ${worker.name} 재작업 (${revisionCount}/${MAX_ORG_REVISIONS})`
+        );
+
+        const reworkResult = await this.reworkWorkerTask(
+          worker,
+          subTask.id,
+          command,
+          manager,
+          feedback
+        );
+
+        if (!reworkResult) {
+          this.taskEngine.transition(parentTask.id, 'failed');
+          return {
+            taskId: parentTask.id,
+            success: false,
+            message: 'Worker revision failed',
+            subTasks: [subTask],
+          };
+        }
+
+        rollingSummary = reworkResult;
+        chainComplete = false;
+        break;
+      }
+    }
+
+    const ceoReport = buildCeoFinalReport(worker, reviewSteps, command, rollingSummary, revisionCount);
+    this.memory.logActivity(worker.id, parentTask.id, ceoReport.slice(0, 2000));
+
+    this.chat.requestOpenPanel(worker.id, worker.name);
+    const reply =
+      formatChatReply(rollingSummary) || rollingSummary.trim() || '처리가 완료되었습니다.';
+    this.agentSay(worker, reply, 'agent', 'done', undefined, true);
+    void this.maybeOfferAgentDelegation(worker, workerRawResult || reply, worker.id);
+
+    this.memory.logActivity(
+      worker.id,
+      parentTask.id,
+      `조직 보고 완료: ${chain.map((id) => (id === CEO_NODE_ID ? 'CEO' : id)).join(' → ')}`
+    );
+
+    this.taskEngine.transition(parentTask.id, 'completed');
+    this.notifications.showInfo(`${worker.name} → 조직 보고 완료`);
+
+    return {
+      taskId: parentTask.id,
+      success: true,
+      message: 'Hierarchical report complete',
+      subTasks: [subTask],
+    };
+  }
+
+  private async executeDirectCommandFlat(
+    agent: Agent,
+    command: string,
+    fullCommand: string,
+    personaAckSent = false
+  ): Promise<OrchestratorResult> {
+    const resolved = this.resolveCeoCommandForAgent(agent.id, command);
+    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
+    if (fileEarly) return fileEarly;
+
+    const allAgents = this.agentManager.getAll();
+    const fileReq = detectCrossAgentFileRequest(
+      resolved.effective,
+      agent,
+      (mention) => this.agentManager.findByMention(mention),
+      allAgents
+    );
+    if (fileReq) {
+      let interpretation: CeoCommandInterpretation | undefined;
+      if (!personaAckSent) {
+        interpretation = await this.interpretCeoCommandWithPersona(agent, command, resolved);
+        if (interpretation.acknowledgment.trim()) {
+          this.agentSay(
+            agent,
+            interpretation.acknowledgment,
+            'agent',
+            'done',
+            { ceoMessage: command },
+            true
+          );
+        }
+      }
+      return await this.offerCrossAgentFileTransfer(agent, fileReq, command, interpretation);
+    }
+
+    if (!this.collabMirrorThreadId && !personaAckSent) {
+      this.chat.requestOpenPanel(agent.id, agent.name);
+    }
+
+    const parentTask = this.taskEngine.create({
+      title: fullCommand,
+      description: `CEO command → ${agent.name}: ${command}`,
+    });
+
+    this.taskEngine.transition(parentTask.id, 'working');
+
+    const subTask = this.taskEngine.create({
+      title: `[${agent.name}] ${command}`,
+      description: agent.description || ROLE_DESCRIPTIONS[agent.role],
+      agentId: agent.id,
+      parentTaskId: parentTask.id,
+    });
+
+    if (!this.trySetAgentWorking(agent)) {
+      this.taskEngine.transition(subTask.id, 'failed');
+      this.taskEngine.transition(parentTask.id, 'failed');
+      return {
+        taskId: parentTask.id,
+        success: false,
+        message: `Agent "${agent.name}" is offline`,
+        subTasks: [subTask],
+      };
+    }
+
+    if (this.collabMirrorThreadId && this.collabSourceAgentId) {
+      const source = this.agentManager.get(this.collabSourceAgentId);
+      if (source) {
+        this.chat.push({
+          threadId: this.collabMirrorThreadId,
+          senderId: agent.id,
+          senderName: formatAgentLabel(agent),
+          senderRole: agent.title?.trim() || agent.role,
+          content: buildDelegateAckMessage(agent, source),
+          type: 'agent',
+          status: 'done',
+        });
+        CeoChatPanel.refreshThread(this.collabMirrorThreadId);
+      }
+    }
+
+    this.agentWorking(
+      agent,
+      `"${command}" — 작업 중…`,
+      undefined,
+      this.buildWorkingDetail(agent, '업무 실행', '작업 착수', command)
+    );
+    try {
+      await this.runAgentTask(agent.id, subTask.id);
+    } finally {
+      this.agentClearWorking(agent);
+      const current = this.agentManager.get(agent.id);
+      if (current?.status === 'working') {
+        this.agentManager.setStatus(agent.id, 'idle');
+      }
+      CeoChatPanel.refreshThread(agent.id);
+    }
+
+    const subResult = this.taskEngine.get(subTask.id);
+    const success = subResult?.status !== 'failed';
+
+    if (success) {
+      this.taskEngine.transition(
+        parentTask.id,
+        subResult?.status === 'review' ? 'review' : 'completed'
+      );
+      const raw = subResult?.result?.trim() ?? '';
+      const blockedPlan = isImplementationPlanReply(raw);
+      let reply = formatChatReply(raw) || (blockedPlan ? '' : raw) || '';
+
+      if (!reply.trim() || blockedPlan) {
+        const lateResolved = this.resolveCeoCommandForAgent(agent.id, command);
+        const lateFile = await this.tryOfferFileTransferFromCommand(agent, lateResolved, command, {
+          acknowledgment: '',
+          understoodTask: lateResolved.effective,
+          suggestedAction: 'cross_agent_file',
+        });
+        if (lateFile) return lateFile;
+        if (!reply.trim()) {
+          reply = blockedPlan ? '' : '처리가 완료되었습니다.';
+        }
+      }
+
+      if (!reply.trim()) {
+        return {
+          taskId: parentTask.id,
+          success: true,
+          message: 'Suppressed non-actionable agent reply',
+          subTasks: [subTask],
+        };
+      }
+
+      if (this.collabSourceAgentId) {
+        const source = this.agentManager.get(this.collabSourceAgentId);
+        if (source) {
+          reply = buildDelegateCompleteMessage(agent, source, reply);
+        }
+      }
+      if (reply.trim()) {
+        this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', undefined, true);
+      }
+      void this.maybeOfferAgentDelegation(agent, raw, agent.id);
+    } else {
+      this.taskEngine.transition(parentTask.id, 'failed');
+      if (!personaAckSent) {
+        this.agentSay(agent, '작업 중 오류가 발생했습니다.', 'agent', 'failed');
+      }
+    }
+
+    return {
+      taskId: parentTask.id,
+      success,
+      message: success ? `Direct command sent to ${agent.name}` : `Direct command failed`,
+      subTasks: [subTask],
+    };
+  }
+
+  /** 상사 반려 시 부하 재작업 */
+  private async reworkWorkerTask(
+    worker: Agent,
+    taskId: string,
+    command: string,
+    manager: Agent,
+    feedback: string
+  ): Promise<string | null> {
+    const task = this.taskEngine.get(taskId);
+    if (!task) return null;
+
+    const revisionNote = `[상사 ${formatAgentLabel(manager)} 수정 지시]\n${feedback}\n\n원래 CEO 지시: ${command}\n위 피드백을 반영해 작업을 수정하세요.`;
+
+    this.taskEngine.update(taskId, {
+      description: `${worker.description || ROLE_DESCRIPTIONS[worker.role]}\n\n---\n${revisionNote}`,
+      result: '',
+      status: 'working',
+    });
+
+    this.agentWorking(worker, `${formatAgentLabel(manager)} 피드백 반영 수정 중…`);
+    try {
+      await this.runAgentTask(worker.id, taskId);
+    } finally {
+      this.agentClearWorking(worker);
+    }
+
+    const updated = this.taskEngine.get(taskId);
+    if (!updated || updated.status === 'failed') {
+      this.agentSay(worker, '수정 작업 중 오류가 발생했습니다.', 'agent', 'failed');
+      return null;
+    }
+
+    return updated.result?.trim() || null;
+  }
+
+  async runAgentTask(agentId: string, taskId: string): Promise<void> {
+    return runWithLlmAgent(agentId, () => this.runAgentTaskInner(agentId, taskId));
+  }
+
+  private async runAgentTaskInner(agentId: string, taskId: string): Promise<void> {
+    const agent = this.agentManager.get(agentId);
+    const task = this.taskEngine.get(taskId);
+    if (!agent || !task) return;
+
+    if (agent.status === 'offline') {
+      this.memory.logActivity(agentId, taskId, `Agent "${agent.name}" is offline — skipping`);
+      return;
+    }
+
+    if (!this.llmStatus.isProviderConnected(agent.provider)) {
+      this.memory.logActivity(
+        agentId,
+        taskId,
+        `Agent "${agent.name}" — AI API 미연결로 작업을 시작하지 않습니다`
+      );
+      this.taskEngine.transition(taskId, 'failed');
+      return;
+    }
+
+    this.agentManager.setStatus(agentId, 'working');
+    this.taskEngine.transition(taskId, 'working');
+
+    try {
+      await this.knowledgeLearner.syncAgent(agent);
+      const command = this.extractCommandFromTask(task);
+      const resolved = this.resolveCeoCommandForAgent(agentId, command);
+
+      const allAgents = this.agentManager.getAll();
+      const ownFileReq = detectOwnFolderFileRequest(resolved.effective, agent, allAgents);
+      if (ownFileReq) {
+        this.memory.logActivity(
+          agentId,
+          taskId,
+          `Own-folder file delivery — LLM 작업 생략 (${agent.name} → 사장님)`
+        );
+        this.taskEngine.setResult(taskId, '');
+        this.taskEngine.transition(taskId, 'completed');
+        this.agentManager.setStatus(agentId, 'idle');
+        void this.offerOwnFolderFileMatch(agent, ownFileReq, command);
+        return;
+      }
+
+      const fileReq = detectCrossAgentFileRequest(
+        resolved.effective,
+        agent,
+        (mention) => this.agentManager.findByMention(mention),
+        allAgents
+      );
+      if (fileReq) {
+        this.memory.logActivity(
+          agentId,
+          taskId,
+          `Cross-agent file transfer — LLM/workspace 작업 생략 (${fileReq.fileOwner.name} → ${agent.name})`
+        );
+        this.taskEngine.setResult(taskId, '');
+        this.taskEngine.transition(taskId, 'completed');
+        this.agentManager.setStatus(agentId, 'idle');
+        return;
+      }
+
+      if (isResearchAgent(agent)) {
+        await this.runResearchTask(agent, task);
+        return;
+      }
+
+      if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
+        await this.runProductionTask(agent, task);
+        return;
+      }
+
+      if (isKiloAgent(agent)) {
+        await this.runKiloTask(agent, task);
+        return;
+      }
+
+      const enabledApis = this.externalApis.getEnabled();
+      const chatContext = this.buildChatContext(agent.id);
+      const apiCommand = this.resolveApiCommand(agent.id, command);
+
+      if (enabledApis.length > 0 && shouldTryExternalApi(apiCommand, enabledApis)) {
+        try {
+          const autoResult = await this.externalApiExecutor.tryAutoExecute(
+            agent,
+            task,
+            apiCommand,
+            chatContext
+          );
+          if (autoResult) {
+            this.taskEngine.setResult(task.id, autoResult);
+            this.memory.logActivity(agent.id, task.id, `${agent.name} external API auto-linked`);
+            this.taskEngine.transition(task.id, 'review');
+            this.agentManager.setStatus(agent.id, 'idle');
+            this.notifications.showTaskComplete(task.title);
+            return;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.memory.logActivity(agent.id, task.id, `External API auto-link error: ${message}`);
+          this.taskEngine.setResult(task.id, message);
+          this.taskEngine.transition(task.id, 'failed');
+          this.agentManager.setStatus(agent.id, 'failed');
+          this.notifications.showError(message.split('\n')[0]);
+          this.agentSay(
+            agent,
+            agent.name.includes('비서')
+              ? `앗, 대표님… API 연동 중 문제가 생겼어요 😢\n\n${message}`
+              : message,
+            'agent',
+            'failed'
+          );
+          return;
+        }
+      }
+
+      const workspaceRoot = this.workspace.getWorkspaceRoot();
+      const projectFiles = workspaceRoot
+        ? await this.gatherProjectContext(task.title)
+        : 'No workspace open';
+
+      const folderContext = await this.agentFolders.buildPromptContext(agent);
+
+      const systemPrompt = `You are ${agent.name}, a ${agent.role} agent.
+${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
+${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
+${this.externalApiExecutor.getRegistryPrompt()}
+${buildWorkspacePrompt(agent.role)}`;
+
+      const response = await this.providers.chat(
+        agent.provider,
+        [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: `Task: ${task.title}
+Description: ${task.description}
+Workspace: ${workspaceRoot ?? 'none'}
+
+Project context:
+${projectFiles}
+
+Complete this task. If code/files are needed, output them in the specified file format.`,
+          },
+        ],
+        { type: agent.provider, model: agent.model }
+      );
+
+      const parsed = parseAgentOutput(response.content);
+      let resultSummary = parsed.summary.trim() || response.content.trim();
+
+      if (parsed.files.length > 0 && workspaceRoot) {
+        const applyResults = await this.workspaceExecutor.applyActions(parsed.files, agentId, taskId);
+        const succeeded = applyResults.filter((r) => r.success).length;
+        resultSummary += `\n\nFiles modified: ${succeeded}/${applyResults.length}`;
+        this.notifications.showInfo(`${agent.name} modified ${succeeded} file(s)`);
+      }
+
+      this.taskEngine.setResult(taskId, resultSummary);
+      this.memory.appendAgentMemory(agentId, `[${task.title}]\n${resultSummary}`);
+      this.memory.logActivity(agentId, taskId, `${agent.name} completed: "${task.title}"`);
+
+      if (agent.role === 'qa') {
+        this.taskEngine.transition(taskId, 'review');
+      } else {
+        this.taskEngine.transition(taskId, 'completed');
+      }
+
+      this.agentManager.setStatus(agentId, 'idle');
+      this.notifications.showTaskComplete(task.title);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.memory.logActivity(agentId, taskId, `Error: ${message}`);
+      this.taskEngine.transition(taskId, 'failed');
+      this.agentManager.setStatus(agentId, 'failed');
+      this.notifications.showError(`${agent.name} failed: ${message}`);
+      this.agentSay(agent, `오류: ${message}`, 'agent', 'failed');
+    }
+  }
+
+  private async runKiloTask(agent: Agent, task: Task): Promise<void> {
+    const prompt = task.title.replace(/^\[[^\]]+\]\s*/, '').trim() || task.description;
+
+    try {
+      const result = await this.kiloAgent.execute(prompt, agent, task.id, (step) => {
+        this.agentWorking(
+          agent,
+          `[${step.step}] ${step.message}`,
+          step.status === 'failed' ? 'failed' : undefined,
+          this.buildWorkingDetail(agent, 'Kilo 개발', step.step, step.message, [
+            `상태: ${step.status}`,
+            `엔진: Kilo Code (코드 계획 → 파일 수정 → 자체 검증)`,
+            `요청: ${prompt.slice(0, 200)}`,
+          ])
+        );
+      });
+
+      let resultSummary = result.output;
+      if (result.filesModified.length > 0) {
+        resultSummary += `\n\nFiles modified: ${result.filesModified.join(', ')}`;
+      }
+      if (result.reportPath) {
+        resultSummary += `\n\n📄 Report: ${result.reportPath}`;
+      }
+      resultSummary += `\n\nMode: ${result.mode} | Engine: ${result.usedCli ? 'Kilo CLI' : 'Internal'}`;
+
+      this.taskEngine.setResult(task.id, resultSummary);
+      this.memory.logActivity(agent.id, task.id, `${agent.name} Kilo complete (${result.mode})`);
+      this.taskEngine.transition(task.id, result.selfCheckPassed ? 'review' : 'completed');
+      this.agentManager.setStatus(agent.id, 'idle');
+      this.notifications.showTaskComplete(task.title);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.memory.logActivity(agent.id, task.id, `Kilo error: ${message}`);
+      this.taskEngine.transition(task.id, 'failed');
+      this.agentManager.setStatus(agent.id, 'failed');
+      this.notifications.showError(`${agent.name} Kilo failed: ${message}`);
+      this.agentSay(agent, `Kilo 오류: ${message}`, 'agent', 'failed');
+    }
+  }
+
+  private extractCommandFromTask(task: Task): string {
+    return task.title.replace(/^\[[^\]]+\]\s*/, '').trim();
+  }
+
+  private async runProductionTask(agent: Agent, task: Task): Promise<void> {
+    const query = task.title.replace(/^\[[^\]]+\]\s*/, '').trim() || task.description;
+
+    try {
+      this.agentWorking(
+        agent,
+        '영상 제작 파이프라인을 시작합니다…',
+        undefined,
+        this.buildWorkingDetail(agent, '영상 제작', '시작', '브리프 → 대본 → 스토리보드 순으로 진행합니다.', [
+          `요청: ${query.slice(0, 200)}`,
+        ])
+      );
+
+      const result = await this.productionAgent.execute(query, agent, task.id, (step) => {
+        const prefix = step.status === 'running' ? '⏳' : step.status === 'done' ? '✓' : '•';
+        this.agentWorking(
+          agent,
+          `${prefix} ${step.step}: ${step.message}`,
+          undefined,
+          this.buildWorkingDetail(agent, '영상 제작', step.step, step.message, [
+            `상태: ${step.status}`,
+            `로직: LLM으로 ${step.step} 산출물 생성 → agent 폴더 outputs/plans/ 에 저장`,
+            `요청: ${query.slice(0, 200)}`,
+          ])
+        );
+      });
+
+      this.taskEngine.setResult(task.id, result.summary);
+      this.memory.logActivity(agent.id, task.id, `${agent.name} production complete`);
+      this.taskEngine.transition(task.id, 'review');
+      this.agentManager.setStatus(agent.id, 'idle');
+      this.notifications.showTaskComplete(task.title);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.memory.logActivity(agent.id, task.id, `Production error: ${message}`);
+      this.taskEngine.transition(task.id, 'failed');
+      this.agentManager.setStatus(agent.id, 'failed');
+      this.notifications.showError(`${agent.name} production failed: ${message}`);
+      this.agentSay(agent, `제작 오류: ${message}`, 'agent', 'failed');
+    }
+  }
+
+  private async runResearchTask(agent: Agent, task: Task): Promise<void> {
+    const query = task.title.replace(/^\[[^\]]+\]\s*/, '').trim() || task.description;
+
+    try {
+      this.agentWorking(
+        agent,
+        'Research 파이프라인을 시작합니다…',
+        undefined,
+        this.buildWorkingDetail(agent, '리서치', '시작', '검색 → 크롤링 → 요약 → 보고서 생성 순으로 진행합니다.', [
+          `요청: ${query.slice(0, 200)}`,
+        ])
+      );
+
+      const docker = await this.crawl4aiDocker.ensureRunning();
+      if (!docker.success) {
+        this.agentWorking(
+          agent,
+          `Docker: ${docker.message} — fallback 사용`,
+          undefined,
+          this.buildWorkingDetail(agent, '리서치', 'Docker', docker.message)
+        );
+      }
+
+      const report = await this.researchAgent.execute(query, agent, task.id, (step) => {
+        const prefix = step.status === 'running' ? '⏳' : step.status === 'done' ? '✓' : '•';
+        this.agentWorking(
+          agent,
+          `${prefix} ${step.step}: ${step.message}`,
+          undefined,
+          this.buildWorkingDetail(agent, '리서치', step.step, step.message, [
+            `상태: ${step.status}`,
+            `로직: Crawl4AI + LLM 파이프라인으로 자료 수집·요약`,
+            `요청: ${query.slice(0, 200)}`,
+          ])
+        );
+      });
+
+      let resultSummary = report.summary;
+      if (report.downloadedFiles && report.downloadedFiles.length > 0) {
+        for (const f of report.downloadedFiles) {
+          resultSummary += `\n\n📥 Downloaded: ${f.path} (${f.size} bytes)`;
+          this.notifications.showInfo(`${agent.name} downloaded → ${f.path}`);
+        }
+      }
+      if (report.reportPath) {
+        resultSummary += `\n\n📄 Report: ${report.reportPath}`;
+      }
+
+      this.taskEngine.setResult(task.id, resultSummary);
+      this.memory.logActivity(agent.id, task.id, `${agent.name} research complete: ${report.sources.length} sources`);
+      this.taskEngine.transition(task.id, 'review');
+      this.agentManager.setStatus(agent.id, 'idle');
+      this.notifications.showTaskComplete(task.title);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.memory.logActivity(agent.id, task.id, `Research error: ${message}`);
+      this.taskEngine.transition(task.id, 'failed');
+      this.agentManager.setStatus(agent.id, 'failed');
+      this.notifications.showError(`${agent.name} research failed: ${message}`);
+      this.agentSay(agent, `Research 오류: ${message}`, 'agent', 'failed');
+    }
+  }
+
+  private buildChatContext(agentId: string): string {
+    const recent = this.chat.getMessages(agentId).slice(-8);
+    if (recent.length === 0) return '';
+    return recent.map((m) => `${m.senderName}: ${m.content}`).join('\n');
+  }
+
+  /** "파리는?" 같은 후속 질문 → 날씨 API용 명령으로 보강 */
+  private resolveApiCommand(agentId: string, command: string): string {
+    if (/날씨|weather|기온|온도|확인|조회|알려/.test(command)) return command;
+
+    const recent = this.chat.getMessages(agentId).slice(-6);
+    const hadWeather = recent.some((m) => /날씨|weather|기온|온도/.test(m.content));
+    if (!hadWeather) return command;
+
+    const cityFollowUp = command.trim().match(/^([가-힣a-zA-Z][가-힣a-zA-Z\s]{0,14}?)(?:은|는|의|은요|는요)?\??$/);
+    if (cityFollowUp) {
+      const city = cityFollowUp[1].trim();
+      if (city.length >= 2 && !/^(그럼|그리고|근데|네|아|음|응)$/i.test(city)) {
+        return `${city} 날씨 확인`;
+      }
+    }
+
+    return command;
+  }
+
+  private buildWorkingDetail(
+    agent: Agent,
+    pipeline: string,
+    step: string,
+    message: string,
+    extraLog: string[] = []
+  ): ChatWorkingDetail {
+    return {
+      pipeline,
+      step,
+      summary: `${step} 단계를 진행 중이에요.`,
+      log: [
+        `에이전트: ${formatAgentLabel(agent)}`,
+        `역할: ${agent.title?.trim() || agent.role}`,
+        `파이프라인: ${pipeline}`,
+        `현재 단계: ${step}`,
+        `진행 내용: ${message}`,
+        ...extraLog,
+      ],
+    };
+  }
+
+  private agentWorking(
+    agent: Agent,
+    content: string,
+    tone?: 'failed',
+    detail?: ChatWorkingDetail
+  ): void {
+    if (tone === 'failed') {
+      this.agentClearWorking(agent);
+      return;
+    }
+    const streamAppend = content.trim() ? [content] : [];
+
+    const state = {
+      threadId: agent.id,
+      senderId: agent.id,
+      senderName: formatAgentLabel(agent),
+      senderRole: agent.title?.trim() || agent.role,
+      content,
+      detail,
+      streamAppend,
+    };
+    this.chat.updateWorking(state);
+    if (this.collabMirrorThreadId && agent.id !== this.collabMirrorThreadId) {
+      let mirrorContent = content;
+      if (this.collabSourceAgentId) {
+        const source = this.agentManager.get(this.collabSourceAgentId);
+        if (source) {
+          mirrorContent = buildDelegateWorkingMessage(agent, source, content);
+        }
+      }
+      this.chat.updateWorking({
+        ...state,
+        threadId: this.collabMirrorThreadId,
+        content: mirrorContent,
+        streamAppend: mirrorContent.trim() ? [mirrorContent] : [],
+      });
+      CeoChatPanel.refreshThread(this.collabMirrorThreadId);
+    }
+    CeoChatPanel.refreshThread(agent.id);
+  }
+
+  private agentClearWorking(agent: Agent): void {
+    this.chat.clearWorking(agent.id);
+    if (this.collabMirrorThreadId) {
+      this.chat.clearWorking(this.collabMirrorThreadId);
+      CeoChatPanel.refreshThread(this.collabMirrorThreadId);
+    }
+    CeoChatPanel.refreshThread(agent.id);
+  }
+
+  private agentSay(
+    agent: Agent | null,
+    content: string,
+    type: 'agent' | 'system' = 'agent',
+    status?: 'pending' | 'working' | 'done' | 'failed',
+    emotionContext?: { ceoMessage?: string },
+    skipDelegationOffer?: boolean
+  ): void {
+    let text = content.trim();
+
+    if (type === 'agent' && agent && isImplementationPlanReply(text)) {
+      const recentCeo = this.chat
+        .getMessages(agent.id)
+        .filter((m) => m.type === 'ceo')
+        .slice(-1)[0]?.content;
+      if (recentCeo) {
+        const fileReq = detectCrossAgentFileRequest(
+          recentCeo,
+          agent,
+          (mention) => this.agentManager.findByMention(mention),
+          this.agentManager.getAll()
+        );
+        if (fileReq && !this.chat.getPending()) {
+          void (async () => {
+            const interpretation = await this.interpretCeoCommandWithPersona(agent, recentCeo);
+            if (interpretation.acknowledgment.trim()) {
+              this.agentSay(
+                agent,
+                interpretation.acknowledgment,
+                'agent',
+                'done',
+                { ceoMessage: recentCeo },
+                true
+              );
+            }
+            await this.offerCrossAgentFileTransfer(agent, fileReq, recentCeo, interpretation);
+          })();
+          return;
+        }
+      }
+      return;
+    }
+
+    if (type === 'agent') {
+      text = formatChatReply(text) || text;
+    }
+
+    if (type === 'agent' && !text) return;
+
+    const secretary = this.getSecretary();
+    const threadId = agent?.id ?? secretary?.id ?? 'secretary';
+    const emotion =
+      type === 'agent'
+        ? detectChatEmotion(text, status, this.buildEmotionContext(threadId, emotionContext?.ceoMessage))
+        : undefined;
+
+    const message: Omit<CeoChatMessage, 'id' | 'timestamp'> = {
+      threadId,
+      senderId: agent?.id ?? null,
+      senderName: agent ? formatAgentLabel(agent) : formatAgentLabel({ name: SECRETARY_AGENT.name, title: SECRETARY_AGENT.title }),
+      senderRole: agent?.title?.trim() || agent?.role,
+      content: text,
+      type,
+      status,
+      emotion,
+    };
+
+    this.chat.push(message);
+
+    if (this.collabMirrorThreadId && threadId !== this.collabMirrorThreadId) {
+      this.chat.push({ ...message, threadId: this.collabMirrorThreadId });
+      CeoChatPanel.refreshThread(this.collabMirrorThreadId);
+    }
+
+    if (agent) {
+      CeoChatPanel.refreshThread(agent.id);
+      if (status === 'done' && type === 'agent' && !skipDelegationOffer) {
+        void this.maybeOfferAgentDelegation(agent, text, threadId);
+      }
+    }
+  }
+
+  private async offerCrossAgentFileTransfer(
+    requester: Agent,
+    fileReq: CrossAgentFileRequest,
+    command: string,
+    interpretation?: CeoCommandInterpretation
+  ): Promise<OrchestratorResult> {
+    if (this.chat.getPending()) {
+      return {
+        taskId: '',
+        success: false,
+        message: '이미 승인 대기 중인 요청이 있어요.',
+      };
+    }
+
+    const { fileOwner } = fileReq;
+    const collabThreadId = buildCollabThreadId(requester.id, fileOwner.id);
+    const fileHint = interpretation?.understoodTask?.trim() || fileReq.fileHint;
+
+    this.agentWorking(
+      requester,
+      '파일 검색 중…',
+      undefined,
+      this.buildWorkingDetail(requester, '파일 요청', 'DB 검색', command)
+    );
+
+    try {
+      return await this.offerFileMatchConfirmation(
+        requester,
+        fileOwner,
+        fileHint,
+        command,
+        collabThreadId,
+        0,
+        []
+      );
+    } finally {
+      this.agentClearWorking(requester);
+    }
+  }
+
+  private async offerOwnFolderFileMatch(
+    agent: Agent,
+    ownReq: OwnFolderFileRequest,
+    command: string
+  ): Promise<OrchestratorResult> {
+    if (this.chat.getPending()) {
+      return {
+        taskId: '',
+        success: false,
+        message: '이미 승인 대기 중인 요청이 있어요.',
+      };
+    }
+
+    if (agent.status === 'failed') {
+      this.agentManager.setStatus(agent.id, 'idle');
+    }
+
+    this.agentWorking(
+      agent,
+      '제 폴더에서 파일 검색 중…',
+      undefined,
+      this.buildWorkingDetail(agent, '파일 전달', 'DB 검색', command)
+    );
+
+    try {
+      return await this.offerFileMatchConfirmation(
+        agent,
+        agent,
+        ownReq.fileHint,
+        command,
+        agent.id,
+        0,
+        [],
+        undefined,
+        { deliveryTarget: 'owner' }
+      );
+    } finally {
+      this.agentClearWorking(agent);
+    }
+  }
+
+  private async offerFileMatchConfirmation(
+    requester: Agent,
+    fileOwner: Agent,
+    fileHint: string,
+    command: string,
+    collabThreadId: string,
+    searchAttempt: number,
+    rejectedRelativePaths: string[],
+    existingPendingId?: string,
+    options?: { deliveryTarget?: 'owner' | 'agent' }
+  ): Promise<OrchestratorResult> {
+    if (this.chat.getPending()) {
+      return {
+        taskId: '',
+        success: false,
+        message: '이미 승인 대기 중인 요청이 있어요.',
+      };
+    }
+
+    const workspaceRoot = this.workspace.getWorkspaceRoot() ?? undefined;
+    const mode = searchModeForAttempt(searchAttempt);
+    const { files } = await searchFilesInAgentDb(
+      this.agentFolders,
+      fileOwner,
+      fileHint,
+      workspaceRoot,
+      { mode, excludeRelativePaths: rejectedRelativePaths }
+    );
+
+    if (files.length === 0 && searchAttempt < 3) {
+      return this.offerFileMatchConfirmation(
+        requester,
+        fileOwner,
+        fileHint,
+        command,
+        collabThreadId,
+        searchAttempt + 1,
+        rejectedRelativePaths,
+        undefined,
+        options
+      );
+    }
+
+    const deliveryTarget = options?.deliveryTarget ?? 'agent';
+
+    if (files.length === 0) {
+      const failMsg =
+        deliveryTarget === 'owner'
+          ? buildOwnFolderFileMatchAsk(requester, '', searchAttempt)
+          : buildFileMatchConfirmationAsk(fileOwner, '', searchAttempt);
+      this.agentSay(requester, failMsg, 'agent', 'failed', undefined, true);
+      return {
+        taskId: '',
+        success: false,
+        message: 'No matching files found',
+      };
+    }
+
+    const candidates = files.slice(0, 15);
+    const pendingId = existingPendingId ?? generateId();
+    const fileList = formatFoundFilePaths(candidates);
+    const askContent =
+      deliveryTarget === 'owner'
+        ? buildOwnFolderFileMatchAsk(requester, fileList, searchAttempt)
+        : buildFileMatchConfirmationAsk(fileOwner, fileList, searchAttempt);
+
+    this.chat.setPending({
+      pendingId,
+      command,
+      agentId: fileOwner.id,
+      agentName: fileOwner.name,
+      kind: 'file-match',
+      sourceAgentId: requester.id,
+      sourceAgentName: requester.name,
+      collabThreadId,
+      fileTransfer: true,
+      fileHint,
+      fileMatchPending: true,
+      candidateFiles: candidates,
+      searchAttempt,
+      rejectedRelativePaths,
+      deliveryTarget,
+    });
+
+    this.chat.push({
+      threadId: requester.id,
+      senderId: requester.id,
+      senderName: formatAgentLabel(requester),
+      senderRole: requester.title?.trim() || requester.role,
+      content: askContent,
+      type: 'confirmation',
+      status: 'pending',
+      emotion: '기본',
+      confirmation: {
+        pendingId,
+        command,
+        agentId: fileOwner.id,
+        agentName: fileOwner.name,
+        kind: 'file-match',
+        sourceAgentId: requester.id,
+        sourceAgentName: requester.name,
+      },
+    });
+    CeoChatPanel.refreshThread(requester.id);
+
+    return {
+      taskId: '',
+      success: true,
+      message: 'Awaiting CEO file match confirmation',
+    };
+  }
+
+  private async rejectFileMatchAndReSearch(pending: {
+    agentId: string;
+    agentName: string;
+    command: string;
+    sourceAgentId?: string;
+    sourceAgentName?: string;
+    collabThreadId?: string;
+    fileHint?: string;
+    candidateFiles?: Array<{ fileName: string; fromRelative: string; fromAbsolute: string }>;
+    searchAttempt?: number;
+    rejectedRelativePaths?: string[];
+    deliveryTarget?: 'owner' | 'agent';
+  }): Promise<void> {
+    const requester = pending.sourceAgentId
+      ? this.agentManager.get(pending.sourceAgentId)
+      : null;
+    const fileOwner = this.agentManager.get(pending.agentId);
+    if (!requester || !fileOwner) return;
+
+    const rejected = [
+      ...(pending.rejectedRelativePaths ?? []),
+      ...(pending.candidateFiles ?? []).map((f) => f.fromRelative),
+    ];
+    const nextAttempt = (pending.searchAttempt ?? 0) + 1;
+
+    this.agentSay(
+      requester,
+      '알겠어요, 다른 파일을 다시 찾아볼게요.',
+      'agent',
+      'working',
+      undefined,
+      true
+    );
+
+    if (nextAttempt > 3) {
+      this.agentSay(
+        requester,
+        '사장님, 다른 파일을 찾지 못했어요. 파일 이름이나 과목을 더 알려주시면 다시 찾아볼게요.',
+        'agent',
+        'failed',
+        undefined,
+        true
+      );
+      return;
+    }
+
+    const collabThreadId =
+      pending.collabThreadId ??
+      (pending.deliveryTarget === 'owner'
+        ? requester.id
+        : buildCollabThreadId(requester.id, fileOwner.id));
+
+    await this.offerFileMatchConfirmation(
+      requester,
+      fileOwner,
+      pending.fileHint ?? pending.command,
+      pending.command,
+      collabThreadId,
+      nextAttempt,
+      rejected,
+      undefined,
+      { deliveryTarget: pending.deliveryTarget ?? 'agent' }
+    );
+  }
+
+  private async executeConfirmedFileMatch(pending: {
+    agentId: string;
+    agentName: string;
+    command: string;
+    sourceAgentId?: string;
+    sourceAgentName?: string;
+    collabThreadId?: string;
+    fileHint?: string;
+    candidateFiles?: Array<{ fileName: string; fromRelative: string; fromAbsolute: string }>;
+    deliveryTarget?: 'owner' | 'agent';
+  }): Promise<OrchestratorResult> {
+    const requester = pending.sourceAgentId
+      ? this.agentManager.get(pending.sourceAgentId)
+      : null;
+    const fileOwner = this.agentManager.get(pending.agentId);
+    if (!requester || !fileOwner) {
+      return { taskId: '', success: false, message: 'Agent not found' };
+    }
+
+    const candidates = pending.candidateFiles ?? [];
+
+    if (pending.deliveryTarget === 'owner') {
+      return this.executeOwnFolderFileDelivery(fileOwner, candidates, pending.command);
+    }
+
+    return this.executeCrossAgentFileTransfer(
+      requester,
+      fileOwner,
+      pending.fileHint ?? pending.command,
+      undefined,
+      pending.command,
+      candidates
+    );
+  }
+
+  private finalizeFileDelivery(
+    agent: Agent,
+    succeeded: boolean,
+    message: string,
+    duplicateOnly = false
+  ): void {
+    this.agentClearWorking(agent);
+    this.agentManager.setStatus(agent.id, succeeded ? 'idle' : 'failed');
+
+    const report = message.trim();
+    if (report) {
+      this.chat.push({
+        threadId: agent.id,
+        senderId: agent.id,
+        senderName: formatAgentLabel(agent),
+        senderRole: agent.title?.trim() || agent.role,
+        content: report,
+        type: 'agent',
+        status: succeeded ? 'done' : 'failed',
+        emotion: succeeded ? '기본' : '슬픔',
+      });
+    }
+
+    if (succeeded) {
+      this.notifications.showInfo(
+        duplicateOnly ? `${agent.name} — 이미 사장님 폴더에 있는 파일` : `${agent.name} — 파일 전달 완료`
+      );
+    } else {
+      this.notifications.showError(`${agent.name} — 파일 전달 실패`);
+    }
+    CeoChatPanel.refreshThread(agent.id);
+  }
+
+  private async executeOwnFolderFileDelivery(
+    agent: Agent,
+    confirmedFiles: Array<{ fileName: string; fromRelative: string; fromAbsolute: string }>,
+    ceoCommand: string
+  ): Promise<OrchestratorResult> {
+    this.agentManager.setStatus(agent.id, 'working');
+
+    this.agentSay(
+      agent,
+      '사장님 확인해 주셔서 감사해요. 지금 파일을 전달할게요.',
+      'agent',
+      'done',
+      undefined,
+      true
+    );
+    CeoChatPanel.refreshThread(agent.id);
+
+    this.agentWorking(agent, '사장님 폴더로 파일 전달 중…');
+
+    const workspaceRoot = this.workspace.getWorkspaceRoot() ?? undefined;
+    const transfer = await copySelectedFilesToOwner(
+      this.agentFolders,
+      agent,
+      confirmedFiles,
+      workspaceRoot
+    );
+
+    const pathReport = formatTransferredPaths(transfer.copied);
+    const hasDuplicates = (transfer.skippedDuplicates?.length ?? 0) > 0;
+    const succeeded = transfer.copied.length > 0 || hasDuplicates;
+    const completionMessage = succeeded
+      ? buildOwnerFolderDeliveryMessage(transfer)
+      : `사장님, 죄송해요. 파일 전달에 실패했어요.\n\n${transfer.message}`;
+
+    this.finalizeFileDelivery(agent, succeeded, completionMessage, hasDuplicates && transfer.copied.length === 0);
+
+    if (transfer.copied.length > 0) {
+      this.memory.appendAgentMemory(
+        agent.id,
+        `[파일전달→사장님] ${ceoCommand.slice(0, 80)}\n${pathReport}`
+      );
+    } else if (hasDuplicates) {
+      this.memory.appendAgentMemory(
+        agent.id,
+        `[파일전달→사장님·중복스킵] ${ceoCommand.slice(0, 80)}`
+      );
+    }
+
+    return {
+      taskId: '',
+      success: succeeded,
+      message: transfer.message,
+    };
+  }
+
+  private async executeCrossAgentFileTransfer(
+    requester: Agent,
+    fileOwner: Agent,
+    fileHint: string,
+    collabRequest: string | undefined,
+    ceoCommand: string,
+    confirmedFiles?: Array<{ fileName: string; fromRelative: string; fromAbsolute: string }>
+  ): Promise<OrchestratorResult> {
+    const collabThreadId = buildCollabThreadId(requester.id, fileOwner.id);
+
+    this.agentSay(
+      requester,
+      '사장님 확인해 주셔서 감사해요. 파일을 전달할게요.',
+      'agent',
+      'done',
+      undefined,
+      true
+    );
+
+    let requestMessage = collabRequest?.trim();
+    if (!requestMessage) {
+      const dialogue = await generateFileTransferDialogue(
+        this.providers,
+        requester,
+        fileOwner,
+        ceoCommand,
+        fileHint,
+        ceoCommand
+      );
+      requestMessage = dialogue.collabRequest;
+    }
+
+    this.chat.push({
+      threadId: collabThreadId,
+      senderId: requester.id,
+      senderName: formatAgentLabel(requester),
+      senderRole: requester.title?.trim() || requester.role,
+      content: requestMessage,
+      type: 'agent',
+      status: 'done',
+    });
+
+    this.chat.push({
+      threadId: collabThreadId,
+      senderId: fileOwner.id,
+      senderName: formatAgentLabel(fileOwner),
+      senderRole: fileOwner.title?.trim() || fileOwner.role,
+      content: buildDelegateAckMessage(fileOwner, requester),
+      type: 'agent',
+      status: 'working',
+    });
+
+    this.chat.requestOpenCollabPanel(collabThreadId, requester.id, fileOwner.id);
+    CeoChatPanel.refreshThread(collabThreadId);
+
+    const workspaceRoot = this.workspace.getWorkspaceRoot() ?? undefined;
+    const transfer = confirmedFiles
+      ? await copySelectedFiles(
+          this.agentFolders,
+          fileOwner,
+          requester,
+          confirmedFiles,
+          workspaceRoot
+        )
+      : await copySelectedFiles(
+          this.agentFolders,
+          fileOwner,
+          requester,
+          (
+            await searchFilesInAgentDb(
+              this.agentFolders,
+              fileOwner,
+              fileHint,
+              workspaceRoot
+            )
+          ).files,
+          workspaceRoot
+        );
+
+    const pathReport = formatTransferredPaths(transfer.copied);
+    const succeeded = transfer.copied.length > 0;
+
+    this.chat.push({
+      threadId: collabThreadId,
+      senderId: fileOwner.id,
+      senderName: formatAgentLabel(fileOwner),
+      senderRole: fileOwner.title?.trim() || fileOwner.role,
+      content: succeeded
+        ? buildFileTransferCompleteMessage(fileOwner, requester, transfer.message)
+        : buildFileTransferFailedMessage(fileOwner, requester, transfer.message),
+      type: 'agent',
+      status: succeeded ? 'done' : 'failed',
+    });
+
+    if (succeeded) {
+      const receivedContent = `${buildFileTransferReceivedMessage(requester, fileOwner)}\n\n${transfer.message}`;
+
+      this.chat.push({
+        threadId: collabThreadId,
+        senderId: requester.id,
+        senderName: formatAgentLabel(requester),
+        senderRole: requester.title?.trim() || requester.role,
+        content: receivedContent,
+        type: 'agent',
+        status: 'done',
+      });
+
+      this.finalizeFileDelivery(
+        requester,
+        true,
+        `사장님, 파일 전달 완료했어요!\n\n${transfer.message}`
+      );
+      this.memory.appendAgentMemory(
+        requester.id,
+        `[파일교환] ${fileOwner.name} → ${requester.name}\n${pathReport}`
+      );
+    } else {
+      this.finalizeFileDelivery(
+        requester,
+        false,
+        `사장님, 죄송해요. 파일 복사에 실패했어요.\n\n${transfer.message}`
+      );
+    }
+
+    CeoChatPanel.refreshThread(collabThreadId);
+
+    return {
+      taskId: '',
+      success: transfer.copied.length > 0,
+      message: transfer.message,
+    };
+  }
+
+  private async maybeOfferAgentDelegation(source: Agent, content: string, threadId: string): Promise<void> {
+    try {
+      if (this.chat.getPending()) return;
+
+      const recentCeo = this.chat
+        .getMessages(threadId)
+        .filter((m) => m.type === 'ceo')
+        .slice(-1)[0]?.content;
+
+      const suggestion = detectDelegationSuggestion(
+        content,
+        (mention) => this.agentManager.findByMention(mention),
+        source.id,
+        recentCeo
+      );
+      if (!suggestion) return;
+
+      const { target, command } = suggestion;
+      const collabThreadId = buildCollabThreadId(source.id, target.id);
+      const pendingId = generateId();
+
+      this.chat.setPending({
+        pendingId,
+        command,
+        agentId: target.id,
+        agentName: target.name,
+        kind: 'agent-collab',
+        sourceAgentId: source.id,
+        sourceAgentName: source.name,
+        collabThreadId,
+      });
+
+      const askContent = buildDelegatePermissionAsk(source, target, command, '사장님');
+
+      this.chat.push({
+        threadId: source.id,
+        senderId: source.id,
+        senderName: formatAgentLabel(source),
+        senderRole: source.title?.trim() || source.role,
+        content: askContent,
+        type: 'confirmation',
+        status: 'pending',
+        emotion: '기본',
+        confirmation: {
+          pendingId,
+          command,
+          agentId: target.id,
+          agentName: target.name,
+          kind: 'agent-collab',
+          sourceAgentId: source.id,
+          sourceAgentName: source.name,
+        },
+      });
+      CeoChatPanel.refreshThread(source.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('[AgentCompany] maybeOfferAgentDelegation failed:', message);
+    }
+  }
+
+  private buildEmotionContext(threadId: string, latestCeoMessage?: string): {
+    ceoMessage?: string;
+    recentCeoMessages?: string[];
+  } {
+    const recentCeo = this.chat
+      .getMessages(threadId)
+      .filter((m) => m.type === 'ceo')
+      .slice(-4)
+      .map((m) => m.content);
+
+    const ceoMessage = latestCeoMessage ?? recentCeo[recentCeo.length - 1];
+    const recentCeoMessages =
+      latestCeoMessage && recentCeo[recentCeo.length - 1] !== latestCeoMessage
+        ? [...recentCeo.slice(-3), latestCeoMessage]
+        : recentCeo;
+
+    return { ceoMessage, recentCeoMessages };
+  }
+
+  private async gatherProjectContext(taskTitle: string): Promise<string> {
+    const keywords = taskTitle
+      .replace(/\[.*?\]/g, '')
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+      .slice(0, 3);
+
+    const lines: string[] = [];
+    for (const keyword of keywords) {
+      const hits = await this.workspace.searchProject(keyword, 5);
+      for (const hit of hits) {
+        lines.push(`${hit.file}:${hit.line} — ${hit.text}`);
+      }
+    }
+
+    if (lines.length === 0) {
+      const root = this.workspace.getWorkspaceRoot();
+      const pkg = root ? await this.workspace.readFile('package.json') : null;
+      if (pkg) lines.push('package.json found in workspace');
+    }
+
+    return lines.slice(0, 15).join('\n') || 'No relevant files found';
+  }
+}

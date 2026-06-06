@@ -1,0 +1,47 @@
+[
+    {
+        "sceneId": 1,
+        "durationSec": 3,
+        "visual": "현대적인 도시 모습 위로 공상과학 영화 같은 AI 장면 연출",
+        "narration": "당신이 몰랐던 AI의 놀라운 발견!",
+        "imagePrompt": "modern city with sci-fi elements, AI visuals overlay",
+        "videoPrompt": "urban landscape with futuristic AI animations",
+        "sfx": "mysterious intro sound"
+    },
+    {
+        "sceneId": 2,
+        "durationSec": 12,
+        "visual": "AI 로봇이 사람과 함께 일하는 장면",
+        "narration": "AI가 이미 우리의 일상 속 깊숙이 자리하고 있다는 사실, 알고 계셨나요?",
+        "imagePrompt": "AI robots working alongside humans in everyday settings",
+        "videoPrompt": "scenes of AI integration in daily life activities",
+        "sfx": "soft background tech music"
+    },
+    {
+        "sceneId": 3,
+        "durationSec": 15,
+        "visual": "AI 테크놀로지가 의료, 교육, 산업에서 사용되는 장면들 스냅샷",
+        "narration": "의료, 교육, 심지어 우리의 휴대폰 속 AI까지, 어떻게 모든 것을 혁신하고 있는지",
+        "imagePrompt": "AI technology in healthcare, education, and industry snapshots",
+        "videoPrompt": "montage of AI application in various fields",
+        "sfx": "inspiring tech theme"
+    },
+    {
+        "sceneId": 4,
+        "durationSec": 15,
+        "visual": "미래의 AI 기술로 변화된 멋진 도시 전망",
+        "narration": "미래에는 AI가 어떻게 우리의 세상을 더욱 변화시킬까요? AI 기술의 발전은 우리의 삶을 더 편리하고 스마트하게 만들 것입니다.",
+        "imagePrompt": "futuristic cityscape transformed by AI technology",
+        "videoPrompt": "vision of future cities enhanced by AI",
+        "sfx": "uplifting futuristic sound"
+    },
+    {
+        "sceneId": 5,
+        "durationSec": 15,
+        "visual": "밝고 긍정적인 배경 위로, 구독과 알림 설정을 유도하는 장면",
+        "narration": "AI의 미래가 궁금하신가요? 구독하고 더 많은 최신 정보를 받아보세요!",
+        "imagePrompt": "positive and bright background with subscribe and notification prompts",
+        "videoPrompt": "encouraging message for subscription and notifications",
+        "sfx": "cheerful outro sound"
+    }
+]

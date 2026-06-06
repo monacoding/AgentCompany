@@ -1,0 +1,29 @@
+[
+    {
+        "sceneId": 1,
+        "durationSec": 1,
+        "visual": "화면 중심에 화려한 섬광 효과가 번쩍임",
+        "narration": "",
+        "imagePrompt": "A bright, colorful flash effect in the center of the screen",
+        "videoPrompt": "Create a short, intense flash effect for the opening scene",
+        "sfx": "강렬한 시작 사운드"
+    },
+    {
+        "sceneId": 2,
+        "durationSec": 2,
+        "visual": "빠른 줌인, 줌아웃으로 젊은 세대가 환호하는 모습",
+        "narration": "무엇이 Z세대를 움직일까?",
+        "imagePrompt": "Young people cheering energetically with fast zoom in and out",
+        "videoPrompt": "Fast-paced zoom in and out on excited young people",
+        "sfx": "빠른 비트"
+    },
+    {
+        "sceneId": 3,
+        "durationSec": 2,
+        "visual": "밝고 신나는 음악과 함께 웃고 즐기는 젊은이들",
+        "narration": "구독하고 더 많은 재미를!",
+        "imagePrompt": "Positive and vibrant scene of young people laughing and enjoying themselves",
+        "videoPrompt": "Joyful young people dancing and laughing with upbeat music",
+        "sfx": "신나는 엔딩 효과음"
+    }
+]

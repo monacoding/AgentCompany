@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "layout": {
+    "persona": "persona.md",
+    "description": "description.md",
+    "memory": "memory.md",
+    "knowledge": "knowledge/",
+    "references": "references/",
+    "outputs": {
+      "reports": "outputs/reports/",
+      "downloads": "outputs/downloads/",
+      "plans": "outputs/plans/",
+      "exports": "outputs/exports/"
+    }
+  },
+  "agents": [
+    { "slug": "secretary", "names": ["비서"], "role": "pm" },
+    { "slug": "wonyoung", "names": ["원영"], "role": "researcher" },
+    { "slug": "mona", "names": ["모나"], "role": "backend" },
+    { "slug": "alex-pm", "names": ["Alex PM"], "role": "pm" },
+    { "slug": "sam-backend", "names": ["Sam Backend"], "role": "backend" },
+    { "slug": "jordan-frontend", "names": ["Jordan Frontend"], "role": "frontend" },
+    { "slug": "casey-qa", "names": ["Casey QA"], "role": "qa" }
+  ]
+}
