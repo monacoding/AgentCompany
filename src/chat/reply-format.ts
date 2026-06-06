@@ -84,3 +84,19 @@ export function formatChatReply(content: string): string {
   const bossFormatted = formatBossReport(text);
   return bossFormatted || original;
 }
+
+/** LLM/API 오류를 사장님께 보여줄 짧은 한국어로 변환 */
+export function formatLlmError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  if (/rate_limit|Rate limit/i.test(raw)) {
+    const wait = raw.match(/try again in ([\d.]+)s/i);
+    if (wait) {
+      return `API 사용량 한도에 걸렸어요. ${Math.ceil(parseFloat(wait[1]))}초 후 다시 말씀해 주세요.`;
+    }
+    return 'API 사용량 한도에 걸렸어요. 잠시 후 다시 말씀해 주세요.';
+  }
+  if (raw.length > 180 || raw.includes('OpenAI API error')) {
+    return 'AI 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
+  }
+  return raw;
+}

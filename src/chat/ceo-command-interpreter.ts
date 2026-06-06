@@ -95,7 +95,8 @@ export async function interpretCeoCommand(
   if (!task) return fallbackInterpretation(agent, task);
 
   try {
-    const folderContext = await agentFolders.buildPromptContext(agent);
+    const folderContext = await agentFolders.buildConversationalPromptContext(agent);
+    const memorySnippet = agent.memory?.trim().slice(0, 800);
     const history = chatHistory ?? [];
 
     const response = await runWithLlmAgent(agent.id, () =>
@@ -106,7 +107,7 @@ export async function interpretCeoCommand(
             role: 'system',
             content: `You are ${agent.name}, a ${agent.role} agent (${agent.title ?? agent.role}) in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
+${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 
 사장님 지시를 **당신의 페르소나·말투·성격**에 맞게 이해하고 분류하세요.
 - 사장님을 부를 때는 항상 "사장님" (CEO, 대표님, 실명 금지)

@@ -31,6 +31,7 @@ import {
   detectCrossAgentFileRequest,
   detectDelegationSuggestion,
   formatChatReply,
+  formatLlmError,
   isContextDependentCommand,
   resolveCommandWithContext,
   generateFileTransferDialogue,
@@ -600,8 +601,8 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 
       return { taskId: '', success: true, message: 'Conversational reply sent' };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.agentSay(agent, `오류: ${message}`, 'agent', 'failed');
+      const message = formatLlmError(error);
+      this.agentSay(agent, message, 'agent', 'failed');
       return { taskId: '', success: false, message };
     } finally {
       this.agentClearWorking(agent);
