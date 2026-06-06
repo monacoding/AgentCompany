@@ -29,8 +29,11 @@ export interface KnowledgeLearnIndex {
   files: Record<string, KnowledgeFileIndex>;
 }
 
+const SYNC_THROTTLE_MS = 30_000;
+
 export class KnowledgeLearner {
   private syncInFlight = new Map<string, Promise<{ learned: string[]; skipped: string[] }>>();
+  private lastSyncAt = new Map<string, number>();
 
   constructor(
     private folders: AgentFolderEngine,
@@ -40,18 +43,30 @@ export class KnowledgeLearner {
     private credentials: CredentialsService
   ) {}
 
-  async syncAgent(agent: Agent): Promise<{ learned: string[]; skipped: string[] }> {
+  async syncAgent(
+    agent: Agent,
+    opts?: { force?: boolean }
+  ): Promise<{ learned: string[]; skipped: string[] }> {
     const slug = this.folders.resolveSlug(agent);
     const existing = this.syncInFlight.get(agent.id);
     if (existing) {
-      await existing;
+      return existing;
+    }
+
+    const last = this.lastSyncAt.get(agent.id) ?? 0;
+    if (!opts?.force && Date.now() - last < SYNC_THROTTLE_MS) {
       return { learned: [], skipped: [] };
     }
 
     const job = this.runSync(agent, slug);
     this.syncInFlight.set(agent.id, job);
     try {
-      return await job;
+      const result = await job;
+      this.lastSyncAt.set(agent.id, Date.now());
+      if (result.learned.length > 0) {
+        this.folders.invalidatePromptContext(agent.id);
+      }
+      return result;
     } finally {
       this.syncInFlight.delete(agent.id);
     }

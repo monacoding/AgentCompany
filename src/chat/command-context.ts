@@ -21,27 +21,29 @@ export function isContextDependentCommand(command: string): boolean {
     return false;
   if (FOLLOW_UP_PREFIX.test(text))
     return true;
-  if (text.length <= 40 && FOLLOW_UP_ACTION.test(text) && !TOPIC_SIGNAL.test(text)) {
+  if (text.length <= 60 && FOLLOW_UP_ACTION.test(text)) {
     return true;
   }
-  if (text.length <= 20)
+  if (text.length <= 30)
     return true;
   return false;
 }
 function pickContextSnippet(messages: CeoChatMessage[], exclude: string): string | null {
-  const ceoLines = messages.filter((m) => m.type === "ceo" && m.content.trim() && m.content.trim() !== exclude).slice(-4).map((m) => m.content.trim());
+  const ceoLines = messages.filter((m) => m.type === "ceo" && m.content.trim() && m.content.trim() !== exclude).slice(-6).map((m) => m.content.trim());
   for (let i = ceoLines.length - 1; i >= 0; i--) {
     if (TOPIC_SIGNAL.test(ceoLines[i]))
       return ceoLines[i];
   }
-  const agentLines = messages.filter((m) => m.type === "agent" && m.content.trim()).slice(-4).map(
+  const agentLines = messages.filter((m) => m.type === "agent" && m.content.trim()).slice(-6).map(
     (m) => m.content.replace(/\n\n📁[\s\S]*$/s, "").replace(/\n\n✅[\s\S]*$/s, "").trim()
   );
   for (let i = agentLines.length - 1; i >= 0; i--) {
     if (TOPIC_SIGNAL.test(agentLines[i])) {
-      return agentLines[i].slice(0, 200);
+      return agentLines[i].slice(0, 300);
     }
   }
+  const lastAgent = agentLines[agentLines.length - 1];
+  if (lastAgent) return lastAgent.slice(0, 300);
   const lastCeo = ceoLines[ceoLines.length - 1];
   return lastCeo ?? null;
 }

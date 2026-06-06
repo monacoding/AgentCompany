@@ -44,10 +44,13 @@ export const DEFAULT_PROFILE_PHOTO_NAME = '기본';
 
 const LEGACY_COMPANY_FOLDER_SLUG = 'Company';
 
+const PROMPT_CONTEXT_CACHE_MS = 60_000;
+
 export class AgentFolderEngine {
   readonly bundledRoot: string;
   private readonly companyBundledRoot: string;
   private readonly storageRoot: string;
+  private promptContextCache = new Map<string, { value: string; at: number }>();
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -647,7 +650,16 @@ ${displayTitle}
     await this.writeText(slug, AGENT_FOLDER_LAYOUT.memory, `${header}${memory.trim()}\n`);
   }
 
-  async buildPromptContext(agent: Agent): Promise<string> {
+  invalidatePromptContext(agentId: string): void {
+    this.promptContextCache.delete(agentId);
+  }
+
+  async buildPromptContext(agent: Agent, opts?: { force?: boolean }): Promise<string> {
+    const cached = this.promptContextCache.get(agent.id);
+    if (!opts?.force && cached && Date.now() - cached.at < PROMPT_CONTEXT_CACHE_MS) {
+      return cached.value;
+    }
+
     const slug = this.resolveSlug(agent);
     const parts: string[] = [];
 
@@ -666,7 +678,9 @@ ${displayTitle}
     const knowledge = await this.loadKnowledge(slug);
     if (knowledge) parts.push(`Knowledge:\n${knowledge}`);
 
-    return parts.join('\n\n');
+    const value = parts.join('\n\n');
+    this.promptContextCache.set(agent.id, { value, at: Date.now() });
+    return value;
   }
 
   async openAgentFolder(agent: Agent): Promise<void> {

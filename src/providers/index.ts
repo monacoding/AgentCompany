@@ -71,6 +71,75 @@ class OpenAIProvider extends BaseProvider {
     throw new Error('OpenAI API 요청에 실패했어요.');
   }
 
+  async chatStream(
+    messages: ChatMessage[],
+    config: ProviderConfig,
+    onChunk: (text: string) => void
+  ): Promise<ProviderResponse> {
+    const apiKey = (config.apiKey || this.credentials.getOpenAiKey()).trim();
+    if (!apiKey) {
+      throw new Error(
+        'OpenAI API Key가 없습니다. 대시보드에서 「연결 확인」 후 .env의 CHATGPT_API_KEY를 확인해 주세요.'
+      );
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${await response.text()}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      return this.chat(messages, config);
+    }
+
+    const decoder = new TextDecoder();
+    let content = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(payload) as {
+            choices?: { delta?: { content?: string } }[];
+          };
+          const delta = parsed.choices?.[0]?.delta?.content ?? '';
+          if (delta) {
+            content += delta;
+            onChunk(delta);
+          }
+        } catch {
+          /* ignore partial SSE */
+        }
+      }
+    }
+
+    return { content, model: config.model };
+  }
+
   isConfigured(): boolean {
     return !!this.credentials.getOpenAiKey();
   }
@@ -193,6 +262,33 @@ export class ProviderEngine {
     }
     try {
       return await provider.chat(messages, config);
+    } finally {
+      if (track && agentId) {
+        this.llmUsage!.end(agentId);
+      }
+    }
+  }
+
+  async chatStream(
+    type: ProviderType,
+    messages: ChatMessage[],
+    config: ProviderConfig,
+    onChunk: (text: string) => void
+  ): Promise<ProviderResponse> {
+    const agentId = getLlmAgentId();
+    const track = !!agentId && !!this.llmUsage && BILLABLE_LLM_PROVIDERS.has(type);
+
+    if (track && agentId) {
+      this.llmUsage!.begin(agentId);
+    }
+    try {
+      if (type === 'openai') {
+        const openai = this.getProvider('openai') as OpenAIProvider;
+        return await openai.chatStream(messages, config, onChunk);
+      }
+      const result = await this.chat(type, messages, config);
+      if (result.content) onChunk(result.content);
+      return result;
     } finally {
       if (track && agentId) {
         this.llmUsage!.end(agentId);

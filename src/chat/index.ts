@@ -35,6 +35,7 @@ export {
   isContextDependentCommand,
   resolveCommandWithContext,
 } from './command-context';
+export { buildChatMessagesForLlm, formatChatContextString } from './chat-context';
 export type { ResolvedCommand } from './command-context';
 export { detectCrossAgentFileRequest, detectOwnFolderFileRequest } from './cross-agent-file';
 export type { OwnFolderFileRequest } from './cross-agent-file';

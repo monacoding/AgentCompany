@@ -34,6 +34,8 @@ import {
   isContextDependentCommand,
   resolveCommandWithContext,
   generateFileTransferDialogue,
+  buildChatMessagesForLlm,
+  formatChatContextString,
   interpretCeoCommand,
   isImplementationPlanReply,
   sanitizeAcknowledgmentForPendingWork,
@@ -393,10 +395,30 @@ export class Orchestrator {
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
-    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
-    if (fileEarly) return fileEarly;
+
+    // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변
+    if (this.isConversationalCommand(command)) {
+      if (isResearchAgent(agent) && isResearchTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, false);
+      }
+      if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, false);
+      }
+      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
+        return this.executeDirectCommandFlat(agent, command, fullCommand, false);
+      }
+      return this.executeConversationalReply(agent, command, resolved);
+    }
 
     const interpretation = await this.interpretCeoCommandWithPersona(agent, command, resolved);
+
+    if (
+      interpretation.suggestedAction === 'conversation_complete' ||
+      interpretation.suggestedAction === 'needs_clarification'
+    ) {
+      return this.executeConversationalReply(agent, command, resolved);
+    }
+
     const acknowledgment = sanitizeAcknowledgmentForPendingWork(
       interpretation.acknowledgment,
       interpretation.suggestedAction
@@ -412,32 +434,13 @@ export class Orchestrator {
       );
     }
 
-    if (
-      interpretation.suggestedAction === 'conversation_complete' ||
-      interpretation.suggestedAction === 'needs_clarification'
-    ) {
-      const fileFromContext = await this.tryOfferFileTransferFromCommand(
-        agent,
-        resolved,
-        command,
-        interpretation
-      );
-      if (fileFromContext) return fileFromContext;
-
-      this.memory.logActivity(agent.id, null, `사장 지시 인지: ${command.slice(0, 80)}`);
-      return {
-        taskId: '',
-        success: true,
-        message: 'CEO command acknowledged',
-      };
-    }
-
+    const fileResolved: ResolvedCommand = {
+      ...resolved,
+      effective: interpretation.understoodTask?.trim() || resolved.effective,
+    };
     const fileLate = await this.tryOfferFileTransferFromCommand(
       agent,
-      {
-        ...resolved,
-        effective: interpretation.understoodTask?.trim() || resolved.effective,
-      },
+      fileResolved,
       command,
       interpretation
     );
@@ -445,7 +448,7 @@ export class Orchestrator {
 
     if (interpretation.suggestedAction === 'cross_agent_file') {
       const crossOnly = detectCrossAgentFileRequest(
-        resolved.effective,
+        fileResolved.effective,
         agent,
         (mention) => this.agentManager.findByMention(mention),
         this.agentManager.getAll()
@@ -455,22 +458,6 @@ export class Orchestrator {
       }
     }
 
-    if (this.isConversationalCommand(command)) {
-      if (isResearchAgent(agent) && isResearchTaskQuery(command)) {
-        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
-      }
-      if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
-        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
-      }
-      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
-        return this.executeDirectCommandFlat(agent, command, fullCommand, true);
-      }
-      return {
-        taskId: '',
-        success: true,
-        message: 'CEO command acknowledged via persona',
-      };
-    }
     if (this.orgEngine.shouldUseHierarchicalReport(agent.id)) {
       const chain = this.orgEngine.getReportingChain(agent.id);
       return this.executeHierarchicalCommand(agent, command, fullCommand, chain);
@@ -508,13 +495,16 @@ export class Orchestrator {
       : command;
 
     try {
+      await this.knowledgeLearner.syncAgent(agent);
+      const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
+        excludeLastCeo: true,
+      });
       return await interpretCeoCommand(
         this.providers,
         this.agentFolders,
-        this.knowledgeLearner,
         agent,
         taskForLlm,
-        this.buildChatContext(agent.id)
+        history
       );
     } finally {
       this.agentClearWorking(agent);
@@ -543,60 +533,66 @@ export class Orchestrator {
 
   private async executeConversationalReply(
     agent: Agent,
-    command: string
+    command: string,
+    resolvedInput?: ResolvedCommand
   ): Promise<OrchestratorResult> {
     this.chat.requestOpenPanel(agent.id, agent.name);
 
-    const resolved = this.resolveCeoCommandForAgent(agent.id, command);
-    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
-    if (fileEarly) return fileEarly;
+    const resolved = resolvedInput ?? this.resolveCeoCommandForAgent(agent.id, command);
 
     if (!this.trySetAgentWorking(agent)) {
       return { taskId: '', success: false, message: `Agent "${agent.name}" is offline` };
     }
 
-    this.agentWorking(agent, '답변 준비 중…', undefined, {
+    const workingDetail: ChatWorkingDetail = {
       pipeline: '대화',
-      step: '답변 준비',
-      summary: '사장님 메시지를 읽고 답변을 준비하고 있어요.',
+      step: '답변 생성',
+      summary: '최근 대화 맥락을 읽고 답변하고 있어요.',
       log: [
         `에이전트: ${formatAgentLabel(agent)}`,
         `역할: ${agent.title?.trim() || agent.role}`,
-        `처리: 최근 대화 맥락 + 지식 베이스를 참고해 자연스러운 답변 생성`,
         `명령: ${command.slice(0, 200)}`,
       ],
-    });
+    };
+    this.agentWorking(agent, '답변 준비 중…', undefined, workingDetail);
+
     try {
-      await this.knowledgeLearner.syncAgent(agent);
       const folderContext = await this.agentFolders.buildPromptContext(agent);
-      const chatContext = this.buildChatContext(agent.id);
+      const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
+        excludeLastCeo: true,
+      });
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
 ${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
 
 사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
-**주어 없는 후속 말**(전달해줘, 해줘 등)은 **최근 대화**와 합쳐 의도를 파악하세요. 맥락상 파일·업무 요청이면 "요청해볼게요" 같은 막연한 답 대신 구체적으로 이해했다고 답하세요.
+**주어 없는 후속 말**(전달해줘, 해줘 등)은 **이전 대화**와 합쳐 의도를 파악하세요.
 사장님이 짜증·분노·질책을 하면 밝게 넘기지 말고 사과·수정·조용히 대기 등 상황에 맞게 답하세요. 이모지는 남발하지 마세요.`;
+
+      const userLine = resolved.usedContext
+        ? `${command}\n(이전 맥락: ${resolved.contextSummary})`
+        : command;
 
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
         { role: 'system', content: systemPrompt },
+        ...history,
+        { role: 'user', content: userLine },
       ];
-      if (chatContext) {
-        messages.push({ role: 'user', content: `최근 대화:\n${chatContext}` });
-      }
-      const userLine = resolved.usedContext
-        ? `${command}\n[이전 맥락: ${resolved.contextSummary}]`
-        : command;
-      messages.push({ role: 'user', content: userLine });
 
+      let streamed = '';
       const response = await runWithLlmAgent(agent.id, () =>
-        this.providers.chat(agent.provider, messages, {
-          type: agent.provider,
-          model: agent.model,
-        })
+        this.providers.chatStream(
+          agent.provider,
+          messages,
+          { type: agent.provider, model: agent.model },
+          (chunk) => {
+            streamed += chunk;
+            this.agentWorking(agent, streamed, undefined, workingDetail);
+          }
+        )
       );
 
-      const raw = response.content.trim();
+      const raw = (response.content || streamed).trim();
       const reply = formatChatReply(raw) || raw || '네, 사장님.';
       this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', { ceoMessage: command });
       this.memory.logActivity(agent.id, null, `대화 응답: ${command.slice(0, 80)}`);
@@ -812,8 +808,10 @@ ${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
     personaAckSent = false
   ): Promise<OrchestratorResult> {
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
-    const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
-    if (fileEarly) return fileEarly;
+    if (!personaAckSent) {
+      const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
+      if (fileEarly) return fileEarly;
+    }
 
     const allAgents = this.agentManager.getAll();
     const fileReq = detectCrossAgentFileRequest(
@@ -1330,9 +1328,7 @@ Complete this task. If code/files are needed, output them in the specified file 
   }
 
   private buildChatContext(agentId: string): string {
-    const recent = this.chat.getMessages(agentId).slice(-8);
-    if (recent.length === 0) return '';
-    return recent.map((m) => `${m.senderName}: ${m.content}`).join('\n');
+    return formatChatContextString(this.chat.getMessages(agentId));
   }
 
   /** "파리는?" 같은 후속 질문 → 날씨 API용 명령으로 보강 */
