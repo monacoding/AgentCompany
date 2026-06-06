@@ -37,6 +37,11 @@ export { AgentPhotoWatcher } from './photo-watcher';
 export { AgentProfileGenerator, generateProfileFromBrief, inferRoleFromBrief } from './profile-generator';
 export type { GeneratedAgentProfile } from './profile-generator';
 export type { KnowledgeFileIndex, KnowledgeLearnIndex } from './knowledge-learner';
+export {
+  isNonLearnableAgentRelativePath,
+  isNonLearnableAgentAbsolutePath,
+  NON_LEARNABLE_AGENT_PATH_PREFIXES,
+} from './learnable-path';
 export { resolveAgentSlug, resolveBundledTemplateSlug, buildAgentFolderSlug, slugifyAgentName, AGENT_FOLDER_LAYOUT } from './slug';
 export {
   COMPANY_FOLDER_SLUG,

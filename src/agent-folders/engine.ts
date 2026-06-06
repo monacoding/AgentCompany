@@ -622,6 +622,7 @@ ${displayTitle}
   private isInternalKnowledgeFile(name: string): boolean {
     if (name.startsWith('.')) return true;
     if (name.startsWith('_')) return true;
+    if (name.startsWith('web-') && name.endsWith('.md')) return true;
     return false;
   }
 

@@ -11,7 +11,8 @@ export function commandNeedsKnowledgeLearning(command: string): boolean {
     return false;
   }
 
-  return /파일|pdf|폴더|knowledge|지식|학습|조사|리서치|크롤|다운|전달|구현|작성|만들|분석|코드|수능|기출|에이전트|outputs?|산출물|리포트|웹|검색|수집|제작|기획|대본|쇼츠|영상|api|날씨/i.test(
+  // outputs/ 산출물 조회·전달은 파일 검색으로 처리 — knowledge 폴더 재학습 불필요
+  return /knowledge|지식|학습|조사|리서치|크롤|구현|작성|만들|분석|코드|수능|기출|에이전트|웹|검색|수집|제작|기획|대본|쇼츠|영상|api|날씨/i.test(
     text
   );
 }

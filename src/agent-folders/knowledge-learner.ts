@@ -79,7 +79,7 @@ export class KnowledgeLearner {
     }
   }
 
-  /** 웹서핑·리서치 중 수집한 자료를 knowledge에 저장 후 즉시 학습 */
+  /** 웹서핑·리서치 중 수집한 자료를 outputs/reports에 저장 (학습 대상 아님) */
   async captureFromWeb(
     agent: Agent,
     params: { query: string; title: string; url: string; body: string }
@@ -104,12 +104,11 @@ _자동 수집: ${now()}_
 ${params.body.trim()}
 `;
 
-    const relPath = `${AGENT_FOLDER_LAYOUT.knowledge}/${filename}`;
-    const saved = await this.folders.writeKnowledgeFile(slug, relPath, markdown);
+    const relPath = `${AGENT_FOLDER_LAYOUT.outputReports}/${filename}`;
+    const saved = await this.folders.writeText(slug, relPath, markdown);
     if (!saved) return null;
 
-    await this.syncAgent(agent);
-    this.memory.logActivity(agent.id, null, `Knowledge captured: ${saved}`);
+    this.memory.logActivity(agent.id, null, `Research report saved: ${saved}`);
     return saved;
   }
 
@@ -199,6 +198,8 @@ ${params.body.trim()}
     if (name.startsWith('.')) return true;
     if (name.startsWith('_')) return true;
     if (SKIP_FILES.has(name)) return true;
+    // 이전 버전에서 knowledge에 저장된 웹 수집본 — outputs로 이전됨, 재학습 불필요
+    if (name.startsWith('web-') && name.endsWith('.md')) return true;
     return false;
   }
 

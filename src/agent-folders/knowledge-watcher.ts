@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AgentCompanyService } from '../services';
+import { isNonLearnableAgentAbsolutePath } from './learnable-path';
 
 const DEBOUNCE_MS = 600;
 
@@ -10,6 +11,8 @@ export class KnowledgeWatcher {
     const watcher = vscode.workspace.createFileSystemWatcher('**/agent/**/knowledge/**');
 
     const schedule = (uri: vscode.Uri) => {
+      if (isNonLearnableAgentAbsolutePath(uri.fsPath)) return;
+
       const agent = service.knowledgeLearner.findAgentByKnowledgePath(uri.fsPath);
       if (!agent) return;
 

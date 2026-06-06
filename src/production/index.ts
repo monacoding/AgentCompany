@@ -45,7 +45,6 @@ export class ProductionAgent {
       onStep?.({ step, status, message });
     };
     this.memory.logActivity(agent.id, taskId, `${agent.name} Production pipeline started: "${query}"`);
-    await this.knowledgeLearner.syncAgent(agent, { force: true });
     const folderContext = await this.agentFolders.buildPromptContext(agent);
     const slug = this.agentFolders.resolveSlug(agent);
     const datePrefix = now().slice(0, 10);
