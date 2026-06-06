@@ -232,7 +232,6 @@ export class AgentCompanyService {
     await this.ensureDeveloperAgents();
     await this.ensureFileTransferKnowledge();
     await this.ensureOwnerPathKnowledge();
-    void this.knowledgeLearner.syncAllAgents();
     this.orgEngine.ensureAgentNodes(this.agents.getAll());
     await this.settings.ensureProactiveIdeasDefaultOff();
     await this.syncOrgOwnerLabel();

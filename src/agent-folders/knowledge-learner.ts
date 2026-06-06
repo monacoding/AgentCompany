@@ -43,6 +43,7 @@ export class KnowledgeLearner {
     private credentials: CredentialsService
   ) {}
 
+  /** knowledge 파일 변경분 LLM 요약 — 업무 명령·파일 추가 시에만 호출 */
   async syncAgent(
     agent: Agent,
     opts?: { force?: boolean }

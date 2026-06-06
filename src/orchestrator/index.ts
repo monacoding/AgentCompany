@@ -31,6 +31,7 @@ import {
   detectCrossAgentFileRequest,
   detectDelegationSuggestion,
   formatChatReply,
+  commandNeedsKnowledgeLearning,
   formatLlmError,
   isContextDependentCommand,
   resolveCommandWithContext,
@@ -496,7 +497,6 @@ export class Orchestrator {
       : command;
 
     try {
-      await this.knowledgeLearner.syncAgent(agent);
       const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
         excludeLastCeo: true,
       });
@@ -1024,7 +1024,6 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
     this.taskEngine.transition(taskId, 'working');
 
     try {
-      await this.knowledgeLearner.syncAgent(agent);
       const command = this.extractCommandFromTask(task);
       const resolved = this.resolveCeoCommandForAgent(agentId, command);
 
@@ -1062,6 +1061,9 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
       }
 
       if (isResearchAgent(agent)) {
+        if (commandNeedsKnowledgeLearning(command)) {
+          await this.knowledgeLearner.syncAgent(agent, { force: true });
+        }
         await this.runResearchTask(agent, task);
         return;
       }
@@ -1072,6 +1074,9 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
       }
 
       if (isKiloAgent(agent)) {
+        if (commandNeedsKnowledgeLearning(command)) {
+          await this.knowledgeLearner.syncAgent(agent, { force: true });
+        }
         await this.runKiloTask(agent, task);
         return;
       }
@@ -1115,16 +1120,21 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
         }
       }
 
+      if (commandNeedsKnowledgeLearning(command)) {
+        await this.knowledgeLearner.syncAgent(agent, { force: true });
+      }
+
       const workspaceRoot = this.workspace.getWorkspaceRoot();
       const projectFiles = workspaceRoot
         ? await this.gatherProjectContext(task.title)
         : 'No workspace open';
 
       const folderContext = await this.agentFolders.buildPromptContext(agent);
+      const memorySnippet = agent.memory?.trim().slice(0, 2000);
 
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
+${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 ${this.externalApiExecutor.getRegistryPrompt()}
 ${buildWorkspacePrompt(agent.role)}`;
 
