@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:00:33.811Z_
+_마지막 동기화: 2026-06-06T18:08:21.077Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1359,15 +1359,6 @@ Source: horaeng.com direct PDF
 ## 경로의 중요성
 - 다른 위치를 추측하지 않고, 지정된 경로를 사용해야 함.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@687e9687]
 # 에이전트 간 파일 이동 규칙
 
@@ -1399,3 +1390,70 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 
 - 파일 이동의 투명성 및 책임성 확보
 - 불확실한 완료 표현의 제거로 실수 방지
+
+[KnowledgeLearned: owner-data-path.md@586d79be]
+# 사장님 데이터 경로
+
+## 데이터 경로 개요
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+- 에이전트는 이 경로를 기준으로 데이터에 접근해야 하며, 다른 경로를 추측해서는 안 됩니다.
+
+## 주요 파일 정보
+
+- `profile.json`: 사장님의 이름, 성격 등을 포함한 프로필 정보
+- `persona.md`: 사장님과의 대화나 보고 시 참고할 페르소나 정보
+- `photo/`: 사장님의 사진 파일들이 저장된 폴더
+
+## 유의 사항
+
+- 모든 사장님 관련 정보는 반드시 지정된 경로를 통해서만 접근 및 저장해야 합니다.
+- 데이터 접근 시 절대 경로와 워크스페이스 기준 경로의 차이를 인지하고 정확하게 사용해야 합니다.  
+- 파일 경로를 복제할 때 반복적인 내용 배제를 위해 규칙적인 구조의 이해가 필수적입니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
+# 에이전트 간 파일 이동 가이드라인
+
+## 기본 원칙
+
+- 파일 이동 작업이 **완료되기 전에는 절대로 완료 표현**을 사용하지 않습니다.
+  - 작업 예정인 항목에 대해서는 예정 표현 사용: "요청해볼게요", "여쭤볼게요", "진행할게요".
+
+- 파일 복사가 **실제로 완료된 후 반드시 경로를 포함**하여 알립니다.
+  - 예: 
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- 복사 실패 시 **정확하게 현황을 보고**합니다. 파일의 위치, 조건, 다음 조치에 대해 설명합니다.
+
+- **허위 보고 금지**: 이동이나 저장이 실제로 되지 않았다면 그런 표현을 사용하지 마십시오. 경로 제공이 안전한 보고의 증거입니다.
+
+[KnowledgeLearned: owner-data-path.md@34d70a05]
+# 사장님 데이터 경로
+
+## 기본 정보
+- 사장님의 프로필, 페르소나, 사진이 저장된 위치는 아래와 같습니다.
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+## 주요 파일
+- **`profile.json`**: 사장님의 이름, 성격 등 프로필 정보가 포함되어 있음.
+- **`persona.md`**: 사장님의 페르소나 정보를 제공. 대화나 보고 시 참고.
+- **`photo/`**: 사장님의 사진이 저장된 폴더.
+
+## 유의 사항
+- 에이전트는 사장님 관련 정보를 조회하거나 저장할 때 반드시 **위 경로**를 사용해야 함.
+- 다른 경로나 위치를 추측하지 말아야 함.

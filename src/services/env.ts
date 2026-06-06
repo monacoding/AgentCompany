@@ -153,6 +153,10 @@ export class EnvService {
     return this.get('DEFAULT_MODEL');
   }
 
+  isEnvLoaded(): boolean {
+    return this.loaded;
+  }
+
   hasEnvFile(): boolean {
     return this.loaded && this.resolvedEnvPath !== null;
   }

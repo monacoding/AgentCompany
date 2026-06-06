@@ -320,6 +320,7 @@ export class CeoChatPanel {
 
     switch (message.type) {
       case 'ready':
+        this.service.prewarmAgentChat(this.thread.threadId);
         this.syncToWebview();
         break;
 

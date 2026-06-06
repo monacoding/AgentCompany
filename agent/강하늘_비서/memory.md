@@ -1,6 +1,6 @@
 # 강하늘 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:03:40.394Z_
+_마지막 동기화: 2026-06-06T18:08:17.375Z_
 
 [[강하늘] 뭐해?]
 안녕하세요! 오늘도 변함없이 여러분의 비서로서 맡은 임무를 수행하고 있습니다. 현재 진행 중인 업무나 도움이 필요한 점이 있으시다면 언제든지 말씀해 주세요. 필요하신 자료가 있거나 프로젝트와 관련하여 궁금하신 사항이 있다면 도와드리겠습니다!
@@ -1495,15 +1495,6 @@ _마지막 동기화: 2026-06-06T18:03:40.394Z_
 
 이 정보는 에이전트 작업의 필수적인 기초 데이터로서 중요한 역할을 합니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@687e9687]
 # 에이전트 간 파일 이동 규칙
 
@@ -1569,3 +1560,64 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-강하늘/owner-data-path.md
 · role-profile.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-강하늘/role-profile.md
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
+# 에이전트 간 파일 이동
+
+## 중요한 규칙 요약
+
+- **완료 전 금지**: 파일 복사나 이동이 실제로 완료되기 전에는 "저장했어요", "옮겼어요"와 같은 완료 표현 사용 금지.
+  - 지시 후: "요청해볼게요", "진행할게요" 등 예정 표현만 사용.
+  
+- **완료 시 경로 필수**: 파일 복사가 완료된 경우에만 완료를 알리며, 저장된 파일 경로를 명확히 기록.
+  - 경로 형식:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+    
+- **실패 시 투명하게**: 파일 찾기 실패나 복사 실패 시 솔직히 알리며, 관련 정보와 조치를 제공.
+  
+- **허위 보고 금지**: 경로 없이 파일 이동 완료를 보고하는 것은 금지, 경로가 이동 완료의 증거. 
+
+- **반복 금지**: 위의 지침은 중복되지 않도록 주의하며 한 번씩만 제공. 
+
+이 규칙들은 파일 이동의 명확성과 투명성을 보장합니다. 에이전트 사이의 커뮤니케이션에서 의사소통의 정확도를 유지하기 위해서는 이 지침을 철저히 준수해야 합니다.
+
+[KnowledgeLearned: owner-data-path.md@34d70a05]
+# 사장님 데이터 경로
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르

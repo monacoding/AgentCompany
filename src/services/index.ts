@@ -232,7 +232,7 @@ export class AgentCompanyService {
     await this.ensureDeveloperAgents();
     await this.ensureFileTransferKnowledge();
     await this.ensureOwnerPathKnowledge();
-    await this.knowledgeLearner.syncAllAgents();
+    void this.knowledgeLearner.syncAllAgents();
     this.orgEngine.ensureAgentNodes(this.agents.getAll());
     await this.settings.ensureProactiveIdeasDefaultOff();
     await this.syncOrgOwnerLabel();
@@ -241,6 +241,23 @@ export class AgentCompanyService {
     );
     this.ideas.start();
     this.telegramInbound.start();
+    void this.prewarmChatContexts();
+  }
+
+  /** 대화창 첫 메시지 지연 방지 — persona·description 미리 로드 */
+  prewarmAgentChat(agentId: string): void {
+    const agent = this.agents.get(agentId);
+    if (agent && agent.status !== 'offline') {
+      void this.agentFolders.prewarmConversationalContext(agent);
+    }
+  }
+
+  private prewarmChatContexts(): void {
+    for (const agent of this.agents.getAll()) {
+      if (agent.status !== 'offline') {
+        void this.agentFolders.prewarmConversationalContext(agent);
+      }
+    }
   }
   bindDashboardRefresh(refresh: () => void): void {
     this.dashboardRefresh = refresh;
@@ -371,6 +388,7 @@ export class AgentCompanyService {
     if (options?.collabThreadId) {
       this.chat.push({ ...ceoMessage, threadId: options.collabThreadId });
     }
+    this.prewarmAgentChat(thread.threadId);
     await this.orchestrator.executeCommand(effectiveCommand);
   }
   resolveCommandThread(command: string) {
@@ -463,7 +481,9 @@ export class AgentCompanyService {
   }
   /** 대시보드 연결 표시와 채팅 LLM 호출이 같은 키를 쓰도록 보장 */
   async ensureEnvForLlm(): Promise<void> {
-    await this.env.load();
+    if (!this.env.isEnvLoaded()) {
+      await this.env.load();
+    }
   }
   async refreshLlmConnection(): Promise<LlmStatus> {
     await this.llmStatus.refreshProviderConnections(

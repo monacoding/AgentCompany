@@ -557,13 +557,14 @@ export class Orchestrator {
     this.agentWorking(agent, '답변 준비 중…', undefined, workingDetail);
 
     try {
-      const folderContext = await this.agentFolders.buildPromptContext(agent);
+      const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
       const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
         excludeLastCeo: true,
       });
+      const memorySnippet = agent.memory?.trim().slice(0, 600);
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${agent.memory ? `\nMemory:\n${agent.memory}` : ''}
+${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 
 사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
 **주어 없는 후속 말**(전달해줘, 해줘 등)은 **이전 대화**와 합쳐 의도를 파악하세요.

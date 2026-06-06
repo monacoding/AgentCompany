@@ -1,22 +1,103 @@
 # Learned: owner-data-path.md
 
-_hash: 586d79be137218b5_  
-_learned: 2026-06-06T18:00:10.184Z_
+_hash: 34d70a054b91c977_  
+_learned: 2026-06-06T18:08:16.937Z_
 
 # 사장님 데이터 경로
 
-## 사장님 데이터 위치
-- 사장님의 프로필, 페르소나, 사진은 특정 폴더에 저장되어 있습니다.
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
 - **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준 경로:** `company/owner`
+- **워크스페이스 기준:** `company/owner`
 
 ### 주요 파일
-- **profile.json:** 사장님의 이름, 성격 등의 프로필 정보
-- **persona.md:** 대화 및 보고 시 참고할 수 있는 사장님의 페르소나 정보
-- **photo/ 폴더:** 사장님의 사진이 저장되어 있는 디렉토리
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
 
-## 데이터 경로 사용 지침
-- 에이전트는 사장님과 관련된 정보를 찾거나 저장할 때 반드시 위의 경로를 사용해야 합니다.
-- 다른 경로나 추측된 위치는 사용하지 않습니다. 
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
 
-에이전트는 위의 경로를 참고하여 정확한 정보 관리가 필요합니다.
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/o
+
+...(truncated)

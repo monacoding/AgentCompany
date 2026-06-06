@@ -45,12 +45,14 @@ export const DEFAULT_PROFILE_PHOTO_NAME = '기본';
 const LEGACY_COMPANY_FOLDER_SLUG = 'Company';
 
 const PROMPT_CONTEXT_CACHE_MS = 60_000;
+const CONVERSATIONAL_CONTEXT_CACHE_MS = 300_000;
 
 export class AgentFolderEngine {
   readonly bundledRoot: string;
   private readonly companyBundledRoot: string;
   private readonly storageRoot: string;
   private promptContextCache = new Map<string, { value: string; at: number }>();
+  private conversationalContextCache = new Map<string, { value: string; at: number }>();
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -652,6 +654,32 @@ ${displayTitle}
 
   invalidatePromptContext(agentId: string): void {
     this.promptContextCache.delete(agentId);
+    this.conversationalContextCache.delete(agentId);
+  }
+
+  /** 일상 대화용 — persona·description만 (knowledge/회사/사장 블록 생략) */
+  async buildConversationalPromptContext(agent: Agent): Promise<string> {
+    const cached = this.conversationalContextCache.get(agent.id);
+    if (cached && Date.now() - cached.at < CONVERSATIONAL_CONTEXT_CACHE_MS) {
+      return cached.value;
+    }
+
+    const slug = this.resolveSlug(agent);
+    const parts: string[] = [];
+
+    const persona = await this.loadPersona(slug);
+    if (persona) parts.push(`Persona:\n${persona.slice(0, 1200)}`);
+
+    const description = await this.loadDescription(slug);
+    if (description) parts.push(`Description:\n${description.slice(0, 800)}`);
+
+    const value = parts.join('\n\n');
+    this.conversationalContextCache.set(agent.id, { value, at: Date.now() });
+    return value;
+  }
+
+  async prewarmConversationalContext(agent: Agent): Promise<void> {
+    await this.buildConversationalPromptContext(agent);
   }
 
   async buildPromptContext(agent: Agent, opts?: { force?: boolean }): Promise<string> {
