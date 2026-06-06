@@ -1490,6 +1490,9 @@ Complete this task. If code/files are needed, output them in the specified file 
         ? detectChatEmotion(text, status, this.buildEmotionContext(threadId, emotionContext?.ceoMessage))
         : undefined;
 
+    const tokenUsage =
+      type === 'agent' && agent?.id ? this.providers.takeTokenUsage(agent.id) : undefined;
+
     const message: Omit<CeoChatMessage, 'id' | 'timestamp'> = {
       threadId,
       senderId: agent?.id ?? null,
@@ -1499,6 +1502,7 @@ Complete this task. If code/files are needed, output them in the specified file 
       type,
       status,
       emotion,
+      ...(tokenUsage ? { tokenUsage } : {}),
     };
 
     this.chat.push(message);

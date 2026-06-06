@@ -9,6 +9,7 @@ export type {
   ChatWorkStreamLine,
   PendingDelegate,
   CeoChatMessageType,
+  ChatTokenUsage,
 } from './types';
 export {
   agentFirstName,

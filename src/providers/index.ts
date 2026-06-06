@@ -93,6 +93,7 @@ class OpenAIProvider extends BaseProvider {
         model: config.model,
         messages,
         stream: true,
+        stream_options: { include_usage: true },
       }),
     });
 
@@ -108,6 +109,7 @@ class OpenAIProvider extends BaseProvider {
     const decoder = new TextDecoder();
     let content = '';
     let buffer = '';
+    let streamUsage: { prompt_tokens: number; completion_tokens: number } | undefined;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -125,7 +127,11 @@ class OpenAIProvider extends BaseProvider {
         try {
           const parsed = JSON.parse(payload) as {
             choices?: { delta?: { content?: string } }[];
+            usage?: { prompt_tokens: number; completion_tokens: number };
           };
+          if (parsed.usage) {
+            streamUsage = parsed.usage;
+          }
           const delta = parsed.choices?.[0]?.delta?.content ?? '';
           if (delta) {
             content += delta;
@@ -137,7 +143,16 @@ class OpenAIProvider extends BaseProvider {
       }
     }
 
-    return { content, model: config.model };
+    return {
+      content,
+      model: config.model,
+      usage: streamUsage
+        ? {
+            promptTokens: streamUsage.prompt_tokens,
+            completionTokens: streamUsage.completion_tokens,
+          }
+        : undefined,
+    };
   }
 
   isConfigured(): boolean {
@@ -261,7 +276,11 @@ export class ProviderEngine {
       this.llmUsage!.begin(agentId);
     }
     try {
-      return await provider.chat(messages, config);
+      const result = await provider.chat(messages, config);
+      if (track && agentId && result.usage) {
+        this.llmUsage!.recordTokens(agentId, result.usage);
+      }
+      return result;
     } finally {
       if (track && agentId) {
         this.llmUsage!.end(agentId);
@@ -282,18 +301,28 @@ export class ProviderEngine {
       this.llmUsage!.begin(agentId);
     }
     try {
+      let result: ProviderResponse;
       if (type === 'openai') {
         const openai = this.getProvider('openai') as OpenAIProvider;
-        return await openai.chatStream(messages, config, onChunk);
+        result = await openai.chatStream(messages, config, onChunk);
+      } else {
+        const provider = this.getProvider(type);
+        result = await provider.chat(messages, config);
+        if (result.content) onChunk(result.content);
       }
-      const result = await this.chat(type, messages, config);
-      if (result.content) onChunk(result.content);
+      if (track && agentId && result.usage) {
+        this.llmUsage!.recordTokens(agentId, result.usage);
+      }
       return result;
     } finally {
       if (track && agentId) {
         this.llmUsage!.end(agentId);
       }
     }
+  }
+
+  takeTokenUsage(agentId: string) {
+    return this.llmUsage?.takeTokens(agentId);
   }
 
   listProviders(): { type: ProviderType; configured: boolean }[] {

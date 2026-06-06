@@ -1,6 +1,6 @@
 # 강하늘 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:08:17.375Z_
+_마지막 동기화: 2026-06-06T18:14:48.093Z_
 
 [[강하늘] 뭐해?]
 안녕하세요! 오늘도 변함없이 여러분의 비서로서 맡은 임무를 수행하고 있습니다. 현재 진행 중인 업무나 도움이 필요한 점이 있으시다면 언제든지 말씀해 주세요. 필요하신 자료가 있거나 프로젝트와 관련하여 궁금하신 사항이 있다면 도와드리겠습니다!
@@ -1561,15 +1561,6 @@ _마지막 동기화: 2026-06-06T18:08:17.375Z_
 · role-profile.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-강하늘/role-profile.md
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
 # 에이전트 간 파일 이동
 
@@ -1621,3 +1612,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 ### 주요 파일
 - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
 - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

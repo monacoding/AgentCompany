@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:07:59.843Z_
+_마지막 동기화: 2026-06-06T18:14:47.601Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1447,15 +1447,6 @@ _마지막 동기화: 2026-06-06T18:07:59.843Z_
 - 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **항상 해당 경로**를 사용해야 합니다.
 - 다른 위치로의 경로 변경이나 추측은 허용되지 않습니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
 # 에이전트 간 파일 이동
 
@@ -1509,3 +1500,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - 다른 위치를 추측하거나 사용하지 않음
 
 이 경로는 에이전트의 사장님 데이터 처리에 필수적입니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

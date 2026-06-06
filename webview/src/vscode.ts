@@ -183,6 +183,12 @@ export interface CeoChatConfirmation {
   sourceAgentName?: string;
 }
 
+export interface ChatTokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 export interface CeoChatMessage {
   id: string;
   threadId: string;
@@ -195,6 +201,7 @@ export interface CeoChatMessage {
   emotion?: string;
   timestamp: string;
   confirmation?: CeoChatConfirmation;
+  tokenUsage?: ChatTokenUsage;
 }
 
 /** 작업 중 말풍선 클릭 시 표시할 상세 정보 */

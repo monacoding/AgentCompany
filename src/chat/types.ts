@@ -1,5 +1,11 @@
 export type CeoChatMessageType = 'ceo' | 'agent' | 'system' | 'confirmation';
 
+export interface ChatTokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 export type DelegateConfirmationKind = 'secretary' | 'agent-collab' | 'file-match';
 
 export interface CeoChatConfirmation {
@@ -26,6 +32,8 @@ export interface CeoChatMessage {
   emotion?: string;
   timestamp: string;
   confirmation?: CeoChatConfirmation;
+  /** 해당 말풍선 생성에 사용된 LLM 토큰 (에이전트 응답만) */
+  tokenUsage?: ChatTokenUsage;
 }
 
 export interface PendingDelegate {

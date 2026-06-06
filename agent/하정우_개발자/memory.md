@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:08:46.666Z_
+_마지막 동기화: 2026-06-06T18:14:47.977Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -1481,15 +1481,6 @@ Files modified: 2/2
 
 이 문서는 사장님 데이터를 관리하는 데 필수적인 경로 정보를 제공합니다. 에이전트는 데이터를 항상 지정된 경로에서 사용해야 합니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
 # 에이전트 간 파일 이동
 
@@ -1539,3 +1530,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - 다른 경로를 **추측하거나 사용하지 않음** 
 
 해당 데이터를 위해 반드시 위의 경로를 사용하여 액세스해야 합니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

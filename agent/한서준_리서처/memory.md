@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:08:21.077Z_
+_마지막 동기화: 2026-06-06T18:14:47.933Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1412,15 +1412,6 @@ Source: horaeng.com direct PDF
 - 데이터 접근 시 절대 경로와 워크스페이스 기준 경로의 차이를 인지하고 정확하게 사용해야 합니다.  
 - 파일 경로를 복제할 때 반복적인 내용 배제를 위해 규칙적인 구조의 이해가 필수적입니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@ab55964a]
 # 에이전트 간 파일 이동 가이드라인
 
@@ -1457,3 +1448,97 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 ## 유의 사항
 - 에이전트는 사장님 관련 정보를 조회하거나 저장할 때 반드시 **위 경로**를 사용해야 함.
 - 다른 경로나 위치를 추측하지 말아야 함.
+
+[KnowledgeLearned: 2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md@9687f3f7]
+# Research Report
+
+**Query:** 2022년도 수능 문제 인터넷 교육과정평가원 사이트에서 찾아서다운 받아 주라  
+**Date:** 2026-06-06  
+**Agent:** 원영 (Research / WebCrawler)  
+**Engine:** Crawl4AI-inspired pipeline
+
+---
+
+## Summary
+
+✅ PDF 4개 다운로드 완료
+
+1. `agent/한서준_리서처/outputs/downloads/2022학년도-대학수학능력시험-국어-문제.pdf` (3.7 MB)
+2. `agent/한서준_리서처/outputs/downloads/2022학년도-대학수학능력시험-수학-문제.pdf` (991.3 KB)
+3. `agent/한서준_리서처/outputs/downloads/2022학년도-대학수학능력시험-영어-문제.pdf` (1.7 MB)
+4. `agent/한서준_리서처/outputs/downloads/2022학년도-대학수학능력시험-한국사-문제.pdf` (2.7 MB)
+
+소스: 호랭이닷컴 직링크 (학습된 Download Knowledge)
+agent/wonyoung/outputs/downloads/ 폴더에서 확인하세요.
+
+---
+
+## Downloaded Files
+
+1. **2022학년도-대학수학능력시험-국어-문제.pdf** (`agent/한서준_리서처/outputs/downloads/2022학년도-대학수학능력시험-국어-문제.pdf`, 3.7 MB)
+   - Source: https://horaeng.com/wp-content/uploads/2022%ED%95%99%EB%85%84%EB%8F%84-%EB%8C%80%ED%95%99%EC%88%98%ED%95%99%EB%8A%A5%EB%A0%A5%EC%8B%9C%ED%97%98-%EA%B5%AD%EC%96%B
+
+[KnowledgeLearned: 2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md@836bff83]
+# Research Report
+
+**Query:** 이전 사장 지시 후속 작업: 한서준 이 찾은 수능 문제 pdf 파일이 한서준 폴더에 있어요 해당 문서중 국어 영역만 한서준한테 달라고 하고, 해당 파일을 윤하씨 폴더에 저장해주세요  
+**Date:** 2026-06-06  
+**Agent:** 원영 (Research / WebCrawler)  
+**Engine:** Crawl4AI-inspired pipeline
+
+---
+
+## Summary
+
+✅ PDF 다운로드 완료
+
+- 파일: `agent/한서준_리서처/outputs/downloads/2024학년도-대학수학능력시험-국어-문제.pdf`
+- 크기: 2.8 MB
+- URL: https://horaeng.com/wp-content/uploads/2024%ED%95%99%EB%85%84%EB%8F%84-%EB%8C%80%ED%95%99%EC%88%98%ED%95%99%EB%8A%A5%EB%A0%A5%EC%8B%9C%ED%97%98-%EA%B5%AD%EC%96%B4-%EB%AC%B8%EC%A0%9C.pdf
+
+agent/wonyoung/outputs/downloads/ 폴더에서 확인하세요.
+
+---
+
+## Downloaded Files
+
+1. **2024학년도-대학수학능력시험-국어-문제.pdf** (`agent/한서준_리서처/outputs/downloads/2024학년도-대학수학능력시험-국어-문제.pdf`, 2.8 MB)
+   - Source: https://horaeng.com/wp-content/uploads/2024%ED%95%99%EB%85%84%EB%8F%84-%EB%8C%80%ED%95%99%EC%88%98%ED%95%99%EB%8A%A5%EB%A0%A5%EC%8B%9C%ED%97%98-%EA%B5%AD%EC%96%B4-%EB%
+
+[KnowledgeLearned: 2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md@380dcefa]
+# Research Report
+
+**Query:** 인터넷 교육과정평가원 사이트에서 2021년도 수능 문제 pdf 로 다운받아줘  
+**Date:** 2026-06-06  
+**Agent:** 원영 (Research / WebCrawler)  
+**Engine:** Crawl4AI-inspired pipeline
+
+---
+
+## Summary
+
+✅ PDF 3개 다운로드 완료
+
+1. `agent/한서준_리서처/outputs/downloads/2021학년도-대학수학능력시험-국어-문제.pdf` (2.5 MB)
+2. `agent/한서준_리서처/outputs/downloads/2021학년도-대학수학능력시험-영어-문제.pdf` (5.9 MB)
+3. `agent/한서준_리서처/outputs/downloads/2021학년도-대학수학능력시험-한국사-문제.pdf` (1.2 MB)
+
+소스: 호랭이닷컴 직링크 (학습된 Download Knowledge)
+agent/wonyoung/outputs/downloads/ 폴더에서 확인하세요.
+
+---
+
+## Downloaded Files
+
+1. **2021학년도-대학수학능력시험-국어-문제.pdf** (`agent/한서준_리서처/outputs/downloads/2021학년도-대학수학능력시험-국어-문제.pdf`, 2.5 MB)
+   - Source: https://horaeng.com/wp-content/uploads/2021%ED%95%99%EB%85%84%EB%8F%84-%EB%8C%80%ED%95%99%EC%88%98%ED%95%99%EB%8A%A5%EB%A0%A5%EC%8B%9C%ED%97%98-%EA%B5%AD%EC%96%B4-%EB%AC%B8%EC%A0%9C.pdf
+2. **2021학년도-대학수학능력시험-영어-문제.pdf** (`agent/한서준_리서처/
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

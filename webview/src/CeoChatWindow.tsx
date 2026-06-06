@@ -7,10 +7,25 @@ import {
   Agent,
   AgentChatThreadConfig,
   ChatWorkingState,
+  ChatTokenUsage,
   CeoChatMessage,
   CollabParticipant,
   postMessage,
 } from './vscode';
+
+function formatTokenCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+function formatTokenUsageLabel(usage: ChatTokenUsage): string {
+  return `${formatTokenCount(usage.totalTokens)} 토큰`;
+}
+
+function formatTokenUsageTitle(usage: ChatTokenUsage): string {
+  return `입력 ${formatTokenCount(usage.promptTokens)} · 출력 ${formatTokenCount(usage.completionTokens)}`;
+}
 
 type CollabAlign = 'left' | 'right';
 
@@ -330,6 +345,14 @@ function ChatBubble({
         {isWorking && <span className="chat-status-dot" />}
       </div>
       <div className="chat-bubble-body">{message.content}</div>
+      {isAgent && message.tokenUsage && message.tokenUsage.totalTokens > 0 && (
+        <div
+          className="chat-bubble-token-usage"
+          title={formatTokenUsageTitle(message.tokenUsage)}
+        >
+          {formatTokenUsageLabel(message.tokenUsage)}
+        </div>
+      )}
       {message.type === 'confirmation' && message.confirmation && message.status === 'pending' && (
         <div className="chat-confirm-actions">
           <button type="button" className="btn-sm success" onClick={() => onConfirm(message.confirmation!.pendingId)}>
