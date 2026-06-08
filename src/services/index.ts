@@ -24,7 +24,18 @@ import { Database } from '../database';
 import { ExternalApiRegistrySync } from '../external-api/registry';
 import { IdeaEngine } from '../ideas/idea-engine';
 import { IdeaService } from '../ideas/idea-service';
-import { isHaJeongWooAgent, isKiloAgent, MONA_AGENT, stripKiloCapabilities } from '../kilo';
+import {
+  CLINE_KNOWLEDGE_FILENAME,
+  CLINE_KNOWLEDGE_MARKER,
+  ClineCliService,
+  getClineKnowledgeBody,
+  getClineKnowledgeSummary,
+  getClinerulesBody,
+  getClineCapabilities,
+  isClineAgent,
+  isHaJeongWooAgent,
+  stripLegacyKiloCapabilities,
+} from '../cline';
 import {
   buildPlatformStructurePromptBlock,
   getPlatformStructureBody,
@@ -33,7 +44,6 @@ import {
   PLATFORM_STRUCTURE_MARKER,
   resolvePlatformPaths,
 } from '../platform';
-import { KiloCliService } from '../kilo/services/kilo-cli-service';
 import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
 import { TelegramInboundPoller } from '../notifications/telegram-inbound';
@@ -103,7 +113,7 @@ export class AgentCompanyService {
   readonly orchestrator: Orchestrator;
   readonly settings: SettingsService;
   readonly crawl4aiDocker: Crawl4AiDockerService;
-  readonly kiloCli: KiloCliService;
+  readonly clineCli: ClineCliService;
   readonly chat: ChatService;
   readonly externalApis: ExternalApiService;
   readonly agentFolders: AgentFolderEngine;
@@ -162,7 +172,7 @@ export class AgentCompanyService {
     );
     this.notifications = new NotificationEngine();
     this.crawl4aiDocker = new Crawl4AiDockerService(this.workspace);
-    this.kiloCli = new KiloCliService(this.workspace);
+    this.clineCli = new ClineCliService(this.workspace);
     this.chat = new ChatService();
     this.teams = new TeamEngine(
       this.db,
@@ -211,10 +221,6 @@ export class AgentCompanyService {
     );
     this.externalApis = new ExternalApiService(context);
     this.apiRegistrySync = new ExternalApiRegistrySync(this.externalApis, this.agents, this.memory);
-    const kiloTemplatePath = path.join(
-      context.extensionPath,
-      'src/team/templates/download_suneung_pdfs.py'
-    );
     this.orchestrator = new Orchestrator(
       this.agents,
       this.tasks,
@@ -231,12 +237,11 @@ export class AgentCompanyService {
       this.llmStatus,
       this.teams
     );
-    this.orchestrator.setKiloTemplatePath(kiloTemplatePath);
     this.teams.setRunContext({
       workerDeps: {
         workspace: this.workspace,
         research: this.orchestrator.getResearchAgent(),
-        kilo: this.orchestrator.getKiloAgent(),
+        cline: this.orchestrator.getClineAgent(),
       },
       templateScriptPath: path.join(
         context.extensionPath,
@@ -266,12 +271,9 @@ export class AgentCompanyService {
     if (this.agents.getAll().length === 0) {
       await this.seedDefaultAgents();
     } else {
-      await Promise.all([
-        this.ensureWonyoungAgent(),
-        this.ensureMonaAgent(),
-        this.ensureSecretaryAgent()
-      ]);
+      await Promise.all([this.ensureWonyoungAgent(), this.ensureSecretaryAgent()]);
     }
+    this.removeMonaAgent();
     await this.agentFolders.initialize(this.agents.getAll());
     await this.ensureWonyoungDownloadKnowledge();
     await this.ensureSecretaryKnowledge();
@@ -289,6 +291,7 @@ export class AgentCompanyService {
     await this.ensureOwnerPathKnowledge();
     await this.ensureProjectPlaybookKnowledge();
     await this.ensurePlatformStructureKnowledge();
+    await this.ensureClineKnowledge();
     this.orgEngine.ensureAgentNodes(this.agents.getAll());
     await this.settings.ensureProactiveIdeasDefaultOff();
     await this.syncOrgOwnerLabel();
@@ -341,7 +344,7 @@ export class AgentCompanyService {
         title = "\uBE44\uC11C";
       } else if (agent.capabilities?.includes("web-crawl") || agent.name.includes("\uC6D0\uC601")) {
         title = "\uB9AC\uC11C\uCC98";
-      } else if (agent.capabilities?.includes("kilo-code") || agent.name.includes("\uBAA8\uB098")) {
+      } else if (agent.capabilities?.includes("cline-code") || isHaJeongWooAgent(agent)) {
         title = "\uAC1C\uBC1C\uC790";
       } else {
         const roleLabel = AGENT_ROLES.find((r) => r.value === agent.role)?.label;
@@ -640,16 +643,17 @@ export class AgentCompanyService {
     if (isResearchAgent(activated)) {
       await this.startCrawl4AiDocker(activated);
     }
-    if (isKiloAgent(activated)) {
-      await this.checkKiloCli(activated);
+    if (isClineAgent(activated)) {
+      await this.checkClineCli(activated);
     }
     return activated;
   }
-  private async checkKiloCli(agent?: Agent): Promise<void> {
-    const label = agent?.name ?? "\uBAA8\uB098";
-    this.notifications.showInfo(`${label}: Kilo CLI \uD655\uC778 \uC911...`);
-    const result = await this.kiloCli.ensureReady();
-    this.memory.logActivity(agent?.id ?? null, null, `Kilo CLI: ${result.message}`);
+
+  private async checkClineCli(agent?: Agent): Promise<void> {
+    const label = agent?.name ?? '하정우';
+    this.notifications.showInfo(`${label}: Cline CLI 확인 중...`);
+    const result = await this.clineCli.ensureReady();
+    this.memory.logActivity(agent?.id ?? null, null, `Cline CLI: ${result.message}`);
     if (result.available) {
       this.notifications.showInfo(result.message);
     } else {
@@ -696,22 +700,13 @@ export class AgentCompanyService {
         provider: config.getDefaultProvider(),
         capabilities: WONYOUNG_AGENT.capabilities
       },
-      {
-        name: MONA_AGENT.name,
-        title: MONA_AGENT.title,
-        role: MONA_AGENT.role,
-        description: MONA_AGENT.description,
-        model: config.getDefaultModel(),
-        provider: config.getDefaultProvider(),
-        capabilities: MONA_AGENT.capabilities
-      }
     ];
     for (const input of defaults) {
       if (this.isAgentDismissed(input.name))
         continue;
       await this.agents.create(input);
     }
-    this.memory.logActivity(null, null, "Default agents seeded (\uBE44\uC11C + \uC6D0\uC601 + \uBAA8\uB098 \uD3EC\uD568)");
+    this.memory.logActivity(null, null, "Default agents seeded (\uBE44\uC11C + \uC6D0\uC601 \uD3EC\uD568)");
   }
   async ensureSecretaryAgent() {
     if (this.isAgentDismissed(SECRETARY_AGENT.name))
@@ -751,24 +746,20 @@ export class AgentCompanyService {
       this.memory.appendAgentMemory(secretary.id, getSecretaryKnowledgeSummary());
     }
   }
-  async ensureMonaAgent() {
-    if (this.isAgentDismissed(MONA_AGENT.name))
-      return;
-    const exists = this.agents.getAll().some((a) => a.name.includes("\uBAA8\uB098") || a.name === MONA_AGENT.name);
-    if (exists)
-      return;
-    const config = this.credentials;
-    await this.agents.create({
-      name: MONA_AGENT.name,
-      title: MONA_AGENT.title,
-      role: MONA_AGENT.role,
-      description: MONA_AGENT.description,
-      model: config.getDefaultModel(),
-      provider: config.getDefaultProvider(),
-      capabilities: MONA_AGENT.capabilities
-    });
-    this.memory.logActivity(null, null, "\uBAA8\uB098 Kilo Code Agent added");
+  /** DB·조직도에서 모나 에이전트 제거 */
+  removeMonaAgent(): void {
+    for (const agent of [...this.agents.getAll()]) {
+      if (!agent.name.includes('\uBAA8\uB098') && agent.name.toLowerCase() !== 'mona') continue;
+      this.db.dismissAgent('모나');
+      this.agents.delete(agent.id);
+      const org = this.orgEngine.load();
+      org.nodes = org.nodes.filter((n) => n.id !== agent.id);
+      org.edges = org.edges.filter((e) => e.fromId !== agent.id && e.toId !== agent.id);
+      this.orgEngine.save(org);
+      this.memory.logActivity(null, null, `모나 에이전트 제거 (${agent.name})`);
+    }
   }
+
   async ensureWonyoungAgent() {
     if (this.isAgentDismissed(WONYOUNG_AGENT.name))
       return;
@@ -1011,31 +1002,75 @@ ${roleSnippet}
       }
     }
   }
-  /** 개발자 에이전트 capability — 모나만 Kilo, 하정우는 Kilo 제외 */
+  /** 하정우에 Cline capability 부여, 레거시 kilo-code 제거 */
   async ensureDeveloperAgents() {
-    const kiloCaps = ["kilo-code", "code-gen", "terminal", "self-check"];
+    const clineCaps = getClineCapabilities();
     for (const agent of this.agents.getAll()) {
-      const isDev =
-        agent.role === "backend" ||
-        agent.title?.includes("\uAC1C\uBC1C") ||
-        isHaJeongWooAgent(agent) ||
-        agent.name.includes("\uBAA8\uB098");
-      if (!isDev) continue;
+      if (!isHaJeongWooAgent(agent)) continue;
 
       const caps = agent.capabilities ?? [];
+      const stripped = stripLegacyKiloCapabilities(caps);
+      const merged = [.../* @__PURE__ */ new Set([...stripped, ...clineCaps])];
       const patch: { capabilities?: string[]; title?: string } = {};
 
-      if (isHaJeongWooAgent(agent)) {
-        const stripped = stripKiloCapabilities(caps);
-        if (stripped.length !== caps.length) patch.capabilities = stripped;
-      } else {
-        const merged = [.../* @__PURE__ */ new Set([...caps, ...kiloCaps])];
-        if (merged.length !== caps.length) patch.capabilities = merged;
+      if (merged.length !== caps.length || stripped.length !== caps.length) {
+        patch.capabilities = merged;
       }
-
-      if (!agent.title?.trim()) patch.title = "\uAC1C\uBC1C\uC790";
+      if (!agent.title?.trim()) patch.title = '\uAC1C\uBC1C\uC790';
       if (Object.keys(patch).length > 0) {
         this.agents.update(agent.id, patch);
+      }
+    }
+  }
+
+  /** 하정우에 Cline 협업 knowledge + .clinerules 주입 */
+  async ensureClineKnowledge() {
+    const wsRoot = this.workspace.getWorkspaceRoot();
+    if (wsRoot) {
+      const clinerulesPath = path.join(wsRoot, '.clinerules');
+      try {
+        const existing = await fs.readFile(clinerulesPath, 'utf-8');
+        if (!existing.includes('AgentCompany')) {
+          await fs.writeFile(
+            clinerulesPath,
+            `${existing.trim()}\n\n${getClinerulesBody()}\n`,
+            'utf-8'
+          );
+        }
+      } catch {
+        await fs.writeFile(clinerulesPath, `${getClinerulesBody()}\n`, 'utf-8');
+      }
+    }
+
+    for (const agent of this.agents.getAll()) {
+      if (!isClineAgent(agent)) continue;
+
+      const slug = this.agentFolders.resolveSlug(agent);
+      const knowledgeDir = path.join(this.agentFolders.getAgentDir(slug), 'knowledge');
+      await fs.mkdir(knowledgeDir, { recursive: true });
+
+      const body = getClineKnowledgeBody(slug);
+      const summary = getClineKnowledgeSummary(slug);
+      const knowledgePath = path.join(knowledgeDir, CLINE_KNOWLEDGE_FILENAME);
+
+      try {
+        const existing = await fs.readFile(knowledgePath, 'utf-8');
+        if (!existing.includes(CLINE_KNOWLEDGE_MARKER)) {
+          await fs.writeFile(
+            knowledgePath,
+            `${existing.trim()}\n\n${body}`.trim() + '\n',
+            'utf-8'
+          );
+        }
+      } catch {
+        await fs.writeFile(knowledgePath, `${body}\n`, 'utf-8');
+      }
+
+      this.agentFolders.invalidatePromptContext(agent.id);
+
+      const memory = this.memory.getAgentMemory(agent.id);
+      if (!memory.includes(CLINE_KNOWLEDGE_MARKER)) {
+        this.memory.appendAgentMemory(agent.id, summary);
       }
     }
   }
@@ -1132,8 +1167,8 @@ ${roleSnippet}
     return true;
   }
   private recordSpecialDismissAliases(agent: Agent): void {
-    if (agent.name.includes("\uBAA8\uB098") || agent.name === MONA_AGENT.name) {
-      this.db.dismissAgent(MONA_AGENT.name);
+    if (agent.name.includes('\uBAA8\uB098') || agent.name.toLowerCase() === 'mona') {
+      this.db.dismissAgent('모나');
     }
     if (agent.name.includes("\uC6D0\uC601") || agent.name === WONYOUNG_AGENT.name) {
       this.db.dismissAgent(WONYOUNG_AGENT.name);

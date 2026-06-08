@@ -16,7 +16,7 @@ export class SelfChecker {
       [
         {
           role: 'system',
-          content: `You are Kilo self-checker. Review if the work satisfies the task. Respond JSON: {"passed":true/false,"feedback":"..."}`,
+          content: `You are ${agent.name}'s code reviewer. Review if the work satisfies the task. Respond JSON: {"passed":true/false,"feedback":"..."}`,
         },
         {
           role: 'user',

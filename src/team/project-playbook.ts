@@ -59,7 +59,7 @@ export function getPmProjectPlaybookExtension(): string {
 
 - 사장님 지시 수신 → **목표·계획·분배·에이전트** 4블록을 먼저 제시
 - **인터넷·웹 PDF 다운로드** 요청 시 knowledge/·로컬 폴더 파일 검색 **절대 금지** — 외부 수집 Project로 계획
-- @한서준 → 리서치 파이프라인 **실제 실행** / @하정우 → 스크립트·코드 **LLM 직접 작성**
+- @한서준 → 리서치 파이프라인 **실제 실행** / @하정우 → **Cline** 스크립트·코드 **실제 실행**
 - roster에 없는 인물·역할을 만들지 말 것
 - PDF/수집 업무: @한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증) 순
 - 영상/콘텐츠: @서윤아델린 + @하정우 조합 검토
@@ -80,6 +80,13 @@ export function getRoleProjectPlaybookSnippet(role: AgentRole, agent: Agent): st
     case 'backend':
     case 'frontend':
     case 'devops':
+      if (/하정우/.test(name)) {
+        return `## @${name} — Project Cline 자동화 역할
+- **Cline 엔진**으로 코드·스크립트 구현 (CLI → Internal 폴백)
+- 이전 태스크(carry_data)의 URL·fileSeq를 스크립트에 반영
+- 산출물: \`company/projects/{sessionId}/files/\` 또는 \`agent/하정우_개발자/outputs/scripts/\`
+- Python urllib/curl 등으로 실제 다운로드 후 %PDF 헤더 검증`;
+      }
       return `## @${name} — Project 자동화 역할
 - 이전 태스크(carry_data)의 URL·fileSeq를 기반으로 스크립트 구현
 - 산출물은 filepath 블록으로 \`company/projects/{sessionId}/files/\` 에 저장

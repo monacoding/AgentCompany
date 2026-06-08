@@ -36,13 +36,12 @@ export function detectPlatformInquiry(command: string): PlatformInquiryKind | nu
 
 export function isDeveloperAgent(agent: Agent): boolean {
   return (
-    agent.capabilities?.includes('kilo-code') === true ||
+    agent.capabilities?.includes('cline-code') === true ||
     agent.role === 'backend' ||
     agent.role === 'frontend' ||
     agent.role === 'devops' ||
     (agent.title?.includes('개발') ?? false) ||
-    agent.name.includes('하정우') ||
-    agent.name.includes('모나')
+    agent.name.includes('하정우')
   );
 }
 
@@ -106,7 +105,7 @@ export function getPlatformStructureBody(paths: PlatformPaths, agent: Agent): st
 - **소스:** \`${paths.extensionSrc}/\`
 - **진입점:** \`src/extension.ts\` → \`dist/extension.js\`
 - **오케스트레이터:** \`src/orchestrator/index.ts\` (CEO 명령·에이전트 실행)
-- **Kilo(코드):** \`src/kilo/\` — 모나 전용 파이프라인 (하정우 미사용)
+- **Cline(코드):** \`src/cline/\` — 하정우 개발 파이프라인
 - **리서치:** \`src/research/\` — 한서준 Crawl4AI 파이프라인
 - **Project:** \`src/team/\` — PM 협업·순차 실행
 - **채팅/명령 해석:** \`src/chat/\`
@@ -188,7 +187,7 @@ export function buildPlatformInquiryReply(
       '',
       '🏗️ 확장 소스 (수정 가능)',
       `· \`${paths.extensionSrc}/orchestrator/\` — 명령 실행`,
-      `· \`${paths.extensionSrc}/kilo/\` — 코드 파이프라인`,
+      `· \`${paths.extensionSrc}/cline/\` — 하정우 Cline 파이프라인`,
       `· \`${paths.extensionSrc}/research/\` — 리서치`,
       `· \`${paths.extensionSrc}/team/\` — Project`,
       `· \`webview/src/\` — 대시보드 UI`,

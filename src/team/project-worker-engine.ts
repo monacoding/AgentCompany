@@ -1,7 +1,7 @@
 import { AgentFolderEngine } from '../agent-folders';
 import { formatChatReply, formatResearchChatReply } from '../chat/reply-format';
 import { isExternalResourceFetchTask } from '../chat/cross-agent-file';
-import { KiloAgent, isDevTaskQuery, isKiloAgent } from '../kilo';
+import { ClineAgent, isClineAgent, isClineDevTask } from '../cline';
 import { ProviderEngine } from '../providers';
 import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research';
 import { Agent, ProjectTask } from '../types';
@@ -18,7 +18,7 @@ import {
 export interface ProjectWorkerDeps {
   workspace: WorkspaceEngine;
   research?: ResearchAgent;
-  kilo?: KiloAgent;
+  cline?: ClineAgent;
 }
 
 /** 코드·스크립트·다운로드 등 실제 프로그램 실행이 필요한 업무 */
@@ -28,7 +28,7 @@ export function needsProgramExecution(command: string, taskDescription: string):
   return (
     isExternalResourceFetchTask(text) ||
     isResearchTaskQuery(text) ||
-    isDevTaskQuery(text) ||
+    isClineDevTask(text) ||
     /구현|자동화|스크립트|실행|다운|download|python|curl|저장|수집|크롤|배포|빌드/i.test(text)
   );
 }
@@ -62,31 +62,32 @@ async function executeViaResearch(
   return output;
 }
 
-async function executeViaKilo(
+async function executeViaCline(
   agent: Agent,
   command: string,
   task: ProjectTask,
   priorContext: string,
   deps: ProjectWorkerDeps
 ): Promise<string | null> {
-  if (!deps.kilo || !isKiloAgent(agent)) return null;
-  const query = [
-    command,
-    task.description,
-    priorContext ? `이전 산출물:\n${priorContext.slice(0, 1500)}` : '',
-  ]
+  if (!deps.cline || !isClineAgent(agent)) return null;
+  const query = [command, task.description, priorContext ? `이전 산출물:\n${priorContext.slice(0, 2000)}` : '']
     .filter(Boolean)
     .join('\n\n');
 
   if (!needsProgramExecution(command, task.description)) return null;
 
-  const result = await deps.kilo.execute(query, agent, null);
+  const result = await deps.cline.execute(query, agent, null, undefined, {
+    priorContext: priorContext.slice(0, 4000),
+  });
   let output = result.output;
   if (result.terminalOutput) {
     output += `\n\n## 터미널\n${result.terminalOutput}`;
   }
   if (result.filesModified.length) {
     output += `\n\n## 수정 파일\n${result.filesModified.map((f) => `- ${f}`).join('\n')}`;
+  }
+  if (result.reportPath) {
+    output += `\n\n## 리포트\n${result.reportPath}`;
   }
   if (result.selfCheckPassed || result.output.includes('FINISHED')) {
     output += '\n\nFINISHED';
@@ -195,7 +196,7 @@ export async function executeProjectWorkerTask(
 
   let output =
     (await executeViaResearch(agent, command, task, deps)) ??
-    (await executeViaKilo(agent, command, task, priorContext, deps)) ??
+    (await executeViaCline(agent, command, task, priorContext, deps)) ??
     (await executeViaLlm(agent, command, plan, task, priorContext, providers, agentFolders, revision));
 
   let extractedFiles = extractAndSaveProjectFiles(options.companyDir, folder, output);

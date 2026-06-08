@@ -2,7 +2,7 @@
   "name": "agent-company",
   "displayName": "AgentCompany",
   "description": "AI 회사 운영 플랫폼 — Cursor/VS Code 내부에서 AI 직원을 관리하고 업무를 수행합니다.",
-  "version": "1.7.98",
+  "version": "1.8.0",
   "publisher": "agentcompany",
   "license": "MIT",
   "repository": {
@@ -164,20 +164,20 @@
           "default": 11235,
           "description": "Host port mapped to Crawl4AI container"
         },
-        "agentCompany.kiloCliCommand": {
+        "agentCompany.clineCliCommand": {
           "type": "string",
-          "default": "kilo",
-          "description": "Kilo CLI command for 모나 Kilo Code Agent (npm install -g @kilocode/cli)"
+          "default": "cline",
+          "description": "Cline CLI command for 하정우 developer agent (npm install -g cline)"
         },
-        "agentCompany.kiloAutoMode": {
+        "agentCompany.clineYoloMode": {
           "type": "boolean",
           "default": true,
-          "description": "Use --auto flag when running kilo run"
+          "description": "Use -y (headless auto-approve) when running cline for 하정우"
         },
-        "agentCompany.kiloCliAutoCheck": {
+        "agentCompany.clineCliAutoCheck": {
           "type": "boolean",
           "default": true,
-          "description": "Check Kilo CLI availability when 모나 agent is activated"
+          "description": "Check Cline CLI availability when 하정우 agent is activated"
         },
         "agentCompany.proactiveIdeasEnabled": {
           "type": "boolean",

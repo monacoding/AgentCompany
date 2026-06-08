@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T14:12:14.007Z_
+_마지막 동기화: 2026-06-08T14:20:00.363Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -2330,3 +2330,35 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[PlatformStructure v1]
+
+# AgentCompany 플랫폼 구조 (개발자 필수)
+
+당신은 **하정우(개발자)** — 이 VS Code/Cursor 확장의 **개발 담당**입니다.
+아래 경로·모듈을 **항상 정확히** 알고 있으며, 사장님 질문에 즉답하고 **src/ 코드 수정**으로 구조를 변경할 수 있습니다.
+
+## 1. 런타임 폴더 (워크스페이스)
+
+| 용도 | 상대 경로 | 절대 경로 |
+|------|-----------|-----------|
+| 에이전트 루트 | `agent/` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/agent` |
+| **내 작업 폴더** | `agent/하정우_개발자` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/agent/하정우_개발자` |
+| 내 산출물 | `agent/하정우_개발자/outputs/` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/agent/하정우_개발자/outputs` |
+| 회사 데이터 | `company/` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company` |
+| 사장님(Owner) | `company/owner/` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner` |
+| Project 산출물 | `company/projects/{세션}/` | `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/projects/` |
+
+## 2. 데이터베이스 (sql.js)
+
+- **파일:** `agentcompany.db`
+- **절대 경로:** `/Users/gimtaehyeong/Library/Application Support/Cursor/User/globalStorage/agentcompany.agent-company/agentcompany.db`
+- **엔진:** sql.js (SQLite WASM) — `src/database/index.ts`
+- **주요 테이블:** agents, tasks, team_sessions, activities, ideas
+
+## 3. 확장 소스 코드 (수정 가능)
+
+- **루트:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu`
+- **소스:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/src/`
+- **진입점:** `src/extension.ts` → `dist/extension.js`
+- **오케스트레이터:** `src/orchestrator/index.ts` (CEO 명령·에이전트 실

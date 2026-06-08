@@ -1,12 +1,12 @@
 import { ProviderEngine } from '../../providers';
 import { Agent } from '../../types';
-import { KiloMode, KiloPlan } from '../types';
+import { DevPlan, DevPlanMode } from './planner-types';
 
 export class CodePlanner {
   constructor(private providers: ProviderEngine) {}
 
-  async plan(task: string, mode: KiloMode, context: string, agent: Agent): Promise<KiloPlan> {
-    const modePrompts: Record<KiloMode, string> = {
+  async plan(task: string, mode: DevPlanMode, context: string, agent: Agent): Promise<DevPlan> {
+    const modePrompts: Record<DevPlanMode, string> = {
       architect: 'Create an architecture plan only. Do NOT write code. Output structured plan with steps and file list.',
       coder: 'Create an implementation plan then generate code. List files to create/modify.',
       debugger: 'Analyze the issue, identify root cause, propose fix steps and files to change.',
@@ -17,7 +17,7 @@ export class CodePlanner {
       [
         {
           role: 'system',
-          content: `You are Kilo ${mode} mode agent (모나). ${modePrompts[mode]}
+          content: `You are ${agent.name}, AgentCompany developer (${mode} mode). ${modePrompts[mode]}
 Respond in JSON:
 {"objective":"...","steps":["..."],"filesToModify":["path/to/file"]}`,
         },

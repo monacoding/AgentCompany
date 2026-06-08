@@ -1,8 +1,8 @@
 import { ProviderEngine } from '../../providers';
 import { Agent } from '../../types';
-import { KiloMode, KiloPlan } from '../types';
 import { buildWorkspacePrompt, parseAgentOutput } from '../../workspace/action-parser';
 import { WorkspaceActionExecutor } from '../../workspace/action-executor';
+import { DevPlan, DevPlanMode } from './planner-types';
 
 export class FileEditor {
   constructor(
@@ -12,13 +12,13 @@ export class FileEditor {
 
   async generateAndApply(
     task: string,
-    plan: KiloPlan,
+    plan: DevPlan,
     context: string,
     agent: Agent,
     agentId: string,
     taskId: string
   ): Promise<{ summary: string; filesModified: string[] }> {
-    const modeInstructions: Record<KiloMode, string> = {
+    const modeInstructions: Record<DevPlanMode, string> = {
       architect: 'Output architecture document only as markdown file. No code implementation.',
       coder: 'Implement the plan. Generate production-ready code files.',
       debugger: 'Fix the bug. Show before/after reasoning and modified files.',
@@ -29,7 +29,7 @@ export class FileEditor {
       [
         {
           role: 'system',
-          content: `You are 모나, Kilo Code ${plan.mode} agent.
+          content: `You are ${agent.name}, AgentCompany developer (Cline ${plan.mode} mode).
 ${modeInstructions[plan.mode]}
 ${buildWorkspacePrompt(agent.role)}
 

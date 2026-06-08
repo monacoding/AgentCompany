@@ -1,5 +1,5 @@
 import { Agent } from '../types';
-import { isKiloAgent } from '../kilo';
+import { isClineAgent } from '../cline';
 import { isProductionAgent } from '../production';
 import { isResearchAgent } from '../research';
 import { buildWorkspacePrompt, parseAgentOutput } from '../workspace/action-parser';
@@ -9,9 +9,11 @@ import { saveProjectExtractedFile } from './project-artifacts';
 export function buildWorkerToolingHint(agent: Agent): string {
   const lines: string[] = ['## Tooling'];
 
-  if (isKiloAgent(agent) || agent.role === 'backend' || agent.role === 'frontend' || agent.role === 'devops') {
-    lines.push('- **AgentCompany 확장 구조를 알고 있으며 src/ 코드 수정으로 구조 변경 가능**');
-    lines.push('- DB: globalStorage/agentcompany.db · 에이전트: agent/{이름_직책}/ · 사장: company/owner/');
+  if (isClineAgent(agent)) {
+    lines.push('- **Cline 엔진**으로 코드·스크립트 구현 (cline -y 또는 Internal Engine)');
+    lines.push('- 이전 에이전트 산출물(carry_data)의 URL·fileSeq를 스크립트에 반영');
+    lines.push('- 산출: company/projects/{session}/files/ 또는 agent/하정우_개발자/outputs/scripts/');
+  } else if (agent.role === 'backend' || agent.role === 'frontend' || agent.role === 'devops') {
     lines.push('- **프로그램을 작성하면 자동 실행됩니다** (.py / .sh → 터미널 실행)');
     lines.push('- 코드·스크립트는 filepath 블록으로 출력 (저장 후 즉시 run)');
     lines.push(buildWorkspacePrompt(agent.role).trim());

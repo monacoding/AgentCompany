@@ -1,22 +1,22 @@
 import { AgentFolderEngine, AGENT_FOLDER_LAYOUT } from '../../agent-folders';
 import { WorkspaceEngine } from '../../workspace';
 import { Agent } from '../../types';
-import { KiloExecutionResult } from '../types';
+import { ClineExecutionResult } from '../types';
 import { now } from '../../utils';
 
-export class KiloReportGenerator {
+export class ClineReportGenerator {
   constructor(
     private workspace: WorkspaceEngine,
     private agentFolders?: AgentFolderEngine
   ) {}
 
-  buildMarkdown(task: string, result: KiloExecutionResult, agentName: string): string {
-    return `# Kilo Code Report
+  buildMarkdown(task: string, result: ClineExecutionResult, agentName: string): string {
+    return `# Cline Development Report
 
 **Agent:** ${agentName}  
 **Task:** ${task}  
 **Mode:** ${result.mode}  
-**Engine:** ${result.usedCli ? 'Kilo CLI' : 'Internal Kilo Engine'}  
+**Engine:** ${result.usedCli ? 'Cline CLI' : 'Internal Cline Engine'}  
 **Date:** ${now().slice(0, 10)}
 
 ---
@@ -43,45 +43,42 @@ ${result.filesModified.map((f) => `- \`${f}\``).join('\n') || '_None_'}
 
 ${result.terminalOutput ? `\n## Terminal\n\`\`\`\n${result.terminalOutput}\n\`\`\`` : ''}
 
-**Self-check:** ${result.selfCheckPassed ? '✅ Passed' : '⚠️ Issues found'}
+**Self-check:** ${result.selfCheckPassed ? 'Passed' : 'Issues found'}
 
 ---
 
 ## Architecture
 
 \`\`\`
-Coding Agent (모나)
+하정우 (개발자)
       │
       ▼
-Kilo Engine
-      ├── Mode Router (Architect / Coder / Debugger)
-      ├── Code Planner
-      ├── File Editor
-      ├── Terminal Runner
-      ├── Self-Checker
-      └── Kilo CLI Adapter (optional)
+Cline Engine
+      ├── Cline CLI (headless -y) — 우선
+      ├── Internal Engine — CLI 미설치 시
+      │     ├── Code Planner
+      │     ├── File Editor
+      │     ├── Terminal Runner
+      │     └── Self-Checker
+      └── Collaboration Context (다른 에이전트 산출물)
 \`\`\`
 
----
-_Powered by [Kilo Code](https://github.com/kilo-org/kilocode)_
+_Powered by [Cline](https://github.com/cline/cline)_
 `;
   }
 
-  async save(task: string, result: KiloExecutionResult, agent: Agent): Promise<string | undefined> {
+  async save(task: string, result: ClineExecutionResult, agent: Agent): Promise<string | undefined> {
     const markdown = this.buildMarkdown(task, result, agent.name);
-    const slug = task
-      .slice(0, 40)
-      .replace(/[^\w가-힣]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .toLowerCase();
+    const slug = task.slice(0, 40).replace(/[^\w가-힣]+/g, '-').toLowerCase();
     const filename = `${now().slice(0, 10)}-${slug || 'report'}.md`;
     const agentRelative = `${AGENT_FOLDER_LAYOUT.outputReports}/${filename}`;
-    const legacyFilename = `kilo/reports/${filename}`;
 
     if (this.agentFolders) {
       const agentSlug = this.agentFolders.resolveSlug(agent);
       return (await this.agentFolders.writeText(agentSlug, agentRelative, markdown)) ?? undefined;
     }
-    return (await this.workspace.createFile(legacyFilename, markdown)) ? legacyFilename : undefined;
+
+    const legacyPath = `cline/reports/${filename}`;
+    return (await this.workspace.createFile(legacyPath, markdown)) ? legacyPath : undefined;
   }
 }

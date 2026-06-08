@@ -1,5 +1,4 @@
 import { Agent } from '../types';
-import { isMonaAgent } from '../kilo';
 import { isWonyoungAgent } from '../research';
 import { isSecretaryAgent } from '../secretary';
 
@@ -43,7 +42,6 @@ export function resolveAgentSlug(agent: Agent): string {
 export function resolveBundledTemplateSlug(agent: Agent): string | null {
   if (isSecretaryAgent(agent)) return 'secretary';
   if (isWonyoungAgent(agent)) return 'wonyoung';
-  if (isMonaAgent(agent)) return 'mona';
 
   const known = BUNDLED_TEMPLATE_BY_NAME[agent.name.trim().toLowerCase()];
   if (known) return known;

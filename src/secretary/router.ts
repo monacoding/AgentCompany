@@ -1,4 +1,4 @@
-import { isKiloAgent } from '../kilo';
+import { isClineAgent } from '../cline';
 import { isResearchAgent } from '../research';
 import { Agent } from '../types';
 import { SecretaryRouteResult } from './types';
@@ -48,8 +48,8 @@ export function routeCommand(command: string, agents: Agent[]): SecretaryRouteRe
     }
   }
 
-  if (/api|backend|코드|구현|버그|fix|debug|개발|refactor|kilo/.test(lower)) {
-    const agent = active.find((a) => isKiloAgent(a) || a.name.includes('모나') || a.role === 'backend');
+  if (/api|backend|코드|구현|버그|fix|debug|개발|refactor|cline/.test(lower)) {
+    const agent = active.find((a) => isClineAgent(a) || a.name.includes('하정우') || a.role === 'backend');
     if (agent) {
       return {
         agentId: agent.id,

@@ -1152,8 +1152,8 @@ function AgentDetailModal({
               {(agent.role === 'researcher' || agent.name.includes('원영')) && (
                 <span className="agent-capability">🌐 WebCrawler · Crawl4AI</span>
               )}
-              {(agent.name.includes('모나') || agent.capabilities?.includes('kilo-code')) && (
-                <span className="agent-capability">⚡ Kilo Code · Agentic Engineering</span>
+              {(agent.name.includes('하정우') || agent.capabilities?.includes('cline-code')) && (
+                <span className="agent-capability">⚡ Cline · Agentic Engineering</span>
               )}
 
               {deleteConfirm && (
@@ -1307,8 +1307,8 @@ function AgentCard({
         {!compact && (agent.role === 'researcher' || agent.name.includes('원영')) && (
           <span className="agent-capability">🌐 WebCrawler · Crawl4AI</span>
         )}
-        {!compact && (agent.name.includes('모나') || agent.capabilities?.includes('kilo-code')) && (
-          <span className="agent-capability">⚡ Kilo Code · Agentic Engineering</span>
+        {!compact && (agent.name.includes('하정우') || agent.capabilities?.includes('cline-code')) && (
+          <span className="agent-capability">⚡ Cline · Agentic Engineering</span>
         )}
         {deleteConfirm && (
           <span className="delete-confirm-text">"{formatAgentLabel(agent)}" Agent를 삭제할까요?</span>

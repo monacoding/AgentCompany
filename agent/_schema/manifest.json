@@ -16,7 +16,6 @@
   "agents": [
     { "slug": "secretary", "names": ["비서"], "role": "pm" },
     { "slug": "wonyoung", "names": ["원영"], "role": "researcher" },
-    { "slug": "mona", "names": ["모나"], "role": "backend" },
     { "slug": "alex-pm", "names": ["Alex PM"], "role": "pm" },
     { "slug": "sam-backend", "names": ["Sam Backend"], "role": "backend" },
     { "slug": "jordan-frontend", "names": ["Jordan Frontend"], "role": "frontend" },

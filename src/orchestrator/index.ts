@@ -56,7 +56,7 @@ import type { CeoChatMessage, ChatWorkingDetail } from '../chat/types';
 import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
 import { ProviderEngine, runWithLlmAgent } from '../providers';
-import { KiloAgent, isDevTaskQuery, isKiloAgent } from '../kilo';
+import { ClineAgent, isClineAgent, isClineDevTask } from '../cline';
 import {
   buildPlatformInquiryReply,
   detectPlatformInquiry,
@@ -116,7 +116,7 @@ export class Orchestrator {
   private workspaceExecutor: WorkspaceActionExecutor;
   private researchAgent: ResearchAgent;
   private productionAgent: ProductionAgent;
-  private kiloAgent: KiloAgent;
+  private clineAgent: ClineAgent;
   private externalApiExecutor: ExternalApiExecutor;
 
   constructor(
@@ -138,7 +138,7 @@ export class Orchestrator {
     this.workspaceExecutor = new WorkspaceActionExecutor(workspace, memory);
     this.researchAgent = new ResearchAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
     this.productionAgent = new ProductionAgent(memory, providers, agentFolders, knowledgeLearner);
-    this.kiloAgent = new KiloAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
+    this.clineAgent = new ClineAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
     this.externalApiExecutor = new ExternalApiExecutor(externalApis, providers, memory, agentFolders);
   }
 
@@ -172,12 +172,8 @@ export class Orchestrator {
     return this.researchAgent;
   }
 
-  getKiloAgent(): KiloAgent {
-    return this.kiloAgent;
-  }
-
-  setKiloTemplatePath(templatePath: string): void {
-    this.kiloAgent.setExtensionTemplatePath(templatePath);
+  getClineAgent(): ClineAgent {
+    return this.clineAgent;
   }
 
   getSecretary(): Agent | null {
@@ -573,7 +569,7 @@ export class Orchestrator {
       if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
         return this.executeDirectCommandFlat(agent, command, fullCommand, false);
       }
-      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
+      if (isClineAgent(agent) && isClineDevTask(command)) {
         return this.executeDirectCommandFlat(agent, command, fullCommand, false);
       }
       return this.executeConversationalReply(agent, command, resolved);
@@ -834,7 +830,9 @@ export class Orchestrator {
         ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
         : '';
       const devBlock = isDeveloperAgent(agent)
-        ? '\n당신은 AgentCompany 확장 개발자입니다. 위 플랫폼 구조·DB·src/ 경로를 정확히 알고 있으며, "경로가 없다"고 하지 마세요. 구조 변경은 src/ 코드 수정으로 수행합니다.'
+        ? agent.name.includes('하정우')
+          ? '\n당신은 AgentCompany 개발자(하정우)입니다. 코드·스크립트 업무는 Cline 엔진으로 실행합니다. 플랫폼 구조·DB·src/ 경로를 정확히 알고 있으며, 다른 에이전트 산출물을 바탕으로 src/에 코드를 추가합니다.'
+          : '\n당신은 AgentCompany 확장 개발자입니다. 위 플랫폼 구조·DB·src/ 경로를 정확히 알고 있으며, "경로가 없다"고 하지 마세요. 구조 변경은 src/ 코드 수정으로 수행합니다.'
         : '';
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
@@ -1380,11 +1378,11 @@ ${pmBlock}${devBlock}
         return;
       }
 
-      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
+      if (isClineAgent(agent) && isClineDevTask(command)) {
         if (commandNeedsKnowledgeLearning(command)) {
           await this.knowledgeLearner.syncAgent(agent, { force: true });
         }
-        await this.runKiloTask(agent, task);
+        await this.runClineTask(agent, task);
         return;
       }
 
@@ -1501,22 +1499,29 @@ Complete this task. If code/files are needed, output them in the specified file 
     }
   }
 
-  private async runKiloTask(agent: Agent, task: Task): Promise<void> {
+  private async runClineTask(agent: Agent, task: Task): Promise<void> {
     const prompt = task.title.replace(/^\[[^\]]+\]\s*/, '').trim() || task.description;
+    const priorContext = task.description?.trim() !== prompt ? task.description : undefined;
 
     try {
-      const result = await this.kiloAgent.execute(prompt, agent, task.id, (step) => {
-        this.agentWorking(
-          agent,
-          `[${step.step}] ${step.message}`,
-          step.status === 'failed' ? 'failed' : undefined,
-          this.buildWorkingDetail(agent, 'Kilo 개발', step.step, step.message, [
-            `상태: ${step.status}`,
-            `엔진: Kilo Code (코드 계획 → 파일 수정 → 자체 검증)`,
-            `요청: ${prompt.slice(0, 200)}`,
-          ])
-        );
-      });
+      const result = await this.clineAgent.execute(
+        prompt,
+        agent,
+        task.id,
+        (step) => {
+          this.agentWorking(
+            agent,
+            `[${step.step}] ${step.message}`,
+            step.status === 'failed' ? 'failed' : undefined,
+            this.buildWorkingDetail(agent, 'Cline 개발', step.step, step.message, [
+              `상태: ${step.status}`,
+              `엔진: Cline (CLI → Internal 폴백)`,
+              `요청: ${prompt.slice(0, 200)}`,
+            ])
+          );
+        },
+        { priorContext }
+      );
 
       let resultSummary = result.output;
       if (result.filesModified.length > 0) {
@@ -1525,21 +1530,22 @@ Complete this task. If code/files are needed, output them in the specified file 
       if (result.reportPath) {
         resultSummary += `\n\n📄 Report: ${result.reportPath}`;
       }
-      resultSummary += `\n\nMode: ${result.mode} | Engine: ${result.usedCli ? 'Kilo CLI' : 'Internal'}`;
+      resultSummary += `\n\nMode: ${result.mode} | Engine: ${result.usedCli ? 'Cline CLI' : 'Internal'}`;
 
       const chatReply = formatChatReply(resultSummary) || resultSummary;
       this.taskEngine.setResult(task.id, chatReply);
-      this.memory.logActivity(agent.id, task.id, `${agent.name} Kilo complete (${result.mode})`);
+      this.memory.logActivity(agent.id, task.id, `${agent.name} Cline complete (${result.mode})`);
       this.taskEngine.transition(task.id, result.selfCheckPassed ? 'review' : 'completed');
       this.agentManager.setStatus(agent.id, 'idle');
+      this.agentSay(agent, chatReply, 'agent', 'done');
       this.notifications.showTaskComplete(task.title);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.memory.logActivity(agent.id, task.id, `Kilo error: ${message}`);
+      this.memory.logActivity(agent.id, task.id, `Cline error: ${message}`);
       this.taskEngine.transition(task.id, 'failed');
       this.agentManager.setStatus(agent.id, 'failed');
-      this.notifications.showError(`${agent.name} Kilo failed: ${message}`);
-      this.agentSay(agent, `Kilo 오류: ${message}`, 'agent', 'failed');
+      this.notifications.showError(`${agent.name} Cline failed: ${message}`);
+      this.agentSay(agent, `Cline 오류: ${message}`, 'agent', 'failed');
     }
   }
 
