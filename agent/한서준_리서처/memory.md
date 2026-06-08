@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T12:50:03.167Z_
+_마지막 동기화: 2026-06-08T12:56:24.265Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1750,15 +1750,6 @@ P1 … / P2 … / P3 …
 
 ##
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@438e5f17]
 # 에이전트 간 파일 이동
 
@@ -1893,3 +1884,29 @@ P1 … / P2 … / P3 …
 
 - 리포트: `agent/한서준_리서처/outputs/reports/`
 - PDF: `agent/한서준_리서처/outputs/downloads/`
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[DownloadKnowledge v3]
+수능 PDF 다운로드 — 검증된 방법 (우선순위):
+
+**1순위 — 평가원 공식 기출문제 (A급)**
+- 목록: https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung
+- 전체 약 180건 · page 1(최신)~page 18(2005~2006) — **MAX 20페이지 크롤**
+- 다운로드: https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq={hex}
+- 구 영역명: 언어/수리/외국어 → 국어/수학/영어로 매핑
+- 2006 이전: 언어=국어, 수리=수학, 외국어=영어
+- 스크립트: templates/download_suneung_pdfs.py (--years 2005,2006 --subjects 국어,수학)
+
+**2순위 — 호랭이닷컴 (최근 연도 미러, 구형 연도는 실패 가능)**
+- https://horaeng.com/350
+
+공통: %PDF 헤더 검증 → company/projects/{폴더}/files/pdfs/ 저장
+주요 과목(기본): 국어, 수학, 영어, 한국사

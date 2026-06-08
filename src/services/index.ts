@@ -555,6 +555,35 @@ export class AgentCompanyService {
     await this.env.load();
     this.cachedLlmStatus = await this.llmStatus.getStatus(false);
   }
+
+  /** 대시보드 ↻ — npm run release 후 Reload Window */
+  async runReleaseAndReload(): Promise<{ success: boolean; message: string }> {
+    const root = this.workspace.getWorkspaceRoot();
+    if (!root) {
+      return { success: false, message: '워크스페이스 폴더를 열어 주세요.' };
+    }
+
+    const pkgPath = path.join(root, 'package.json');
+    try {
+      await fs.access(pkgPath);
+    } catch {
+      return { success: false, message: 'package.json이 없는 워크스페이스입니다.' };
+    }
+
+    this.notifications.showInfo('릴리스 시작 — 빌드·VSIX·GitHub 푸시·확장 설치 후 Reload 합니다.');
+
+    const result = await this.workspace.executeTerminal('npm run release', 600_000);
+    if (result.exitCode !== 0) {
+      const detail = (result.stderr || result.stdout || '').trim().slice(-800);
+      return {
+        success: false,
+        message: `릴리스 실패 (exit ${result.exitCode})${detail ? `\n${detail}` : ''}`,
+      };
+    }
+
+    await vscode.commands.executeCommand('workbench.action.reloadWindow');
+    return { success: true, message: '릴리스 완료 — Reload 중…' };
+  }
   /** 대시보드 연결 표시와 채팅 LLM 호출이 같은 키를 쓰도록 보장 */
   async ensureEnvForLlm(): Promise<void> {
     if (!this.env.isEnvLoaded()) {

@@ -103,6 +103,7 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [llmChecking, setLlmChecking] = useState(false);
+  const [releasing, setReleasing] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [newAgent, setNewAgent] = useState<AgentForm>(emptyAgentForm());
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
@@ -180,6 +181,11 @@ export default function App() {
       if (event.data.type === 'projectDetail') {
         const detail = event.data.payload as ProjectDetail | null;
         if (detail) setProjectDetail(detail);
+      }
+      if (event.data.type === 'releaseStatus') {
+        const { status } = event.data.payload as { status: string };
+        if (status === 'running') setReleasing(true);
+        if (status === 'failed') setReleasing(false);
       }
     };
     window.addEventListener('message', handler);
@@ -299,7 +305,13 @@ export default function App() {
         </div>
         <div className="header-right">
           <HeaderStatusBar foundedAt={data.companyInfo?.foundedAt} />
-          <button className="btn-icon" onClick={() => postMessage('refresh')} title="Refresh">
+          <button
+            className={`btn-icon${releasing ? ' btn-icon--spin' : ''}`}
+            onClick={() => postMessage('refresh')}
+            title="릴리스 (npm run release) & Reload"
+            disabled={releasing}
+            aria-busy={releasing}
+          >
             ↻
           </button>
         </div>

@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T12:33:55.885Z_
+_마지막 동기화: 2026-06-08T12:56:24.120Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -599,15 +599,6 @@ P4. 프로젝트 결과 PM 보고
 
 사장님, 이대로 진행할까요?
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [PM 계획] 인터넷에서 2000~2010년도 수능 문제 pdf 로 다운 받는 작업 계획 짜줘
 ## 목표
 2000년부터 2010년까지의 수능 문제 PDF를 인터넷에서 다운로드하여 정리하기.
@@ -626,3 +617,12 @@ P1: 출처 조사 / P2: 다운로드 자동화 구현 / P3: 결과 검증 및 �
 @박준호 · @한서준 · @하정우 · @최현석 · @김윤하
 
 사장님, 이대로 진행할까요?
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
