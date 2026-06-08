@@ -582,10 +582,12 @@ export class Orchestrator {
         agent,
         acknowledgment,
         'agent',
-        'done',
+        'pending',
         { ceoMessage: command },
         true
       );
+      this.agentManager.setStatus(agent.id, 'progress');
+      CeoChatPanel.refreshThread(agent.id);
     }
 
     const fileResolved: ResolvedCommand = {
@@ -1105,10 +1107,12 @@ ${pmBlock}${devBlock}
             agent,
             interpretation.acknowledgment,
             'agent',
-            'done',
+            'pending',
             { ceoMessage: command },
             true
           );
+          this.agentManager.setStatus(agent.id, 'progress');
+          CeoChatPanel.refreshThread(agent.id);
         }
       }
       return await this.offerCrossAgentFileTransfer(agent, fileReq, command, interpretation);
@@ -1225,9 +1229,7 @@ ${pmBlock}${devBlock}
       void this.maybeOfferAgentDelegation(agent, raw, agent.id);
     } else {
       this.taskEngine.transition(parentTask.id, 'failed');
-      if (!personaAckSent) {
-        this.agentSay(agent, '작업 중 오류가 발생했습니다.', 'agent', 'failed');
-      }
+      this.agentSay(agent, '작업 중 오류가 발생했습니다.', 'agent', 'failed');
     }
 
     return {
@@ -1939,10 +1941,12 @@ ${templateBlock}
                 agent,
                 interpretation.acknowledgment,
                 'agent',
-                'done',
+                'pending',
                 { ceoMessage: recentCeo },
                 true
               );
+              this.agentManager.setStatus(agent.id, 'progress');
+              CeoChatPanel.refreshThread(agent.id);
             }
             await this.offerCrossAgentFileTransfer(agent, fileReq, recentCeo, interpretation);
           })();

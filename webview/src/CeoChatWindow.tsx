@@ -2,7 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SendIcon, useCeoCommandInput } from './chat-shared';
 import { VoiceMeterOverlay } from './VoiceMeterOverlay';
 import { VoiceMicButton } from './VoiceMicButton';
-import { formatAgentLabel, formatChatSenderName } from './agent-display';
+import {
+  formatAgentLabel,
+  formatChatSenderName,
+  isWorkStartAcknowledgment,
+} from './agent-display';
 import {
   Agent,
   AgentChatThreadConfig,
@@ -173,12 +177,26 @@ function resolveAgentStatusLabel(
     return { label: '확인 대기중', kind: 'waiting' };
   }
 
-  const completionFilter = (m: CeoChatMessage) => {
-    if (m.type !== 'agent' || m.status !== 'done') return false;
-    if (m.content.startsWith('[위임]') || m.content.endsWith('도와줄래요?')) return false;
-    if (config?.collabMode && config.targetAgentId) {
-      return m.senderId === config.targetAgentId;
+  const agentMessageFilter = (m: CeoChatMessage) => {
+    if (m.type !== 'agent') return false;
+    if (config?.collabMode && config.targetAgentId && m.senderId !== config.targetAgentId) {
+      return false;
     }
+    return true;
+  };
+
+  const lastAgentMessage = [...messages].reverse().find(agentMessageFilter);
+  if (lastAgentMessage?.status === 'pending') {
+    return {
+      label: config?.collabMode && agentName ? `${agentName} 업무 중..` : '업무 중..',
+      kind: 'progress',
+    };
+  }
+
+  const completionFilter = (m: CeoChatMessage) => {
+    if (!agentMessageFilter(m) || m.status !== 'done') return false;
+    if (m.content.startsWith('[위임]') || m.content.endsWith('도와줄래요?')) return false;
+    if (isWorkStartAcknowledgment(m.content)) return false;
     return true;
   };
 
