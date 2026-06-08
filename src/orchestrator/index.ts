@@ -83,7 +83,7 @@ import { WorkspaceEngine } from '../workspace';
 import { OrgEngine, CEO_NODE_ID, buildCeoFinalReport, reviewAndSummarizeForManager, parseManagerReview, ManagerReviewStep } from '../org';
 import { parseCeoMention } from './mention-parser';
 import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-display';
-import { isPmAgent, MAX_ORG_REVISIONS } from './routing';
+import { isPmAgent, MAX_ORG_REVISIONS, isConversationalCommand } from './routing';
 import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
@@ -428,7 +428,7 @@ export class Orchestrator {
     });
 
     if (this.isTelegramCommand()) {
-      if (secretary && this.isConversationalCommand(command)) {
+      if (secretary && isConversationalCommand(command)) {
         return this.executeConversationalReply(secretary, command);
       }
       this.agentSay(
@@ -544,7 +544,7 @@ export class Orchestrator {
     if (folderHandled) return folderHandled;
 
     // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변
-    if (this.isConversationalCommand(command)) {
+    if (isConversationalCommand(command)) {
       if (isResearchAgent(agent) && isResearchTaskQuery(command)) {
         return this.executeDirectCommandFlat(agent, command, fullCommand, false);
       }
@@ -580,6 +580,12 @@ export class Orchestrator {
         true
       );
       this.agentManager.setStatus(agent.id, 'progress');
+      this.agentWorking(agent, acknowledgment, undefined, {
+        pipeline: '업무',
+        step: '착수',
+        summary: '말씀 확인 후 작업을 이어가고 있어요.',
+        log: [acknowledgment.slice(0, 200)],
+      });
       CeoChatPanel.refreshThread(agent.id);
     }
 
@@ -755,30 +761,6 @@ export class Orchestrator {
       CeoChatPanel.refreshThread(session.threadId);
       void fullCommand;
     }
-  }
-
-  /** 인사·짧은 대화 — 태스크/조직 보고 없이 바로 답변 */
-  private isConversationalCommand(command: string): boolean {
-    const text = command.trim();
-    if (!text || text.length > 300) return false;
-    if (detectFolderOpenRequest(text)) return true;
-    if (detectPlatformInquiry(text)) return true;
-    if (
-      /폴더\s*경로|경로(?:는|이)?\s*(?:뭐|어디|알려)|(?:너|네|니|당신)(?:의)?\s*(?:경로|폴더)|[\uAC00-\uD7A3]{2,}\s*폴더\s*경로/i.test(
-        text
-      )
-    ) {
-      return true;
-    }
-    if (isContextDependentCommand(text)) return false;
-    if (
-      /```|\.(ts|tsx|js|py|md|json)|create|implement|fix|build|deploy|write|research|refactor|조사|구현|작성|수정|배포|리팩터|파일|코드|버그|찾|검색|다운|pdf|크롤|리서치|수집|확인|알아봐|수능|기출|제작|만들|쇼츠|숏폼|대본|기획해|스토리보드|썸네일|브리프/i.test(
-        text
-      )
-    ) {
-      return false;
-    }
-    return true;
   }
 
   private async executeConversationalReply(
@@ -1318,16 +1300,6 @@ ${pmBlock}${devBlock}
         return;
       }
 
-      const platformKind = detectPlatformInquiry(resolved.effective);
-      if (platformKind) {
-        const reply = buildPlatformInquiryReply(this.agentFolders, agent, platformKind);
-        this.taskEngine.setResult(taskId, reply);
-        this.taskEngine.transition(taskId, 'completed');
-        this.agentManager.setStatus(agentId, 'idle');
-        this.agentSay(agent, reply, 'agent', 'done');
-        return;
-      }
-
       const allAgents = this.agentManager.getAll();
       const folderScope = resolveFolderPathScope(resolved.effective, agent, allAgents);
       if (folderScope) {
@@ -1345,6 +1317,18 @@ ${pmBlock}${devBlock}
         this.agentManager.setStatus(agentId, 'idle');
         this.agentSay(agent, reply, 'agent', 'done');
         return;
+      }
+
+      if (isDeveloperAgent(agent)) {
+        const platformKind = detectPlatformInquiry(resolved.effective);
+        if (platformKind) {
+          const reply = buildPlatformInquiryReply(this.agentFolders, agent, platformKind);
+          this.taskEngine.setResult(taskId, reply);
+          this.taskEngine.transition(taskId, 'completed');
+          this.agentManager.setStatus(agentId, 'idle');
+          this.agentSay(agent, reply, 'agent', 'done');
+          return;
+        }
       }
 
       if (isExternalResourceFetchTask(resolved.effective)) {
@@ -2040,20 +2024,33 @@ ${templateBlock}
       return this.executeFolderOpen(agent, rawCommand, threadMessages);
     }
 
-    const platformKind = detectPlatformInquiry(effective);
-    if (platformKind) {
-      return this.replyPlatformInquiry(agent, rawCommand, platformKind);
-    }
-
     const scope = resolveFolderPathScope(effective, agent, allAgents);
-    if (!scope) return null;
-
-    if (scope === 'named') {
-      const target = detectFolderPathTargetAgent(effective, agent, allAgents);
-      if (target) return this.replyNamedFolderPath(agent, rawCommand, target);
+    if (scope) {
+      if (scope === 'named') {
+        const target = detectFolderPathTargetAgent(effective, agent, allAgents);
+        if (target) return this.replyNamedFolderPath(agent, rawCommand, target);
+      }
+      return this.replyFolderPathInquiry(agent, rawCommand, scope as 'owner' | 'agent' | 'both');
     }
 
-    return this.replyFolderPathInquiry(agent, rawCommand, scope as 'owner' | 'agent' | 'both');
+    if (isDeveloperAgent(agent)) {
+      const platformKind = detectPlatformInquiry(effective);
+      if (platformKind) {
+        return this.replyPlatformInquiry(agent, rawCommand, platformKind);
+      }
+    }
+
+    return null;
+  }
+
+  /** 착수 ack 등으로 남은 progress/working 배지 정리 */
+  private clearAgentChatProgress(agent: Agent): void {
+    this.agentClearWorking(agent);
+    const current = this.agentManager.get(agent.id);
+    if (current && (current.status === 'progress' || current.status === 'working')) {
+      this.agentManager.setStatus(agent.id, 'idle');
+    }
+    CeoChatPanel.refreshThread(agent.id);
   }
 
   private async executeFolderOpen(
@@ -2091,6 +2088,7 @@ ${templateBlock}
         : `사장님, ${target.name} 작업 폴더(\`${slug}\`)를 탐색기에서 열었어요.`;
 
     this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.clearAgentChatProgress(agent);
     this.memory.logActivity(agent.id, null, `폴더 열기 (${target === 'owner' ? 'owner' : target.name})`);
     return { taskId: '', success: true, message: 'Folder opened' };
   }
@@ -2103,6 +2101,7 @@ ${templateBlock}
     this.chat.requestOpenPanel(agent.id, agent.name);
     const reply = this.agentFolders.buildNamedAgentFolderPathReply(target);
     this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.clearAgentChatProgress(agent);
     this.memory.logActivity(agent.id, null, `폴더 경로 안내 (named: ${target.name})`);
     return { taskId: '', success: true, message: 'Named folder path inquiry answered' };
   }
@@ -2115,6 +2114,7 @@ ${templateBlock}
     this.chat.requestOpenPanel(agent.id, agent.name);
     const reply = this.agentFolders.buildFolderPathReply(agent, scope);
     this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.clearAgentChatProgress(agent);
     this.memory.logActivity(agent.id, null, `폴더 경로 안내 (${scope})`);
     return { taskId: '', success: true, message: 'Folder path inquiry answered' };
   }
@@ -2127,6 +2127,7 @@ ${templateBlock}
     this.chat.requestOpenPanel(agent.id, agent.name);
     const reply = buildPlatformInquiryReply(this.agentFolders, agent, kind);
     this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.clearAgentChatProgress(agent);
     this.memory.logActivity(agent.id, null, `플랫폼 구조 안내 (${kind})`);
     return { taskId: '', success: true, message: 'Platform inquiry answered' };
   }
