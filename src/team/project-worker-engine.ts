@@ -118,6 +118,7 @@ async function executeViaLlm(
   );
 
   const response = await providers.chat(
+    agent.provider,
     [
       {
         role: 'system',

@@ -363,10 +363,16 @@ function ChatBubble({
               ? '예, 이 파일 전달'
               : message.confirmation.kind === 'agent-collab'
                 ? `예, ${message.confirmation.agentName}에게 요청`
-                : '예, 진행'}
+                : message.confirmation.kind === 'pm-project'
+                  ? '진행하세요'
+                  : '예, 진행'}
           </button>
           <button type="button" className="btn-sm" onClick={() => onReject(message.confirmation!.pendingId)}>
-            {message.confirmation.kind === 'file-match' ? '아니오, 다시 찾기' : '아니오'}
+            {message.confirmation.kind === 'file-match'
+              ? '아니오, 다시 찾기'
+              : message.confirmation.kind === 'pm-project'
+                ? '수정 요청'
+                : '아니오'}
           </button>
         </div>
       )}

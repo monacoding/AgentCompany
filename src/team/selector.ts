@@ -47,6 +47,7 @@ ${transcript || '(아직 없음)'}
 
   try {
     const response = await providers.chat(
+      lead.provider,
       [
         { role: 'system', content: '다음 발화자 이름만 한 줄로 답하세요.' },
         { role: 'user', content: prompt },

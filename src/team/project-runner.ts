@@ -97,6 +97,7 @@ async function reviewWorkerOutput(
   const userContent = buildReviewPhasePrompt(reviewer, worker, command, task.description, output);
 
   const response = await providers.chat(
+    reviewer.provider,
     [
       {
         role: 'system',
@@ -338,6 +339,7 @@ export async function runProjectSequential(
 
     const reportPrompt = buildPmReportPhasePrompt(command, deliverables);
     const review = await providers.chat(
+      pm.provider,
       [
         {
           role: 'system',

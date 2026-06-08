@@ -140,7 +140,13 @@ export class ChatService {
         continue;
       }
       const suffix =
-        outcome === 'confirmed' ? '\n\n✅ 사장님 확인 완료' : '\n\n↩️ 다른 파일로 다시 찾기';
+        outcome === 'confirmed'
+          ? msg.confirmation?.kind === 'pm-project'
+            ? '\n\n✅ Project 진행 승인'
+            : '\n\n✅ 사장님 확인 완료'
+          : msg.confirmation?.kind === 'pm-project'
+            ? '\n\n✏️ 수정 요청 — 말씀해 주시면 계획을 다시 짭니다'
+            : '\n\n↩️ 다른 파일로 다시 찾기';
       this.updateMessage(msg.id, {
         status: 'done',
         confirmation: undefined,

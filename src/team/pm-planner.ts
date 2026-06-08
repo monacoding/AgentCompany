@@ -151,6 +151,7 @@ export async function planTeamWithPm(
 
   try {
     const response = await providers.chat(
+      pm.provider,
       [
         {
           role: 'system',

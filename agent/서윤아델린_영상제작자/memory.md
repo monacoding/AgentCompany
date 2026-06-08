@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:56:51.698Z_
+_마지막 동기화: 2026-06-08T12:17:26.605Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1501,15 +1501,6 @@ _마지막 동기화: 2026-06-08T11:56:51.698Z_
 
 이 경로는 에이전트의 사장님 데이터 처리에 필수적입니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [ProjectPlaybook v1]
 
 ## AgentCompany Project 표준 절차 (필수)
@@ -1555,3 +1546,12 @@ P1 … / P2 … / P3 …
 
 확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
 ```
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

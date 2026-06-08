@@ -4,6 +4,7 @@ export {
   shouldStartProjectImmediately,
   shouldStartProject,
   isProjectGoAhead,
+  isProjectPlanRevision,
   shouldUseTeamCollaboration,
   stripProjectCommandPrefix,
   stripTeamCommandPrefix,
@@ -11,6 +12,7 @@ export {
   normalizeTeamCommand,
 } from './trigger';
 export { hasProjectPlanningContext, extractProjectBriefFromChat } from './project-brief';
+export { looksLikePmPlan, buildPmApprovalConfirmationText } from './pm-approval';
 export {
   PROJECT_REVIEW_MAX_ITERATIONS,
   PROJECT_TEST_MAX_ITERATIONS,

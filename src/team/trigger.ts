@@ -16,12 +16,25 @@ export function isProjectGoAhead(command: string): boolean {
   if (!text || text.length > 120) return false;
 
   return (
-    /^(?:그럼\s*)?(?:이제\s*)?(?:최종적으로\s*)?(?:진행(?:하세요|해(?:\s*주세요)?|합니다)?|시작(?:하세요|해(?:\s*주세요)?)|실행(?:하세요|해(?:\s*주세요)?)|개시(?:하세요|해)?)(?:\s*[!\.。]*)?$/i.test(
+    /^(?:그럼\s*)?(?:이제\s*)?(?:최종적으로\s*)?(?:진행(?:하세요|해(?:\s*주세요)?|해줘|합니다)?|시작(?:하세요|해(?:\s*주세요)?|해줘)?|실행(?:하세요|해(?:\s*주세요)?|해줘)?|개시(?:하세요|해(?:줘)?)?)(?:\s*[!\.。]*)?$/i.test(
       text
     ) ||
     /프로젝트\s*(?:진행|시작|실행|개설)/i.test(text) ||
     /project\s*(?:go|start|run|proceed)/i.test(text) ||
     /(?:좋아|오케이|ok|확인)[,.]?\s*(?:진행|시작|실행)/i.test(text)
+  );
+}
+
+/** PM 계획 확정 전 수정·재계획 요청 */
+export function isProjectPlanRevision(command: string): boolean {
+  const text = command.trim();
+  if (!text || text.length > 400) return false;
+  if (isProjectGoAhead(text)) return false;
+  if (/^(?:예|네|응|좋아|오케이|ok)\b/i.test(text) && text.length < 20) return false;
+
+  return (
+    /^(?:아니|아냐|아니요|말고|대신|그건|그거|잠깐|잠시)\b/i.test(text) ||
+    /(?:수정|바꿔|변경|고쳐|다시\s*짜|재\s*계획|재계획|빼고|추가해|넣어|제외|줄여|늘려)/i.test(text)
   );
 }
 

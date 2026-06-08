@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T12:05:06.893Z_
+_마지막 동기화: 2026-06-08T12:17:26.788Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1596,15 +1596,6 @@ agent/wonyoung/outputs/downloads/ 폴더에서 확인하세요.
 - fileSeq·boardSeq·학년도·영역 매핑
 - 다음 태스크(@하정우)에 carry_data로 전달
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [DownloadKnowledge v2]
 수능 PDF 다운로드 — 검증된 방법 (우선순위):
 
@@ -1758,3 +1749,12 @@ P1 … / P2 … / P3 …
 
 
 ##
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

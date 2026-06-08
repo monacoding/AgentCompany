@@ -76,9 +76,12 @@ import {
   TeamEngine,
   buildPmOrchestrationPromptBlock,
   buildPmPlanningContextBlock,
+  buildPmApprovalConfirmationText,
   extractProjectBriefFromChat,
   hasProjectPlanningContext,
   isProjectGoAhead,
+  isProjectPlanRevision,
+  looksLikePmPlan,
   normalizeProjectCommand,
   proposeTeamMembers,
   shouldStartProjectImmediately,
@@ -211,6 +214,18 @@ export class Orchestrator {
     this.chat.resolveConfirmationByPendingId(pendingId, 'confirmed');
     this.chat.clearPending();
 
+    if (pending.kind === 'pm-project') {
+      const agent = this.agentManager.get(pending.agentId);
+      if (!agent) {
+        return { taskId: '', success: false, message: 'PM agent not found' };
+      }
+      const brief =
+        pending.planBrief?.trim() ||
+        extractProjectBriefFromChat(this.chat.getMessages(agent.id), '진행하세요');
+      const fullCommand = `@${agent.name} 진행하세요`;
+      return this.executeTeamCommand(agent, brief, fullCommand, { leadPm: agent });
+    }
+
     if (pending.kind === 'file-match' && pending.sourceAgentId) {
       try {
         return await this.executeConfirmedFileMatch(pending);
@@ -305,6 +320,23 @@ export class Orchestrator {
       this.chat.resolveConfirmationByPendingId(pendingId, 'rejected');
       this.chat.clearPending();
       void this.rejectFileMatchAndReSearch(pending);
+      return;
+    }
+
+    if (pending.kind === 'pm-project') {
+      this.chat.resolveConfirmationByPendingId(pendingId, 'rejected');
+      this.chat.clearPending();
+      const agent = this.agentManager.get(pending.agentId);
+      if (agent) {
+        this.agentSay(
+          agent,
+          '사장님, 어떤 부분을 수정할까요? 말씀해 주시면 계획을 다시 짜겠습니다.\n(예: "아니 @하정우 빼고 @한서준이 스크립트까지 해줘")',
+          'agent',
+          'done',
+          undefined,
+          true
+        );
+      }
       return;
     }
 
@@ -468,7 +500,20 @@ export class Orchestrator {
       return this.executeDirectCommandFlat(agent, command, fullCommand, false);
     }
 
+    if (
+      this.isPmAgent(agent) &&
+      isProjectPlanRevision(command) &&
+      hasProjectPlanningContext(this.chat.getMessages(agent.id))
+    ) {
+      return this.executePmPlanRevision(agent, command, fullCommand);
+    }
+
     if (isProjectGoAhead(command) && this.isPmAgent(agent)) {
+      const pending = this.chat.getPending();
+      if (pending?.kind === 'pm-project' && pending.agentId === agent.id) {
+        this.chat.resolveConfirmationByPendingId(pending.pendingId, 'confirmed');
+        this.chat.clearPending();
+      }
       const threadMessages = this.chat.getMessages(agent.id);
       if (hasProjectPlanningContext(threadMessages)) {
         const brief = extractProjectBriefFromChat(threadMessages, command);
@@ -783,6 +828,9 @@ ${pmBlock}
       const raw = (response.content || streamed).trim();
       const reply = formatChatReply(raw) || raw || '네, 사장님.';
       this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', { ceoMessage: command });
+      if (this.isPmAgent(agent)) {
+        this.maybeOfferPmProjectApproval(agent, reply);
+      }
       this.memory.logActivity(agent.id, null, `대화 응답: ${command.slice(0, 80)}`);
 
       return { taskId: '', success: true, message: 'Conversational reply sent' };
@@ -970,6 +1018,9 @@ ${pmBlock}
     const reply =
       formatChatReply(rollingSummary) || rollingSummary.trim() || '처리가 완료되었습니다.';
     this.agentSay(worker, reply, 'agent', 'done', undefined, true);
+    if (this.isPmAgent(worker)) {
+      this.maybeOfferPmProjectApproval(worker, workerRawResult || reply);
+    }
     void this.maybeOfferAgentDelegation(worker, workerRawResult || reply, worker.id);
 
     this.memory.logActivity(
@@ -1130,6 +1181,9 @@ ${pmBlock}
       }
       if (reply.trim()) {
         this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', undefined, true);
+        if (this.isPmAgent(agent)) {
+          this.maybeOfferPmProjectApproval(agent, reply);
+        }
       }
       void this.maybeOfferAgentDelegation(agent, raw, agent.id);
     } else {
@@ -1473,7 +1527,8 @@ ${templateBlock}
 - 팀 에이전트 매칭·협업 계획 시 **위 실제 @에이전트명만** 사용
 - 가상의 외부 전문가·일반 직함 나열 금지
 - 한국어, "사장님" 호칭, @이름: 담당업무 형식 권장
-- 계획이 확정되면 사장님께 "진행하세요"라고 말씀해 주시면 Project를 시작할 수 있다고 안내`;
+- 계획 제시 후 마지막에 **"사장님, 이대로 진행할까요?"** 로 승인을 요청
+- 사장님이 "진행하세요" 버튼·승인 또는 수정 요청(예: "아니 ~ 바꿔줘")으로 확정`;
 
     const userLine = resolved.usedContext
       ? `${command}\n(이전 맥락: ${resolved.contextSummary})`
@@ -1498,6 +1553,58 @@ ${templateBlock}
     this.taskEngine.transition(task.id, 'completed');
     this.agentManager.setStatus(agent.id, 'idle');
     this.notifications.showTaskComplete(task.title);
+  }
+
+  private async executePmPlanRevision(
+    agent: Agent,
+    command: string,
+    fullCommand: string
+  ): Promise<OrchestratorResult> {
+    const pending = this.chat.getPending();
+    if (pending?.kind === 'pm-project') {
+      this.chat.resolveConfirmationByPendingId(pending.pendingId, 'rejected');
+      this.chat.clearPending();
+    }
+    const revisionCommand = `계획 수정 요청: ${command}`;
+    return this.executeDirectCommandFlat(agent, revisionCommand, fullCommand, false);
+  }
+
+  /** PM 계획 제시 후 사장님 승인(진행하세요 버튼) 또는 수정 요청 대기 */
+  private maybeOfferPmProjectApproval(agent: Agent, planText: string): void {
+    if (!this.isPmAgent(agent) || this.isTelegramCommand()) return;
+    if (!looksLikePmPlan(planText)) return;
+    if (this.chat.getPending()) return;
+
+    const brief = extractProjectBriefFromChat(this.chat.getMessages(agent.id), '');
+    if (!brief.trim()) return;
+
+    const pendingId = generateId();
+    this.chat.setPending({
+      pendingId,
+      command: brief,
+      agentId: agent.id,
+      agentName: agent.name,
+      kind: 'pm-project',
+      planBrief: brief,
+    });
+
+    this.chat.push({
+      threadId: agent.id,
+      senderId: agent.id,
+      senderName: formatAgentLabel(agent),
+      senderRole: agent.title?.trim() || agent.role,
+      content: buildPmApprovalConfirmationText(),
+      type: 'confirmation',
+      status: 'pending',
+      confirmation: {
+        pendingId,
+        command: brief,
+        agentId: agent.id,
+        agentName: agent.name,
+        kind: 'pm-project',
+      },
+    });
+    CeoChatPanel.refreshThread(agent.id);
   }
 
   private async runProductionTask(agent: Agent, task: Task): Promise<void> {
