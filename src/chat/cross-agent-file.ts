@@ -1,5 +1,6 @@
 import { Agent } from '../types';
 import { getAgentMatchTokens, textMentionsAgent } from '../utils/agent-display';
+import { detectFolderOpenRequest } from './folder-path';
 
 export interface CrossAgentFileRequest {
   fileOwner: Agent;
@@ -147,7 +148,7 @@ export function detectCrossAgentFileRequest(
   allAgents: Agent[]
 ): CrossAgentFileRequest | null {
   const text = command.trim();
-  if (!text || !FILE_SIGNAL.test(text))
+  if (!text || detectFolderOpenRequest(text) || !FILE_SIGNAL.test(text))
     return null;
   if (isExternalResourceFetchTask(text))
     return null;
@@ -200,7 +201,7 @@ export function detectOwnFolderFileRequest(
   allAgents: Agent[]
 ): OwnFolderFileRequest | null {
   const text = command.trim();
-  if (!text || !FILE_SIGNAL.test(text))
+  if (!text || detectFolderOpenRequest(text) || !FILE_SIGNAL.test(text))
     return null;
   if (isExternalResourceFetchTask(text))
     return null;

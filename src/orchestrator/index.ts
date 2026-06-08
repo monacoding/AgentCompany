@@ -83,6 +83,7 @@ import { WorkspaceEngine } from '../workspace';
 import { OrgEngine, CEO_NODE_ID, buildCeoFinalReport, reviewAndSummarizeForManager, parseManagerReview, ManagerReviewStep } from '../org';
 import { parseCeoMention } from './mention-parser';
 import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-display';
+import { isPmAgent, MAX_ORG_REVISIONS } from './routing';
 import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
@@ -99,16 +100,8 @@ import {
   shouldStartProjectImmediately,
 } from '../team';
 
-const MAX_ORG_REVISIONS = 5;
-
-const ROLE_TASK_MAP: Record<string, AgentRole[]> = {
-  default: ['pm', 'backend', 'frontend', 'qa'],
-  api: ['pm', 'backend', 'qa'],
-  ui: ['pm', 'frontend', 'qa'],
-  docs: ['pm', 'writer'],
-  deploy: ['pm', 'devops'],
-  research: ['pm', 'researcher'],
-};
+// Routing constants and classification logic have been moved to ./routing.ts
+// (safe incremental extraction - see orchestrator/routing.ts for details)
 
 export class Orchestrator {
   private collabMirrorThreadId: string | null = null;
@@ -511,19 +504,19 @@ export class Orchestrator {
       return this.executeTeamCommand(agent, projectTask, fullCommand);
     }
 
-    if (this.isPmAgent(agent) && isExternalResourceFetchTask(command)) {
+    if (isPmAgent(agent) && isExternalResourceFetchTask(command)) {
       return this.executeDirectCommandFlat(agent, command, fullCommand, false);
     }
 
     if (
-      this.isPmAgent(agent) &&
+      isPmAgent(agent) &&
       isProjectPlanRevision(command) &&
       hasProjectPlanningContext(this.chat.getMessages(agent.id))
     ) {
       return this.executePmPlanRevision(agent, command, fullCommand);
     }
 
-    if (isProjectGoAhead(command) && this.isPmAgent(agent)) {
+    if (isProjectGoAhead(command) && isPmAgent(agent)) {
       const pending = this.chat.getPending();
       if (pending?.kind === 'pm-project' && pending.agentId === agent.id) {
         this.chat.resolveConfirmationByPendingId(pending.pendingId, 'confirmed');
@@ -660,7 +653,7 @@ export class Orchestrator {
         agent,
         taskForLlm,
         history,
-        this.isPmAgent(agent)
+        isPmAgent(agent)
           ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
           : undefined
       );
@@ -672,10 +665,6 @@ export class Orchestrator {
       }
       CeoChatPanel.refreshThread(agent.id);
     }
-  }
-
-  private isPmAgent(agent: Agent): boolean {
-    return agent.role === 'pm' || isSecretaryAgent(agent);
   }
 
   private async executeTeamCommand(
@@ -821,10 +810,10 @@ export class Orchestrator {
       const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
       const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
         excludeLastCeo: true,
-        limit: this.isPmAgent(agent) ? 20 : 12,
+        limit: isPmAgent(agent) ? 20 : 12,
       });
       const memorySnippet = agent.memory?.trim().slice(0, 600);
-      const pmBlock = this.isPmAgent(agent)
+      const pmBlock = isPmAgent(agent)
         ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
         : '';
       const devBlock = isDeveloperAgent(agent)
@@ -867,7 +856,7 @@ ${pmBlock}${devBlock}
       const raw = (response.content || streamed).trim();
       const reply = formatChatReply(raw) || raw || '네, 사장님.';
       this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', { ceoMessage: command });
-      if (this.isPmAgent(agent)) {
+      if (isPmAgent(agent)) {
         this.maybeOfferPmProjectApproval(agent, reply);
       }
       this.memory.logActivity(agent.id, null, `대화 응답: ${command.slice(0, 80)}`);
@@ -1057,7 +1046,7 @@ ${pmBlock}${devBlock}
     const reply =
       formatChatReply(rollingSummary) || rollingSummary.trim() || '처리가 완료되었습니다.';
     this.agentSay(worker, reply, 'agent', 'done', undefined, true);
-    if (this.isPmAgent(worker)) {
+    if (isPmAgent(worker)) {
       this.maybeOfferPmProjectApproval(worker, workerRawResult || reply);
     }
     void this.maybeOfferAgentDelegation(worker, workerRawResult || reply, worker.id);
@@ -1222,7 +1211,7 @@ ${pmBlock}${devBlock}
       }
       if (reply.trim()) {
         this.agentSay(agent, reply.slice(0, 1500), 'agent', 'done', undefined, true);
-        if (this.isPmAgent(agent)) {
+        if (isPmAgent(agent)) {
           this.maybeOfferPmProjectApproval(agent, reply);
         }
       }
@@ -1415,7 +1404,7 @@ ${pmBlock}${devBlock}
         return;
       }
 
-      if (this.isPmAgent(agent)) {
+      if (isPmAgent(agent)) {
         await this.runPmPlanningTask(agent, task, command, resolved);
         return;
       }
@@ -1670,7 +1659,7 @@ ${templateBlock}
 
   /** PM 계획 제시 후 사장님 승인(진행하세요 버튼) 또는 수정 요청 대기 */
   private maybeOfferPmProjectApproval(agent: Agent, planText: string): void {
-    if (!this.isPmAgent(agent) || this.isTelegramCommand()) return;
+    if (!isPmAgent(agent) || this.isTelegramCommand()) return;
     if (!looksLikePmPlan(planText)) return;
     if (this.chat.getPending()) return;
 
