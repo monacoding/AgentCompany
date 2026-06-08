@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:32:39.244Z_
+_마지막 동기화: 2026-06-08T11:35:06.879Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -169,15 +169,6 @@ To create a plan for developing and uploading Korean language education content 
 
 By adhering to this roadmap, we can efficiently deliver high-quality educational content on YouTube while leveraging automation to enhance productivity and engagement. Let's move forward by finalizing the first phase and gathering all necessary resources!
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@0634504f]
 # 에이전트 간 파일 이동
 
@@ -304,3 +295,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 이제 팀 에이전트의 프로필과 현재 프로젝트의 세부 사항을 바탕으로 매칭 계획을 세우겠습니다. 이 계획은 Project Manager인 제가 최종 검토 후 승인할 것입니다.
 
 현재 프로젝트의 세부 사항이나 에이전트의 프로필 등을 추가로 공유해주실 수 있나요? 그러면 보다 정확한 매칭 계획을 수립하겠습니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

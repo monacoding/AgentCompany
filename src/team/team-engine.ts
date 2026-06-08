@@ -136,7 +136,13 @@ export class TeamEngine {
         .join('\n');
 
       if (taskPreview) {
-        this.pushMessage(threadId, null, '시스템', 'system', `📌 **Tasks (Sequential)**\n${taskPreview}`);
+        this.pushMessage(
+          threadId,
+          null,
+          '시스템',
+          'system',
+          `📌 **Tasks (Sequential + Review Loop)**\n${taskPreview}\n\n각 태스크: 작업 → 검토 → 미승인 시 수정 (최대 5회, ChatDev SDLC)`
+        );
       }
 
       let liveTasks = session.projectTasks.length
@@ -172,6 +178,17 @@ export class TeamEngine {
             if (agent) this.clearWorking(threadId);
             liveTasks = liveTasks.map((t) => (t.agentId === task.agentId ? { ...task } : t));
             this.updateSession(session.id, { projectTasks: liveTasks });
+          },
+          onReviewStart: (task, reviewer, iteration, max) => {
+            this.setWorking(
+              threadId,
+              reviewer,
+              `검토 ${iteration}/${max}: @${task.agentName}`
+            );
+          },
+          onReviewDone: (_task, reviewer) => {
+            this.clearWorking(threadId);
+            void reviewer;
           },
           onMessage: (agent, content) => {
             this.pushMessage(threadId, agent.id, formatAgentLabel(agent), 'agent', content);

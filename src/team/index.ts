@@ -11,6 +11,12 @@ export {
   normalizeTeamCommand,
 } from './trigger';
 export { hasProjectPlanningContext, extractProjectBriefFromChat } from './project-brief';
+export {
+  PROJECT_REVIEW_MAX_ITERATIONS,
+  PROJECT_TEST_MAX_ITERATIONS,
+  isDeliverableApproved,
+  resolveProjectReviewer,
+} from './project-loop';
 export { proposeTeamMembers, formatTeamMemberLabels } from './member-picker';
 export type { TeamPlanResult } from './pm-planner';
 export {
