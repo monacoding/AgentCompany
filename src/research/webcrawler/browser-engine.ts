@@ -53,7 +53,7 @@ export class Crawl4AiAdapter {
       const result = data.results?.[0];
       if (!result) return null;
 
-      const markdown = result.fit_markdown || result.markdown || '';
+      const markdown = this.resolveMarkdown(result);
       if (!markdown && !result.html) return null;
 
       return {
@@ -66,6 +66,18 @@ export class Crawl4AiAdapter {
     } catch {
       return null;
     }
+  }
+
+  private resolveMarkdown(result: {
+    fit_markdown?: string | { raw_markdown?: string; markdown_with_citations?: string };
+    markdown?: string | { raw_markdown?: string; markdown_with_citations?: string };
+  }): string {
+    const pick = (value: typeof result.markdown): string => {
+      if (!value) return '';
+      if (typeof value === 'string') return value;
+      return value.markdown_with_citations || value.raw_markdown || '';
+    };
+    return pick(result.fit_markdown) || pick(result.markdown);
   }
 
   private htmlToText(html: string): string {
