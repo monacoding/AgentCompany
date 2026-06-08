@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T13:21:12.375Z_
+_마지막 동기화: 2026-06-08T13:34:43.733Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1936,15 +1936,6 @@ P4. PM 보고: 프로젝트 결과와 보고서를 작성하여 제출
 ### 요약
 2023년 10월 현재, 교육과정평가원 웹사이트(suneung.re.kr)에서 2000~2010년도 수능 문제 PDF를 직접 다운로드할 수 있는 페이지를 찾을 수 없습니다. 이는 해당 콘텐츠가 삭제되거나 이동된 결과일 수 있습니다. 정확한 URL이나 페이지 검색 방법을 다시 확인해야 할 필요성이 있습니다
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@1126fb46]
 # 에이전트 간 파일 이동
 
@@ -2036,3 +2027,12 @@ P1 … / P2 … / P3 …
 - **가상 인물·직함 사용 금지**, 진짜 회사 에이전트 roster 내 인력만 활용
 
 이러한 절차를 통해 효율적이고 명확한 프로젝트 관리를 수
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
