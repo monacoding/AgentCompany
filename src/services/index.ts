@@ -388,7 +388,24 @@ export class AgentCompanyService {
       this.chat.push({ ...ceoMessage, threadId: options.collabThreadId });
     }
     this.prewarmAgentChat(thread.threadId);
-    await this.orchestrator.executeCommand(effectiveCommand);
+    if (options?.fromTelegram) {
+      this.orchestrator.beginTelegramCommand();
+      this.telegramInbound.beginReplySession();
+    }
+    try {
+      await this.orchestrator.executeCommand(effectiveCommand);
+    } catch (error) {
+      if (options?.fromTelegram) {
+        const message = error instanceof Error ? error.message : String(error);
+        void this.notifications.getTelegram().send(`❌ 처리 중 오류\n${message.slice(0, 500)}`);
+      }
+      throw error;
+    } finally {
+      if (options?.fromTelegram) {
+        this.orchestrator.endTelegramCommand();
+        this.telegramInbound.endReplySession();
+      }
+    }
   }
   resolveCommandThread(command: string) {
     return resolveThreadForCommand(

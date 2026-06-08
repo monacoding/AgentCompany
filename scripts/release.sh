@@ -12,6 +12,15 @@ CURSOR_BIN="${CURSOR_BIN:-/Applications/Cursor.app/Contents/Resources/app/bin/cu
 
 echo "==> AgentCompany v${VERSION} release"
 
+echo "==> Pruning old VSIX packages..."
+shopt -s nullglob
+old_vsix=(releases/agent-company-*.vsix)
+if [[ ${#old_vsix[@]} -gt 0 ]]; then
+  echo "    Removing ${#old_vsix[@]} old package(s)..."
+  rm -f "${old_vsix[@]}"
+fi
+shopt -u nullglob
+
 echo "==> Building VSIX..."
 npm run package
 

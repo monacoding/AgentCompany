@@ -17,6 +17,8 @@ alwaysApply: true
 npm run release
 ```
 
+`npm run release` 실행 시 `releases/agent-company-*.vsix` 구버전은 자동 삭제되고, 현재 버전 VSIX만 남긴다.
+
 또는 설치 없이 GitHub만 업로드:
 
 ```bash

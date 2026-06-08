@@ -15,6 +15,7 @@ export class TelegramInboundPoller {
   private timer?: NodeJS.Timeout;
   private polling = false;
   private lastCommandAt = 0;
+  private replySessionActive = false;
   private readonly replyWindowMs = 30 * 60_000;
 
   constructor(
@@ -51,14 +52,36 @@ export class TelegramInboundPoller {
     return enabled && inbound && !!token && !!chatId;
   }
 
+  beginReplySession(): void {
+    this.replySessionActive = true;
+    this.lastCommandAt = Date.now();
+  }
+
+  endReplySession(): void {
+    this.replySessionActive = false;
+  }
+
   forwardAgentMessage(msg: CeoChatMessage): void {
     if (!this.isReady()) return;
-    if (Date.now() - this.lastCommandAt > this.replyWindowMs) return;
+    if (!this.replySessionActive && Date.now() - this.lastCommandAt > this.replyWindowMs) return;
+
+    if (msg.type === 'confirmation' && msg.status === 'pending') {
+      const body = `📋 확인이 필요해요 (Cursor에서 승인해 주세요)\n\n${msg.content}`.slice(0, 3900);
+      void this.sendAgentReply(body);
+      return;
+    }
+
     if (msg.type !== 'agent' && msg.type !== 'system') return;
-    if (msg.senderName === 'CEO') return;
+    if (msg.senderName === 'CEO' || msg.senderName === '사장님') return;
+    if (msg.status === 'working' || msg.status === 'pending') return;
+    if (!msg.content.trim()) return;
 
     const body = `${msg.senderName}\n${msg.content}`.slice(0, 3900);
-    void this.sendToTelegram(body);
+    void this.sendAgentReply(body);
+  }
+
+  private async sendAgentReply(body: string): Promise<void> {
+    await this.sendToTelegram(body);
   }
 
   private getCredentials(): { token: string; chatId: string } | null {

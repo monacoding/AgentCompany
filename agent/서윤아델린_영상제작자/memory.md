@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:14:47.601Z_
+_마지막 동기화: 2026-06-06T18:21:20.931Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드

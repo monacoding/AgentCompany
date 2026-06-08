@@ -86,6 +86,7 @@ const ROLE_TASK_MAP: Record<string, AgentRole[]> = {
 export class Orchestrator {
   private collabMirrorThreadId: string | null = null;
   private collabSourceAgentId: string | null = null;
+  private telegramCommandActive = false;
   private workspaceExecutor: WorkspaceActionExecutor;
   private researchAgent: ResearchAgent;
   private productionAgent: ProductionAgent;
@@ -121,6 +122,18 @@ export class Orchestrator {
     }
     this.agentManager.setStatus(agent.id, 'working');
     return true;
+  }
+
+  beginTelegramCommand(): void {
+    this.telegramCommandActive = true;
+  }
+
+  endTelegramCommand(): void {
+    this.telegramCommandActive = false;
+  }
+
+  isTelegramCommand(): boolean {
+    return this.telegramCommandActive;
   }
 
   getSecretary(): Agent | null {
@@ -348,6 +361,10 @@ export class Orchestrator {
       status: 'pending',
       confirmation: { pendingId, command, agentId: target.id, agentName: target.name },
     });
+
+    if (this.isTelegramCommand()) {
+      return this.executeConfirmedDelegate(pendingId);
+    }
 
     return {
       taskId: '',
@@ -1514,7 +1531,7 @@ Complete this task. If code/files are needed, output them in the specified file 
 
     if (agent) {
       CeoChatPanel.refreshThread(agent.id);
-      if (status === 'done' && type === 'agent' && !skipDelegationOffer) {
+      if (status === 'done' && type === 'agent' && !skipDelegationOffer && !this.isTelegramCommand()) {
         void this.maybeOfferAgentDelegation(agent, text, threadId);
       }
     }
@@ -1705,6 +1722,10 @@ Complete this task. If code/files are needed, output them in the specified file 
       },
     });
     CeoChatPanel.refreshThread(requester.id);
+
+    if (this.isTelegramCommand()) {
+      return this.executeConfirmedDelegate(pendingId);
+    }
 
     return {
       taskId: '',
