@@ -386,6 +386,30 @@ export class AgentFolderEngine {
     return path.join('agent', slug, ...parts).replace(/\\/g, '/');
   }
 
+  /** 특정 에이전트 작업 폴더 경로 안내 */
+  buildNamedAgentFolderPathReply(target: Agent): string {
+    const slug = this.resolveSlug(target);
+    const agentDir = this.getAgentDir(slug);
+    const agentRel = this.getRelativePath(slug);
+    const outputsRel = this.getRelativePath(slug, 'outputs');
+    return [
+      '사장님, 폴더 경로 확인해 드릴게요.',
+      '',
+      `📁 ${target.name} 작업 폴더`,
+      `· 워크스페이스: \`${agentRel}\``,
+      `· 절대 경로: \`${agentDir}\``,
+      `· 산출물: \`${outputsRel}/\` (reports, scripts, downloads)`,
+      '',
+      '탐색기에서 열어 드릴까요? "폴더 열어줘"라고 말씀해 주세요.',
+    ].join('\n');
+  }
+
+  async openOwnerFolder(): Promise<void> {
+    await this.ensureOwnerFolder();
+    const uri = vscode.Uri.file(this.getOwnerDir());
+    await this.revealFolderInExplorer(uri);
+  }
+
   /** CEO 채팅용 폴더 경로 안내 메시지 */
   buildFolderPathReply(
     agent: Agent,

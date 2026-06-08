@@ -25,7 +25,10 @@ import {
   buildOwnFolderFileMatchAsk,
   buildFileTransferCompleteMessage,
   buildFileTransferFailedMessage,
-  detectFolderPathInquiry,
+  detectFolderOpenRequest,
+  detectFolderPathTargetAgent,
+  inferFolderOpenTarget,
+  resolveFolderPathScope,
   detectOwnFolderFileRequest,
   buildFileTransferReceivedMessage,
   detectChatEmotion,
@@ -473,15 +476,8 @@ export class Orchestrator {
       return null;
     }
 
-    const platformKind = detectPlatformInquiry(effective);
-    if (platformKind) {
-      return this.replyPlatformInquiry(agent, rawCommand, platformKind);
-    }
-
-    const folderPathScope = detectFolderPathInquiry(effective);
-    if (folderPathScope) {
-      return this.replyFolderPathInquiry(agent, rawCommand, folderPathScope);
-    }
+    const folderHandled = await this.tryHandleFolderCommand(agent, rawCommand, effective);
+    if (folderHandled) return folderHandled;
 
     const ownFileReq = detectOwnFolderFileRequest(effective, agent, allAgents);
     if (ownFileReq) {
@@ -551,15 +547,8 @@ export class Orchestrator {
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
 
-    const platformKind = detectPlatformInquiry(resolved.effective);
-    if (platformKind) {
-      return this.replyPlatformInquiry(agent, command, platformKind);
-    }
-
-    const folderPathScope = detectFolderPathInquiry(resolved.effective);
-    if (folderPathScope) {
-      return this.replyFolderPathInquiry(agent, command, folderPathScope);
-    }
+    const folderHandled = await this.tryHandleFolderCommand(agent, command, resolved.effective);
+    if (folderHandled) return folderHandled;
 
     // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변
     if (this.isConversationalCommand(command)) {
@@ -781,8 +770,15 @@ export class Orchestrator {
   private isConversationalCommand(command: string): boolean {
     const text = command.trim();
     if (!text || text.length > 300) return false;
+    if (detectFolderOpenRequest(text)) return true;
     if (detectPlatformInquiry(text)) return true;
-    if (detectFolderPathInquiry(text)) return true;
+    if (
+      /폴더\s*경로|경로(?:는|이)?\s*(?:뭐|어디|알려)|(?:너|네|니|당신)(?:의)?\s*(?:경로|폴더)|[\uAC00-\uD7A3]{2,}\s*폴더\s*경로/i.test(
+        text
+      )
+    ) {
+      return true;
+    }
     if (isContextDependentCommand(text)) return false;
     if (
       /```|\.(ts|tsx|js|py|md|json)|create|implement|fix|build|deploy|write|research|refactor|조사|구현|작성|수정|배포|리팩터|파일|코드|버그|찾|검색|다운|pdf|크롤|리서치|수집|확인|알아봐|수능|기출|제작|만들|쇼츠|숏폼|대본|기획해|스토리보드|썸네일|브리프/i.test(
@@ -1308,6 +1304,29 @@ ${pmBlock}${devBlock}
       const command = this.extractCommandFromTask(task);
       const resolved = this.resolveCeoCommandForAgent(agentId, command);
 
+      if (detectFolderOpenRequest(command)) {
+        const target = inferFolderOpenTarget(
+          command,
+          agent,
+          this.agentManager.getAll(),
+          this.chat.getMessages(agent.id)
+        );
+        if (target === 'owner') {
+          await this.agentFolders.openOwnerFolder();
+        } else {
+          await this.agentFolders.openAgentFolder(target);
+        }
+        const reply =
+          target === 'owner'
+            ? '사장님, Owner 폴더를 탐색기에서 열었어요.'
+            : `사장님, ${target.name} 작업 폴더를 탐색기에서 열었어요.`;
+        this.taskEngine.setResult(taskId, reply);
+        this.taskEngine.transition(taskId, 'completed');
+        this.agentManager.setStatus(agentId, 'idle');
+        this.agentSay(agent, reply, 'agent', 'done');
+        return;
+      }
+
       const platformKind = detectPlatformInquiry(resolved.effective);
       if (platformKind) {
         const reply = buildPlatformInquiryReply(this.agentFolders, agent, platformKind);
@@ -1318,9 +1337,18 @@ ${pmBlock}${devBlock}
         return;
       }
 
-      const folderPathScope = detectFolderPathInquiry(resolved.effective);
-      if (folderPathScope) {
-        const reply = this.agentFolders.buildFolderPathReply(agent, folderPathScope);
+      const allAgents = this.agentManager.getAll();
+      const folderScope = resolveFolderPathScope(resolved.effective, agent, allAgents);
+      if (folderScope) {
+        let reply: string;
+        if (folderScope === 'named') {
+          const namedTarget = detectFolderPathTargetAgent(resolved.effective, agent, allAgents);
+          reply = namedTarget
+            ? this.agentFolders.buildNamedAgentFolderPathReply(namedTarget)
+            : this.agentFolders.buildFolderPathReply(agent, 'agent');
+        } else {
+          reply = this.agentFolders.buildFolderPathReply(agent, folderScope);
+        }
         this.taskEngine.setResult(taskId, reply);
         this.taskEngine.transition(taskId, 'completed');
         this.agentManager.setStatus(agentId, 'idle');
@@ -1328,7 +1356,6 @@ ${pmBlock}${devBlock}
         return;
       }
 
-      const allAgents = this.agentManager.getAll();
       if (isExternalResourceFetchTask(resolved.effective)) {
         // 외부 다운로드 업무 — 폴더 검색 생략, PM/리서치 등 실제 작업으로 진행
       } else {
@@ -2008,10 +2035,89 @@ ${templateBlock}
     }
   }
 
+  private async tryHandleFolderCommand(
+    agent: Agent,
+    rawCommand: string,
+    effective: string
+  ): Promise<OrchestratorResult | null> {
+    const allAgents = this.agentManager.getAll();
+    const threadMessages = this.chat.getMessages(agent.id);
+
+    if (detectFolderOpenRequest(rawCommand)) {
+      return this.executeFolderOpen(agent, rawCommand, threadMessages);
+    }
+
+    const platformKind = detectPlatformInquiry(effective);
+    if (platformKind) {
+      return this.replyPlatformInquiry(agent, rawCommand, platformKind);
+    }
+
+    const scope = resolveFolderPathScope(effective, agent, allAgents);
+    if (!scope) return null;
+
+    if (scope === 'named') {
+      const target = detectFolderPathTargetAgent(effective, agent, allAgents);
+      if (target) return this.replyNamedFolderPath(agent, rawCommand, target);
+    }
+
+    return this.replyFolderPathInquiry(agent, rawCommand, scope as 'owner' | 'agent' | 'both');
+  }
+
+  private async executeFolderOpen(
+    agent: Agent,
+    command: string,
+    threadMessages: CeoChatMessage[]
+  ): Promise<OrchestratorResult> {
+    this.chat.requestOpenPanel(agent.id, agent.name);
+    const target = inferFolderOpenTarget(
+      command,
+      agent,
+      this.agentManager.getAll(),
+      threadMessages
+    );
+
+    try {
+      if (target === 'owner') {
+        await this.agentFolders.openOwnerFolder();
+      } else {
+        await this.agentFolders.openAgentFolder(target);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.agentSay(agent, `폴더를 열지 못했어요.\n\n${message}`, 'agent', 'failed', { ceoMessage: command });
+      return { taskId: '', success: false, message };
+    }
+
+    const slug =
+      target === 'owner'
+        ? this.agentFolders.getCompanyRelativePath('owner')
+        : this.agentFolders.getRelativePath(this.agentFolders.resolveSlug(target));
+    const reply =
+      target === 'owner'
+        ? `사장님, Owner 폴더(\`${slug}\`)를 탐색기에서 열었어요.`
+        : `사장님, ${target.name} 작업 폴더(\`${slug}\`)를 탐색기에서 열었어요.`;
+
+    this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.memory.logActivity(agent.id, null, `폴더 열기 (${target === 'owner' ? 'owner' : target.name})`);
+    return { taskId: '', success: true, message: 'Folder opened' };
+  }
+
+  private replyNamedFolderPath(
+    agent: Agent,
+    command: string,
+    target: Agent
+  ): OrchestratorResult {
+    this.chat.requestOpenPanel(agent.id, agent.name);
+    const reply = this.agentFolders.buildNamedAgentFolderPathReply(target);
+    this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.memory.logActivity(agent.id, null, `폴더 경로 안내 (named: ${target.name})`);
+    return { taskId: '', success: true, message: 'Named folder path inquiry answered' };
+  }
+
   private replyFolderPathInquiry(
     agent: Agent,
     command: string,
-    scope: FolderPathScope
+    scope: 'owner' | 'agent' | 'both'
   ): OrchestratorResult {
     this.chat.requestOpenPanel(agent.id, agent.name);
     const reply = this.agentFolders.buildFolderPathReply(agent, scope);

@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T14:20:00.363Z_
+_마지막 동기화: 2026-06-08T14:29:13.617Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -2322,15 +2322,6 @@ P1 … / P2 … / P3 …
 ## @하정우 — 자동화 역할
 - 이전 태스크의 URL, fileSeq를 기반으로 스크립트 구
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [PlatformStructure v1]
 
 # AgentCompany 플랫폼 구조 (개발자 필수)
@@ -2362,3 +2353,50 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - **소스:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/src/`
 - **진입점:** `src/extension.ts` → `dist/extension.js`
 - **오케스트레이터:** `src/orchestrator/index.ts` (CEO 명령·에이전트 실
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[ClineCollaboration v1]
+
+# 하정우 — Cline 개발 파이프라인 & 에이전트 협업
+
+## 역할
+당신은 AgentCompany **개발 담당(하정우)** 입니다.
+코드·스크립트·자동화는 **Cline 엔진**으로 실행하며, 다른 에이전트 산출물을 바탕으로 **src/ 및 워크스페이스에 직접 코드를 추가**합니다.
+
+## Cline 실행 방식
+1. **Cline CLI** (우선): `cline -y "작업 설명"` — 헤드리스 자율 실행
+2. **Internal Engine** (폴백): CLI 미설치 시 Code Planner → File Editor → Terminal → Self-Check
+
+설치: `npm install -g cline` · 인증: `cline auth`
+
+## 협업 흐름 (Project)
+| 단계 | 에이전트 | 산출물 |
+|------|--------|--------|
+| P1 출처조사 | @한서준 | URL·fileSeq·출처 표 |
+| P2 자동화 | **@하정우** | Python 스크립트·다운로드 코드 |
+| P3 검증 | @김윤하/최현석 | PDF 메타 검증 |
+| P4 보고 | @박준호 | PM_REPORT.md |
+
+**규칙:** 한서준의 carry_data(URL·fileSeq)를 반드시 스크립트에 반영. 산출물은 `company/projects/{세션}/files/` 또는 `agent/하정우_개발자/outputs/scripts/`
+
+## 수능 PDF 자동화
+- 공식: https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234
+- 다운: `fileDown.do?fileSeq=` + Python urllib
+- 템플릿: `src/team/templates/download_suneung_pdfs.py`
+
+## AgentCompany 구조 수정
+버그·기능 추가는 **src/** 코드를 직접 수정합니다.
+- 오케스트레이터: `src/orchestrator/index.ts`
+- Cline 연동: `src/cline/`
+- 빌드: `npm run build`
+
+## .clinerules
+워크스페이스 루트 `.clinerules`에 AgentCompany 컨벤션을 따릅니다.

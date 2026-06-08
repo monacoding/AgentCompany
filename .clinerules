@@ -1,0 +1,19 @@
+# AgentCompany — Cline Rules
+
+## 폴더 구조
+- agent/{이름_직책}/ — 에이전트 데이터
+- company/owner/ — 사장님 데이터
+- company/projects/{세션}/ — Project 산출물
+- src/ — 확장 소스 (수정 가능)
+
+## 코딩 규칙
+- TypeScript strict, 기존 컨벤션 따르기
+- 최소 diff, 불필요한 추상화 금지
+- 한국어 사용자 메시지·주석
+- 빌드 검증: npm run build
+
+## 협업
+- 리서치 결과(URL·fileSeq)를 스크립트에 반영
+- 산출 스크립트: outputs/scripts/ 또는 projects/files/scripts/
+- 완료 보고 시 저장 경로 명시
+

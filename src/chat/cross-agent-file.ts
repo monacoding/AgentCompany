@@ -14,7 +14,7 @@ export interface OwnFolderFileRequest {
   summary: string;
 }
 
-export type FolderPathScope = 'owner' | 'agent' | 'both';
+export type FolderPathScope = 'owner' | 'agent' | 'both' | 'named';
 
 const FOLDER_PATH_SIGNAL =
   /(?:폴더\s*경로|경로(?:는|이)?\s*(?:확인|알려|알려줘|뭐|무엇|어디)|폴더\s*(?:위치|어디|확인)|어디에\s*(?:저장|있)|(?:너|네|니|당신)(?:의)?\s*경로|내\s*폴더|제\s*폴더|작업\s*폴더|outputs?\s*경로|folder\s*path)/i;

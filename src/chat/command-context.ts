@@ -1,3 +1,4 @@
+import { detectFolderOpenRequest } from './folder-path';
 import { CeoChatMessage } from './types';
 
 export interface ResolvedCommand {
@@ -52,7 +53,7 @@ function pickContextSnippet(messages: CeoChatMessage[], exclude: string): string
 }
 export function resolveCommandWithContext(command: string, threadMessages: CeoChatMessage[]): ResolvedCommand {
   const raw = command.trim();
-  if (!raw || !isContextDependentCommand(raw)) {
+  if (!raw || detectFolderOpenRequest(raw) || !isContextDependentCommand(raw)) {
     return { raw, effective: raw, usedContext: false };
   }
   const contextSnippet = pickContextSnippet(threadMessages, raw);

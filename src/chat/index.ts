@@ -46,6 +46,13 @@ export {
   isExternalResourceFetchTask,
 } from './cross-agent-file';
 export type { FolderPathScope, OwnFolderFileRequest } from './cross-agent-file';
+export {
+  detectFolderOpenRequest,
+  detectFolderPathTargetAgent,
+  inferFolderOpenTarget,
+  resolveFolderPathScope,
+} from './folder-path';
+export type { FolderOpenTarget } from './folder-path';
 export type { CrossAgentFileRequest } from './cross-agent-file';
 export { generateFileTransferDialogue } from './file-transfer-dialogue';
 export type { FileTransferDialogue } from './file-transfer-dialogue';

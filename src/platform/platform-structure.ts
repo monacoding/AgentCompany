@@ -11,7 +11,7 @@ const PLATFORM_INQUIRY_SIGNAL =
   /(?:플랫폼|프로그램|구조|아키텍처|소스\s*코드|extension|확장|agentcompany)/i;
 
 const AGENT_PATH_SIGNAL =
-  /(?:너(?:의)?|니(?:가)?|네|당신(?:의)?)\s*(?:경로|폴더|디렉터리|directory)|경로(?:는|이)?\s*(?:뭐|어디|어떻)/i;
+  /(?:아니\s*)?(?:너(?:의)?|니(?:가)?|네|당신(?:의)?)\s*(?:경로|폴더|디렉터리|directory)|경로(?:는|이)?\s*(?:뭐|어디|어떻)/i;
 
 const DB_INQUIRY_SIGNAL =
   /(?:데이터\s*베이스|database|db|agentcompany\.db).{0,20}(?:어디|경로|못\s*찾|찾아|위치|알려)|(?:db|데이터\s*베이스)\s*(?:경로|위치)/i;
