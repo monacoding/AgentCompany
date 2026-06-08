@@ -250,6 +250,8 @@ export interface AgentChatThreadConfig {
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
   projectMode?: boolean;
+  projectTitle?: string;
+  projectLeadAgentId?: string;
   projectParticipantIds?: string[];
 }
 

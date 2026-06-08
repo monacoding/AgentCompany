@@ -10,6 +10,7 @@ import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
 import { ProjectWorkerDeps } from './project-worker-engine';
 import { parseProjectTasks, runProjectSequential } from './project-runner';
+import { formatProjectDisplayTitle } from './project-title';
 import { buildTeamThreadId } from './thread-id';
 import { TeamRunResult } from './types';
 
@@ -76,7 +77,7 @@ export class TeamEngine {
 
     const session: TeamSession = {
       id,
-      title: command.slice(0, 60) || `${pm.name} Project`,
+      title: formatProjectDisplayTitle(command) || `${pm.name} Project`,
       status: 'planning',
       phase: 'planning',
       projectTasks,

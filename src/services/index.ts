@@ -31,7 +31,7 @@ import { NotificationEngine } from '../notifications';
 import { TelegramInboundPoller } from '../notifications/telegram-inbound';
 import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
-import { TeamEngine } from '../team';
+import { TeamEngine, formatProjectDisplayTitle } from '../team';
 import { listProjectArtifacts } from '../team/project-artifacts';
 import {
   getProjectPlaybookSummary,
@@ -1080,7 +1080,10 @@ ${roleSnippet}
         telegramStatus: telegram.getStatus()
       },
       externalApis: this.externalApis.getAllPublic(),
-      teamSessions: this.teams.getAllSessions(),
+      teamSessions: this.teams.getAllSessions().map((s) => ({
+        ...s,
+        title: formatProjectDisplayTitle(s.title),
+      })),
       llmStatus: this.cachedLlmStatus ?? defaultLlmStatus,
       version: this.context.extension.packageJSON.version ?? "0.0.0"
     };

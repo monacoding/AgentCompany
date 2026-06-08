@@ -5,7 +5,12 @@ type ChatListener = (msg: CeoChatMessage) => void;
 type WorkingListener = (state: ChatWorkingState | null, threadId: string) => void;
 type PanelOpenRequest = (threadId: string, agentName: string) => void;
 type CollabPanelOpenRequest = (collabThreadId: string, sourceAgentId: string, targetAgentId: string) => void;
-type TeamPanelOpenRequest = (threadId: string, participantIds: string[], title: string) => void;
+type TeamPanelOpenRequest = (
+  threadId: string,
+  participantIds: string[],
+  title: string,
+  leadAgentId?: string
+) => void;
 
 export class ChatService {
   private messages: CeoChatMessage[] = [];
@@ -52,8 +57,13 @@ export class ChatService {
     this.teamPanelOpenRequest = fn;
   }
 
-  requestOpenTeamPanel(threadId: string, participantIds: string[], title: string): void {
-    this.teamPanelOpenRequest?.(threadId, participantIds, title);
+  requestOpenTeamPanel(
+    threadId: string,
+    participantIds: string[],
+    title: string,
+    leadAgentId?: string
+  ): void {
+    this.teamPanelOpenRequest?.(threadId, participantIds, title, leadAgentId);
   }
 
   push(msg: Omit<CeoChatMessage, 'id' | 'timestamp'>): CeoChatMessage {

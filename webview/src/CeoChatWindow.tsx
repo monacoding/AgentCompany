@@ -56,8 +56,8 @@ function collabAlignOptions(config: AgentChatThreadConfig) {
 }
 
 function collabTitle(config: AgentChatThreadConfig): string {
-  if (config.projectMode && config.collabParticipants?.length) {
-    return config.collabParticipants.map((p) => p.displayName).join(' · ');
+  if (config.projectMode) {
+    return config.projectTitle ?? config.panelTitle ?? 'Project';
   }
   if (config.collabParticipants?.length) {
     return config.collabParticipants.map((p) => p.displayName).join(' ↔ ');
@@ -65,6 +65,29 @@ function collabTitle(config: AgentChatThreadConfig): string {
   const peer = config.collabPeerName ?? '에이전트 A';
   const target = config.agentDisplayName ?? config.agentName ?? '에이전트 B';
   return `${peer} ↔ ${target}`;
+}
+
+function projectSubtitle(config: AgentChatThreadConfig): string {
+  const participants = config.collabParticipants ?? [];
+  const leadId = config.projectLeadAgentId;
+  const lead = participants.find((p) => p.agentId === leadId) ?? participants[0];
+  const members = participants
+    .filter((p) => p.agentId !== lead?.agentId)
+    .map((p) => p.displayName);
+
+  const leadLabel = lead?.displayName ?? 'PM';
+  const memberText = members.length > 0 ? members.join(', ') : '—';
+  return `PM: ${leadLabel} · 팀원: ${memberText}`;
+}
+
+function collabSubtitle(config: AgentChatThreadConfig, ownerDisplay: string, displayName: string): string {
+  if (config.projectMode) {
+    return projectSubtitle(config);
+  }
+  if (config.collabMode) {
+    return '에이전트 협업 대화 · 관전 모드';
+  }
+  return `${ownerDisplay} ↔ ${displayName}`;
 }
 
 function AgentAvatar({
@@ -489,7 +512,7 @@ export function CeoChatWindow({ threadConfig }: { threadConfig: AgentChatThreadC
   return (
     <div className={`ceo-chat-window ${isCollab ? 'collab-mode' : ''}`}>
       <header className="ceo-chat-window-header">
-        {isCollab && config.collabParticipants ? (
+        {isCollab && config.collabParticipants && config.collabParticipants.length > 0 ? (
           <CollabAvatarGroup participants={config.collabParticipants} />
         ) : (
           <AgentAvatar name={displayName} photoUrl={config.profilePhotoUrl} />
@@ -499,9 +522,7 @@ export function CeoChatWindow({ threadConfig }: { threadConfig: AgentChatThreadC
             <h1>{isCollab ? collabTitle(config) : displayName}</h1>
             <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
           </div>
-          <p>
-            {isCollab ? '에이전트 협업 대화 · 관전 모드' : `${ownerDisplay} ↔ ${displayName}`}
-          </p>
+          <p>{collabSubtitle(config, ownerDisplay, displayName)}</p>
           {working && <p className="ceo-chat-working-detail">{working.content}</p>}
         </div>
       </header>

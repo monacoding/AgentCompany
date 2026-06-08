@@ -696,7 +696,12 @@ export class Orchestrator {
 
     const session = this.teamEngine.createSession(pm, command, members, plan, requester.id);
 
-    this.chat.requestOpenTeamPanel(session.threadId, session.memberAgentIds, session.title);
+    this.chat.requestOpenTeamPanel(
+      session.threadId,
+      session.memberAgentIds,
+      session.title,
+      session.leadAgentId
+    );
     CeoChatPanel.refreshThread(session.threadId);
     this.dashboardRefresh?.();
 

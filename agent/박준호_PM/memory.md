@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T12:18:36.956Z_
+_마지막 동기화: 2026-06-08T12:29:09.513Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -536,15 +536,6 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [PM 계획] 인터넷에서 2000~2010년도 수능 문제 pdf 로 다운 받는 작업 계획 짜줘
 ## 목표
 인터넷에서 2000년부터 2010년까지의 수능 문제 PDF를 수집·다운로드하고 연도별로 정리합니다.
@@ -586,3 +577,33 @@ P4. PM 보고
    - PM_REPORT.md 작성 및 사장님에게 최종 보고
 
 각 에이전트가 자신의 역할을 완료하면 다음 단계로 넘어가겠습니다. 프로젝트가 완료되면 결과를 보고드리겠습니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[PM 계획] 인터넷에서 2000~2010년도 수능 문제 pdf 로 다운 받는 작업 계획 짜줘
+### 목표
+2000년부터 2010년까지의 수능 기출문제 PDF를 신뢰할 수 있는 출처에서 수집하여 다운로드합니다.
+
+### 계획
+P1. 출처 조사
+P2. 다운로드 자동화 스크립트 구현
+P3. 파일 검증 및 분류
+P4. 프로젝트 결과 PM 보고
+
+### 작업 분배
+1. @한서준: 2000~2010년 수능 문제의 신뢰할 수 있는 출처 URL 및 다운로드 가능한 파일 정보 조사
+2. @하정우: @한서준이 조사한 출처를 바탕으로 PDF를 일괄 다운로드하는 Python 스크립트 구현. 파일은 `company/projects/{sessionId}/files/pdfs/`에 저장
+3. @김윤하: 다운로드한 PDF 파일의 메타 데이터 검토 및 누락이나 중복 여부 검증
+4. @박준호: 프로젝트 결과를 PM_REPORT.md에 작성하고 사장님께 보고
+
+### 참여 에이전트
+@박준호, @한서준, @하정우, @김윤하
+
+사장님, 이대로 진행할까요?

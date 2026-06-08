@@ -330,7 +330,8 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
             this.service,
             session.threadId,
             session.memberAgentIds,
-            session.title
+            session.title,
+            session.leadAgentId
           );
         }
         break;

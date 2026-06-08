@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { CHAT_EMOTIONS } from '../chat';
+import { formatProjectDisplayTitle } from '../team/project-title';
 import { formatAgentLabel } from '../utils/agent-display';
 import { AgentCompanyService } from '../services';
 import { handleVoiceWebviewMessage } from './voice-message-handlers';
@@ -24,6 +25,8 @@ export interface AgentChatThreadConfig {
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
   projectMode?: boolean;
+  projectTitle?: string;
+  projectLeadAgentId?: string;
   projectParticipantIds?: string[];
   preserveFocus?: boolean;
   viewColumn?: vscode.ViewColumn;
@@ -56,8 +59,8 @@ export class CeoChatPanel {
       CeoChatPanel.openCollabChat(extensionUri, service, collabThreadId, sourceAgentId, targetAgentId);
     });
 
-    service.chat.setTeamPanelOpenRequest((threadId, participantIds, title) => {
-      CeoChatPanel.openProjectChat(extensionUri, service, threadId, participantIds, title);
+    service.chat.setTeamPanelOpenRequest((threadId, participantIds, title, leadAgentId) => {
+      CeoChatPanel.openProjectChat(extensionUri, service, threadId, participantIds, title, leadAgentId);
     });
   }
 
@@ -66,10 +69,19 @@ export class CeoChatPanel {
     service: AgentCompanyService,
     threadId: string,
     participantIds: string[],
-    title: string
+    title: string,
+    leadAgentId?: string
   ): CeoChatPanel {
-    const leadId = participantIds[0];
-    const lead = leadId ? service.agents.get(leadId) : null;
+    const pmId = leadAgentId ?? participantIds[0];
+    const lead = pmId ? service.agents.get(pmId) : null;
+    const displayTitle = formatProjectDisplayTitle(title);
+    const collabParticipants: CollabParticipant[] = participantIds
+      .map((id) => {
+        const agent = service.agents.get(id);
+        if (!agent) return null;
+        return { agentId: id, displayName: formatAgentLabel(agent) };
+      })
+      .filter((p): p is CollabParticipant => p !== null);
 
     return CeoChatPanel.createOrShow(extensionUri, service, {
       threadId,
@@ -79,8 +91,11 @@ export class CeoChatPanel {
       agentRole: lead?.title?.trim() || lead?.role,
       collabMode: true,
       projectMode: true,
+      projectTitle: displayTitle,
+      projectLeadAgentId: pmId,
       projectParticipantIds: participantIds,
-      panelTitle: `Project: ${title}`,
+      collabParticipants,
+      panelTitle: displayTitle,
       preserveFocus: true,
       viewColumn: vscode.ViewColumn.Two,
     });
@@ -92,9 +107,17 @@ export class CeoChatPanel {
     service: AgentCompanyService,
     threadId: string,
     participantIds: string[],
-    title: string
+    title: string,
+    leadAgentId?: string
   ): CeoChatPanel {
-    return CeoChatPanel.openProjectChat(extensionUri, service, threadId, participantIds, title);
+    return CeoChatPanel.openProjectChat(
+      extensionUri,
+      service,
+      threadId,
+      participantIds,
+      title,
+      leadAgentId
+    );
   }
 
   static openCollabChat(
