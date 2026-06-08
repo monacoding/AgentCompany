@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { spawn } from 'child_process';
 
 export interface FileOperation {
   path: string;
@@ -88,17 +85,39 @@ export class WorkspaceEngine {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     const cwd = workspaceFolder?.uri.fsPath ?? process.cwd();
 
-    try {
-      const { stdout, stderr } = await execAsync(command, { cwd, timeout: timeoutMs, maxBuffer: 10 * 1024 * 1024 });
-      return { stdout, stderr, exitCode: 0 };
-    } catch (error: unknown) {
-      const err = error as { stdout?: string; stderr?: string; code?: number };
-      return {
-        stdout: err.stdout ?? '',
-        stderr: err.stderr ?? String(error),
-        exitCode: err.code ?? 1,
+    return new Promise((resolve) => {
+      const shell = process.env.SHELL || '/bin/zsh';
+      const child = spawn(shell, ['-lc', command], {
+        cwd,
+        env: process.env,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      let stdout = '';
+      let stderr = '';
+      let settled = false;
+
+      const finish = (exitCode: number) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve({ stdout, stderr, exitCode });
       };
-    }
+
+      const timer = setTimeout(() => {
+        child.kill('SIGKILL');
+        finish(124);
+      }, timeoutMs);
+
+      child.stdout?.on('data', (chunk) => {
+        stdout += chunk.toString();
+      });
+      child.stderr?.on('data', (chunk) => {
+        stderr += chunk.toString();
+      });
+      child.on('error', () => finish(1));
+      child.on('close', (code) => finish(code ?? 1));
+    });
   }
 
   async executeGit(args: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {

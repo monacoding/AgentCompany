@@ -73,15 +73,12 @@ export class WebCrawlerAgent {
     }
 
     if (this.crawl4aiDocker) {
-      const dockerOk = await this.crawl4aiDocker.isDockerRunning(2000);
-      if (!dockerOk) {
-        this.browserEngine.setPreferFallback(true);
-        return;
-      }
+      const healthy = await this.crawl4aiDocker.isHealthy();
+      this.browserEngine.setPreferFallback(!healthy);
+      return;
     }
 
-    const available = await this.crawl4ai.isAvailable();
-    this.browserEngine.setPreferFallback(!available);
+    this.browserEngine.setPreferFallback(true);
   }
 
   private async runDownloadPipeline(

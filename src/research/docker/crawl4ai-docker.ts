@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { WorkspaceEngine } from '../../workspace';
 
+const HEALTH_TIMEOUT_MS = 1500;
+
 export interface DockerEnsureResult {
   success: boolean;
   message: string;
@@ -15,6 +17,7 @@ export interface CrawlEngineResolution {
 
 export class Crawl4AiDockerService {
   private starting: Promise<DockerEnsureResult> | null = null;
+  private backgroundStartQueued = false;
 
   constructor(private workspace: WorkspaceEngine) {}
 
@@ -57,45 +60,49 @@ export class Crawl4AiDockerService {
     }
   }
 
-  /** Crawl4AI API 응답 여부 (Docker 컨테이너 기동 완료) */
+  /** Crawl4AI API 응답 여부 — HTTP만 사용 (docker CLI hang 방지) */
   async isHealthy(): Promise<boolean> {
     const baseUrl = this.getBaseUrl();
 
     try {
-      const response = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) });
+      const response = await fetch(`${baseUrl}/health`, {
+        signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
+      });
       if (response.ok) return true;
     } catch {
       // try root
     }
 
     try {
-      const response = await fetch(baseUrl, { signal: AbortSignal.timeout(3000) });
+      const response = await fetch(baseUrl, { signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS) });
       return response.ok;
     } catch {
       return false;
     }
   }
 
-  /** Docker 데몬 실행 여부 (기본 2초 타임아웃) */
-  async isDockerRunning(timeoutMs = 2000): Promise<boolean> {
-    return this.isDockerDaemonAvailable(timeoutMs);
+  /** Docker Desktop 프로세스 실행 여부 — docker info hang 방지용 선행 검사 */
+  async isDockerRunning(timeoutMs = 800): Promise<boolean> {
+    const appRunning = await this.workspace.executeTerminal(
+      'pgrep -x Docker >/dev/null 2>&1 || pgrep -f "com.docker.docker" >/dev/null 2>&1',
+      800
+    );
+    if (appRunning.exitCode !== 0) {
+      return false;
+    }
+
+    const result = await this.workspace.executeTerminal(
+      'docker info --format "{{.ServerVersion}}" 2>/dev/null',
+      timeoutMs
+    );
+    return result.exitCode === 0 && !!result.stdout.trim();
   }
 
   /**
-   * 리서치 크롤 엔진 결정.
-   * Docker 미실행 → Crawl4AI 확인·기동 없이 즉시 fallback.
-   * Docker 실행 + Crawl4AI 준비됨 → crawl4ai.
+   * 리서치 시작용 — 절대 docker CLI·컨테이너 기동을 기다리지 않음.
+   * Crawl4AI API만 확인하고, 없으면 즉시 fallback.
    */
   async resolveEngine(): Promise<CrawlEngineResolution> {
-    const dockerOk = await this.isDockerRunning(2000);
-    if (!dockerOk) {
-      return {
-        mode: 'fallback',
-        message: 'Docker 미실행 — 즉시 DuckDuckGo·Jina·Fetch로 조사 진행',
-        attemptedStart: false,
-      };
-    }
-
     if (await this.isHealthy()) {
       return {
         mode: 'crawl4ai',
@@ -104,30 +111,23 @@ export class Crawl4AiDockerService {
       };
     }
 
-    if (!this.isAutoStartEnabled()) {
-      return {
-        mode: 'fallback',
-        message: 'Crawl4AI 미가동 — DuckDuckGo·Jina·Fetch로 조사 진행',
-        attemptedStart: false,
-      };
-    }
-
-    const result = await this.ensureRunningWithTimeout(45000);
-    if (result.success && (await this.isHealthy())) {
-      return {
-        mode: 'crawl4ai',
-        message: result.message,
-        attemptedStart: true,
-      };
-    }
+    this.scheduleBackgroundStart();
 
     return {
       mode: 'fallback',
-      message: result.success
-        ? 'Crawl4AI API 미응답 — Jina/Fetch fallback'
-        : `${result.message} — Jina/Fetch fallback`,
-      attemptedStart: true,
+      message: 'Crawl4AI 미연결 — DuckDuckGo·Jina·Fetch로 즉시 조사 진행',
+      attemptedStart: false,
     };
+  }
+
+  private scheduleBackgroundStart(): void {
+    if (!this.isAutoStartEnabled() || this.backgroundStartQueued) return;
+    this.backgroundStartQueued = true;
+    void this.ensureRunning()
+      .catch(() => undefined)
+      .finally(() => {
+        this.backgroundStartQueued = false;
+      });
   }
 
   private getBaseUrl(): string {
@@ -137,38 +137,12 @@ export class Crawl4AiDockerService {
     );
   }
 
-  private async isDockerDaemonAvailable(timeoutMs = 5000): Promise<boolean> {
-    const result = await this.workspace.executeTerminal(
-      'docker info --format "{{.ServerVersion}}"',
-      timeoutMs
-    );
-    return result.exitCode === 0 && !!result.stdout.trim();
-  }
-
-  private async ensureRunningWithTimeout(timeoutMs: number): Promise<DockerEnsureResult> {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      return await Promise.race([
-        this.ensureRunning(),
-        new Promise<DockerEnsureResult>((resolve) => {
-          timer = setTimeout(
-            () =>
-              resolve({
-                success: false,
-                message: 'Crawl4AI Docker 시작 시간 초과',
-                alreadyRunning: false,
-              }),
-            timeoutMs
-          );
-        }),
-      ]);
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
+  private async isDockerDaemonAvailable(timeoutMs = 2000): Promise<boolean> {
+    return this.isDockerRunning(timeoutMs);
   }
 
   private async doEnsureRunning(): Promise<DockerEnsureResult> {
-    const dockerOk = await this.isDockerAvailable();
+    const dockerOk = await this.isDockerDaemonAvailable(2000);
     if (!dockerOk) {
       return {
         success: false,
@@ -215,14 +189,11 @@ export class Crawl4AiDockerService {
     };
   }
 
-  private async isDockerAvailable(): Promise<boolean> {
-    return this.isDockerDaemonAvailable(5000);
-  }
-
   private async isContainerRunning(): Promise<boolean> {
     const name = this.getContainerName();
     const result = await this.workspace.executeTerminal(
-      `docker ps --filter name=^/${name}$ --filter status=running --format "{{.Names}}"`
+      `docker ps --filter name=^/${name}$ --filter status=running --format "{{.Names}}"`,
+      3000
     );
     return result.stdout.trim() === name;
   }
@@ -230,14 +201,15 @@ export class Crawl4AiDockerService {
   private async containerExists(): Promise<boolean> {
     const name = this.getContainerName();
     const result = await this.workspace.executeTerminal(
-      `docker ps -a --filter name=^/${name}$ --format "{{.Names}}"`
+      `docker ps -a --filter name=^/${name}$ --format "{{.Names}}"`,
+      3000
     );
     return result.stdout.trim() === name;
   }
 
   private async startContainer(): Promise<DockerEnsureResult> {
     const name = this.getContainerName();
-    const result = await this.workspace.executeTerminal(`docker start ${name}`);
+    const result = await this.workspace.executeTerminal(`docker start ${name}`, 15000);
     if (result.exitCode !== 0) {
       return {
         success: false,
@@ -275,12 +247,12 @@ export class Crawl4AiDockerService {
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {
       try {
-        const response = await fetch(baseUrl, { signal: AbortSignal.timeout(3000) });
+        const response = await fetch(baseUrl, { signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS) });
         if (response.ok) return true;
       } catch {
         // retry
       }
-      await sleep(2000);
+      await sleep(1500);
     }
     return false;
   }

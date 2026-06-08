@@ -16,12 +16,12 @@ export class Crawl4AiAdapter {
   async isAvailable(): Promise<boolean> {
     try {
       const response = await fetch(`${this.getBaseUrl()}/health`, {
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(1500),
       });
       return response.ok;
     } catch {
       try {
-        const response = await fetch(this.getBaseUrl(), { signal: AbortSignal.timeout(3000) });
+        const response = await fetch(this.getBaseUrl(), { signal: AbortSignal.timeout(1500) });
         return response.ok;
       } catch {
         return false;
@@ -35,7 +35,7 @@ export class Crawl4AiAdapter {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ urls: [url], priority: 10 }),
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(20000),
       });
 
       if (!response.ok) return null;

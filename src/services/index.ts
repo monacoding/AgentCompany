@@ -662,7 +662,14 @@ export class AgentCompanyService {
   }
   private async startCrawl4AiDocker(agent?: Agent): Promise<void> {
     const label = agent?.name ?? "\uC6D0\uC601";
-    const dockerOk = await this.crawl4aiDocker.isDockerRunning(2000);
+    const healthy = await this.crawl4aiDocker.isHealthy();
+    if (healthy) {
+      this.memory.logActivity(agent?.id ?? null, null, 'Crawl4AI Docker 연결됨');
+      this.notifications.showInfo(`${label}: Crawl4AI Docker 실행 중`);
+      return;
+    }
+
+    const dockerOk = await this.crawl4aiDocker.isDockerRunning(800);
     if (!dockerOk) {
       const message = 'Docker 미실행 — 리서치는 DuckDuckGo·Jina·Fetch로 즉시 진행 가능';
       this.memory.logActivity(agent?.id ?? null, null, message);
@@ -670,14 +677,13 @@ export class AgentCompanyService {
       return;
     }
 
-    this.notifications.showInfo(`${label}: Crawl4AI Docker \uD655\uC778 \uC911...`);
-    const result = await this.crawl4aiDocker.resolveEngine();
-    this.memory.logActivity(agent?.id ?? null, null, `Crawl engine: ${result.message}`);
-    if (result.mode === 'crawl4ai') {
-      this.notifications.showInfo(result.message);
-    } else {
-      this.notifications.showWarning(`${result.message} (리서치는 계속 가능)`);
-    }
+    this.notifications.showInfo(`${label}: Crawl4AI Docker 백그라운드 기동 시도…`);
+    void this.crawl4aiDocker.ensureRunning().then((result) => {
+      this.memory.logActivity(agent?.id ?? null, null, `Crawl4AI: ${result.message}`);
+      if (result.success) {
+        this.notifications.showInfo(result.message);
+      }
+    });
   }
   async seedDefaultAgents() {
     const config = this.credentials;

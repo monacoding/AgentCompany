@@ -18,7 +18,7 @@ export class ResearchAgent {
     workspace: WorkspaceEngine,
     agentFolders?: AgentFolderEngine,
     private knowledgeLearner?: KnowledgeLearner,
-    crawl4aiDocker?: Crawl4AiDockerService
+    private crawl4aiDocker?: Crawl4AiDockerService
   ) {
     const reportGenerator = new ReportGenerator(workspace, agentFolders);
     this.webCrawler = new WebCrawlerAgent(
@@ -40,6 +40,15 @@ export class ResearchAgent {
   ): Promise<ResearchReport> {
     this.memory.logActivity(agent.id, taskId, `${agent.name} Research Agent started: "${query}"`);
 
+    let runOptions = options;
+    if (!runOptions && this.crawl4aiDocker) {
+      const engine = await this.crawl4aiDocker.resolveEngine();
+      runOptions = {
+        preferFallback: engine.mode === 'fallback',
+        crawlEngineMessage: engine.message,
+      };
+    }
+
     const report = await this.webCrawler.run(query, agent, (step) => {
       this.memory.logActivity(
         agent.id,
@@ -47,7 +56,7 @@ export class ResearchAgent {
         `[${step.step}] ${step.status}: ${step.message}`
       );
       onStep?.(step);
-    }, options);
+    }, runOptions);
 
     this.memory.appendAgentMemory(
       agent.id,

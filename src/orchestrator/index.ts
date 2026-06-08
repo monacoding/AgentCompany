@@ -1376,7 +1376,7 @@ ${pmBlock}${devBlock}
 
       if (isResearchAgent(agent)) {
         if (commandNeedsKnowledgeLearning(command)) {
-          await this.knowledgeLearner.syncAgent(agent, { force: true });
+          void this.knowledgeLearner.syncAgent(agent, { force: true });
         }
         await this.runResearchTask(agent, task);
         return;
