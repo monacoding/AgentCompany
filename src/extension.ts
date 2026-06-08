@@ -32,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
 
   service.bindDashboardRefresh(() => dashboardProvider?.refresh());
+  service.bindDashboardNavigate((tab) => dashboardProvider?.navigateTo(tab));
 
   initPromise = service
     .initialize()

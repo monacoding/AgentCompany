@@ -1,6 +1,6 @@
 # 김윤하 — 누적 메모리
 
-_마지막 동기화: 2026-06-06T18:21:20.201Z_
+_마지막 동기화: 2026-06-08T09:25:30.964Z_
 
 [[김윤하] 윤하씨, 서준이가 찾은 수능 문제 중에 국어 영역만 윤하씨 폴더 데이터 베이스로 가져가줄래요?]
 [OpenAI] API key not configured. .env 파일에 CHATGPT_API_KEY를 설정해 주세요.
@@ -1385,6 +1385,132 @@ Files modified: 1/1
 ## 필수 인지 사항
 - 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용해야 합니다.
 - 다른 위치를 추측해서는 안 됩니다.
+
+[KnowledgeLearned: cross-agent-file-transfer.md@781ce650]
+# 에이전트 간 파일 이동 규칙 요약
+
+- **완료 전 금지**
+  - 시스템에서 파일 이동이 실제로 완료되기 전까지는 "저장했어요", "옮겼어요" 등의 완료 표현을 금지.
+  - 작업 요청 후에는 "요청해볼게요", "진행할게요"와 같은 예정 표현만 사용.
+
+- **완료 시 경로 필수**
+  - 파일 복사가 확인된 경우에만 완료 표현 사용.
+  - 완료 시 반드시 파일이 저장된 경로를 명시.
+  - 경로 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일 이동 실패 시 "완료"라고 말하지 않으며, 문제 해결을 위한 다음 조치를 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"고만 보고하는 것 금지.
+  - 경로는 작업 완료의 증명 자료로 반드시 필요.
+
+[KnowledgeLearned: owner-data-path.md@eb6799c4]
+# 사장님 데이터 경로 요약
+
+## 기본 정보
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+## 주요 파일 및 폴더
+- **프로필 파일:** `/profile.json`
+  - 사장님의 이름과 성격 등 기본 정보 포함
+- **페르소나 파일:** `/persona.md`
+  - 대화 및 보고 시 참고할 수 있는 사장님의 페르소나 정보
+- **사진 폴더:** `/photo/`
+  - 사장님의 사진 저장 위치
+
+## 사용 지침
+- 에이전트는 사장님 관련 정보 검색 및 저장 시 **반드시 위 지정된 경로**를 사용해야 함
+- 다른 위치를 추측하거나 사용하지 않음
+
+이 문서는 사장님 정보를 효율적으로 관리하기 위한 경로 정보를 제공합니다. 모든 관련 파일 및 폴더는 정의된 경로에 있으며, 이를 통해 일관되고 정확한 정보 접근이 가능합니다.
+
+[[김윤하] 하늘이 수능 수리 영역 교육 유투브 영상 어떻게 만들지 팀꾸려서 계획짜봐]
+김윤하님, 수능 수리 영역 교육 유튜브 영상 제작을 위한 팀 구성 및 계획을 짜겠습니다. 이를 위한 단계는 아래와 같습니다.
+
+1. **팀 구성**
+   - 수리 영역 전문가: 수능 수리 영역의 문제를 이해하고 해설할 수 있는 전문가
+   - 영상 프로듀서/감독: 영상 기획 및 촬영을 맡을 전문가
+   - 편집자: 영상 편집과 후반 작업을 담당할 전문가
+   - 콘텐츠 관리자: 영상 컨셉을 잡고 교육 콘텐츠를 체계적으로 기획할 전문가
+
+2. **계획 수립**
+   - **목표 설정:** 수능 수리 영역의 핵심 개념과 문제 풀이 전략을 학생들이 쉽게 이해할 수 있도록 교육 영상을 제작
+   - **대상 분석:** 주 타겟은 고교생 및 수능 준비생
+   - **형식 결정:** 강의 스타일의 해설 및 문제 풀이 영상, 개념 소개 그리고 자주 틀리는 문제 설명
+   - **스케줄 수립:** 기획 → 촬영 → 편집 → 리뷰 → 배포까지의 전체 일정 수립
+   - **리소스 준비:** 촬영 장비, 장소 섭외, 자료 준비
+   - **콘텐츠 검토:** 각 콘텐츠의 내용 검토 및 피드백
+
+3. **실행**
+   - 팀원들에게 각각의 역할과 책임을 분담
+   - 주기적인 회의를 통해 진행 상황 체크 및 피드백 제공
+
+4. **후속 조치**
+   - 학생들의 피드백을 받아 콘텐츠 개선
+   - 추가 강의 콘텐츠 제작 및 업로드 계획
+
+위와 같은 계획을 바탕으로 팀을 구성하고 본격적인 작업을 진행해보겠습니다. 추가 의견이나 디테일한 계획이 필요하시면 말씀해 주세요.
+
+[[김윤하] /팀 수능 기출 분석하고 쇼츠 대본까지 협업해줘 @강하늘 함께 조사하고 정리해줘 @최현우 기획하고 구현까지 연계해서 해줘]
+## Task Overview
+
+The task involves analyzing Korean SAT (수능) test papers, creating a script for a short video, and collaborating with the team for implementation and integration. The following are the key roles for the task:
+
+1. **김윤하 (Yoonha Kim)**: Analyze the test papers, identify key concepts, and develop them into a structured educational curriculum.
+2. **강하늘 (Haneul Kang)**: Collaborate on research and organize findings.
+3. **최현우 (Hyunwoo Choi)**: Plan and execute the implementation and integration process for the final output.
+
+## Task Breakdown
+
+### Step 1: Analyze SAT Korean Test Papers
+- **Objective**: Identify, analyze and extrapolate primary test concepts to create a comprehensive knowledge graph.
+- **Actions**:
+  - Gather SAT Korean test papers.
+  - Use analysis tools to extract significant patterns and logic.
+  - Document findings and insights.
+
+### Step 2: Collaborate and Organize Findings
+- **Collaborators**: Yoonha Kim & Haneul Kang
+- **Objective**: Synthesize research data and ensure accurate documentation.
+- **Actions**:
+  - Haneul will assist in gathering additional necessary data and resources.
+  - Organize the extracted data logically and insightfully in collaboration with Haneul.
+
+### Step 3: Create a Script for a Short Video
+- **Objective**: Write a compelling, informative script for a short educational video.
+- **Actions**:
+  - Use insights from analysis to draft a script highlighting key findings.
+  - Ensure the script is concise, informative, and engaging.
+
+### Step 4: Plan and Execute Implementation
+- **Leads**: Hyunwoo Choi
+- **Objective**: Develop and deploy the final product or presentation.
+- **Actions**:
+  - Draft an action plan for video production and release.
+  - Execute the sustainability and efficiency plan for the task's objectives.
+
+## Deliverables
+
+1. **Analysis Report**: A detailed report on SAT Korean Test Paper analysis.
+2. **Short Video Script**: A well-structured script for the educational short video.
+3. **Implementation Plan**: A comprehensive plan covering the production, execution, and roll-out of the video.
+
+I'll begin the analysis process for the SAT Korean test papers, coordinating with 강하늘 (Haneul Kang) on research. 최현우 (Hyunwoo Choi) will manage the planning and execution phases thereafter.
+
+For the implementation of the steps necessary, I may refer to some files or codes if required:
+
+
+
+With this strategy in place, I'll initiate the first step and loop back for collaboration and script drafting. If there's any update or requirement, feel free to inform me.
+
+Files modified: 1/1
 
 [ExternalApiRegistry v2]
 CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.

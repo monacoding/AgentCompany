@@ -26,7 +26,9 @@ export function CeoCommandInput({ agents }: { agents: Agent[] }) {
   return (
     <section className="ceo-section">
       <label className="ceo-label">CEO Command</label>
-      <p className="ceo-hint">명령 전송 시 해당 에이전트 채팅창이 열립니다</p>
+      <p className="ceo-hint">
+        명령 전송 시 해당 에이전트 채팅창이 열립니다 · 복합 업무는 <code>/팀</code> 또는 &quot;협업&quot;을 넣으면 팀 협업이 시작됩니다
+      </p>
 
       <div className="ceo-input-wrap">
         <div className="ceo-input-row">

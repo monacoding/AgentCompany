@@ -320,6 +320,21 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
         break;
       }
 
+      case 'openTeamChat': {
+        const { sessionId } = message.payload as { sessionId: string };
+        const session = this.service.teams.getSession(sessionId);
+        if (session) {
+          CeoChatPanel.openTeamChat(
+            this.extensionUri,
+            this.service,
+            session.threadId,
+            session.memberAgentIds,
+            session.title
+          );
+        }
+        break;
+      }
+
       case 'openAgentFolder': {
         const { agentId } = message.payload as { agentId: string };
         const agent = this.service.agents.get(agentId);

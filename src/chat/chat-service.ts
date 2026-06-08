@@ -5,6 +5,7 @@ type ChatListener = (msg: CeoChatMessage) => void;
 type WorkingListener = (state: ChatWorkingState | null, threadId: string) => void;
 type PanelOpenRequest = (threadId: string, agentName: string) => void;
 type CollabPanelOpenRequest = (collabThreadId: string, sourceAgentId: string, targetAgentId: string) => void;
+type TeamPanelOpenRequest = (threadId: string, participantIds: string[], title: string) => void;
 
 export class ChatService {
   private messages: CeoChatMessage[] = [];
@@ -14,6 +15,7 @@ export class ChatService {
   private workingListeners = new Set<WorkingListener>();
   private panelOpenRequest?: PanelOpenRequest;
   private collabPanelOpenRequest?: CollabPanelOpenRequest;
+  private teamPanelOpenRequest?: TeamPanelOpenRequest;
 
   addListener(fn: ChatListener): () => void {
     this.listeners.add(fn);
@@ -44,6 +46,14 @@ export class ChatService {
 
   requestOpenCollabPanel(collabThreadId: string, sourceAgentId: string, targetAgentId: string): void {
     this.collabPanelOpenRequest?.(collabThreadId, sourceAgentId, targetAgentId);
+  }
+
+  setTeamPanelOpenRequest(fn: TeamPanelOpenRequest): void {
+    this.teamPanelOpenRequest = fn;
+  }
+
+  requestOpenTeamPanel(threadId: string, participantIds: string[], title: string): void {
+    this.teamPanelOpenRequest?.(threadId, participantIds, title);
   }
 
   push(msg: Omit<CeoChatMessage, 'id' | 'timestamp'>): CeoChatMessage {

@@ -31,6 +31,7 @@ import { NotificationEngine } from '../notifications';
 import { TelegramInboundPoller } from '../notifications/telegram-inbound';
 import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
+import { TeamEngine } from '../team';
 import { isProductionAgent } from '../production';
 import { LlmUsageTracker, ProviderEngine } from '../providers';
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
@@ -95,6 +96,7 @@ export class AgentCompanyService {
   readonly ideaEngine: IdeaEngine;
   readonly ideas: IdeaService;
   readonly telegramInbound: TelegramInboundPoller;
+  readonly teams: TeamEngine;
   readonly orgEngine: OrgEngine;
   readonly voiceTranscription: VoiceTranscriptionService;
   readonly voiceCapture: VoiceCaptureService;
@@ -104,6 +106,7 @@ export class AgentCompanyService {
   private knowledgeWatcher?: KnowledgeWatcher;
   private photoWatcher?: AgentPhotoWatcher;
   private dashboardRefresh?: () => void;
+  private dashboardNavigate?: (tab: string) => void;
   private initialized = false;
   private cachedLlmStatus: LlmStatus | null = null;
   private partialTranscriptTimer?: ReturnType<typeof setInterval>;
@@ -145,8 +148,27 @@ export class AgentCompanyService {
     this.crawl4aiDocker = new Crawl4AiDockerService(this.workspace);
     this.kiloCli = new KiloCliService(this.workspace);
     this.chat = new ChatService();
+    this.teams = new TeamEngine(
+      this.db,
+      this.agents,
+      this.chat,
+      this.providers,
+      this.agentFolders
+    );
     this.telegramInbound = new TelegramInboundPoller(
       this.context,
+      {
+        getAgents: () => this.agents.getAll(),
+        getSecretary: () => this.orchestrator.getSecretary(),
+        findByMention: (mention) => this.agents.findByMention(mention),
+        getLastAgentId: () =>
+          this.context.globalState.get<string>('telegramLastAgentId') ?? null,
+        setLastAgentId: async (agentId) => {
+          await this.context.globalState.update('telegramLastAgentId', agentId);
+        },
+        getBotUsername: () =>
+          this.context.globalState.get<string>('telegramBotUsername') ?? undefined,
+      },
       (text) => this.executeCeoCommand(text, undefined, { fromTelegram: true }),
       (text) => this.notifications.getTelegram().send(text)
     );
@@ -186,7 +208,8 @@ export class AgentCompanyService {
       this.agentFolders,
       this.knowledgeLearner,
       this.orgEngine,
-      this.llmStatus
+      this.llmStatus,
+      this.teams
     );
   }
   startKnowledgeWatcher(context: vscode.ExtensionContext): void {
@@ -262,6 +285,17 @@ export class AgentCompanyService {
     this.dashboardRefresh = refresh;
     this.ideas.setOnChange(refresh);
     this.llmUsage.setOnChange(refresh);
+    this.syncDashboardHooks();
+  }
+
+  bindDashboardNavigate(navigate: (tab: string) => void): void {
+    this.dashboardNavigate = navigate;
+    this.syncDashboardHooks();
+  }
+
+  private syncDashboardHooks(): void {
+    if (!this.dashboardRefresh && !this.dashboardNavigate) return;
+    this.orchestrator.setDashboardHooks(this.dashboardRefresh, this.dashboardNavigate);
   }
   /** 기존 DB 에이전트에 title 백필 */
   async ensureAgentTitles() {
@@ -928,6 +962,7 @@ ${body}
         telegramStatus: telegram.getStatus()
       },
       externalApis: this.externalApis.getAllPublic(),
+      teamSessions: this.teams.getAllSessions(),
       llmStatus: this.cachedLlmStatus ?? defaultLlmStatus,
       version: this.context.extension.packageJSON.version ?? "0.0.0"
     };

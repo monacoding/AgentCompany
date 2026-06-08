@@ -37,3 +37,8 @@ export class NotificationEngine {
 }
 
 export { TelegramInboundPoller } from './telegram-inbound';
+export {
+  prepareTelegramCommand,
+  formatTelegramWelcome,
+  formatTelegramAgentRoster,
+} from './telegram-command';

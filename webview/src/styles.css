@@ -1250,9 +1250,12 @@ body {
 /* Tabs */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 2px;
   margin-bottom: 12px;
   border-bottom: 1px solid var(--vscode-panel-border, #333);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tab {
@@ -1372,6 +1375,18 @@ select:focus {
 
 .stat-card.success {
   border-color: #22c55e;
+}
+
+.stat-card-button {
+  cursor: pointer;
+  border-color: #8b5cf6;
+  background: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.stat-card-button:hover {
+  border-color: #a78bfa;
 }
 
 .stat-value {

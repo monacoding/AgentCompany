@@ -1,5 +1,13 @@
 import * as vscode from 'vscode';
 import { CeoChatMessage } from '../chat/types';
+import { Agent } from '../types';
+import {
+  formatTelegramAgentReply,
+  formatTelegramAgentRoster,
+  formatTelegramRouteHint,
+  formatTelegramWelcome,
+  prepareTelegramCommand,
+} from './telegram-command';
 
 export interface TelegramUpdate {
   update_id: number;
@@ -11,6 +19,15 @@ export interface TelegramUpdate {
   };
 }
 
+export interface TelegramInboundDeps {
+  getAgents: () => Agent[];
+  getSecretary: () => Agent | null;
+  findByMention: (mention: string) => Agent | null;
+  getLastAgentId: () => string | null;
+  setLastAgentId: (agentId: string) => Promise<void>;
+  getBotUsername: () => string | undefined;
+}
+
 export class TelegramInboundPoller {
   private timer?: NodeJS.Timeout;
   private polling = false;
@@ -20,6 +37,7 @@ export class TelegramInboundPoller {
 
   constructor(
     private context: vscode.ExtensionContext,
+    private deps: TelegramInboundDeps,
     private onCommand: (text: string) => Promise<void>,
     private sendToTelegram: (text: string) => Promise<{ success: boolean }>
   ) {}
@@ -29,6 +47,7 @@ export class TelegramInboundPoller {
     if (!this.isReady()) return;
 
     void this.ensurePollingMode();
+    void this.cacheBotUsername();
     this.timer = setInterval(() => void this.poll(), 4000);
     this.context.subscriptions.push({ dispose: () => this.stop() });
   }
@@ -76,7 +95,7 @@ export class TelegramInboundPoller {
     if (msg.status === 'working' || msg.status === 'pending') return;
     if (!msg.content.trim()) return;
 
-    const body = `${msg.senderName}\n${msg.content}`.slice(0, 3900);
+    const body = formatTelegramAgentReply(msg.senderName, msg.content).slice(0, 3900);
     void this.sendAgentReply(body);
   }
 
@@ -90,6 +109,24 @@ export class TelegramInboundPoller {
     const chatId = config.get<string>('telegramChatId', '').trim();
     if (!token || !chatId) return null;
     return { token, chatId };
+  }
+
+  private async cacheBotUsername(): Promise<void> {
+    const creds = this.getCredentials();
+    if (!creds) return;
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${creds.token}/getMe`);
+      if (!response.ok) return;
+      const data = (await response.json()) as {
+        ok: boolean;
+        result?: { username?: string };
+      };
+      if (data.ok && data.result?.username) {
+        await this.context.globalState.update('telegramBotUsername', data.result.username);
+      }
+    } catch {
+      // 다음 폴링에서 재시도
+    }
   }
 
   private async ensurePollingMode(): Promise<void> {
@@ -137,15 +174,50 @@ export class TelegramInboundPoller {
     const text = message.text.trim();
     if (!text) return;
 
+    const agents = this.deps.getAgents();
+    const secretary = this.deps.getSecretary();
+
     if (text === '/start') {
+      await this.sendToTelegram(formatTelegramWelcome(agents));
+      return;
+    }
+
+    if (text === '/agents' || text === '/목록') {
+      const roster = formatTelegramAgentRoster(agents);
       await this.sendToTelegram(
-        'AgentCompany 봇 연결됨 ✅\n텍스트를 보내면 CEO 명령으로 처리됩니다.\n예: @비서 오늘 할 일 정리해줘'
+        roster ? `👥 에이전트 목록\n\n${roster}` : '등록된 에이전트가 없습니다.'
       );
       return;
     }
 
+    const prepared = prepareTelegramCommand(
+      text,
+      agents,
+      secretary,
+      this.deps.getLastAgentId(),
+      (mention) => this.deps.findByMention(mention),
+      this.deps.getBotUsername()
+    );
+
+    if (prepared.targetAgentId) {
+      await this.deps.setLastAgentId(prepared.targetAgentId);
+    }
+
+    const targetAgent =
+      prepared.targetAgentId != null
+        ? agents.find((a) => a.id === prepared.targetAgentId) ?? null
+        : null;
+    const targetLabel = targetAgent
+      ? `${targetAgent.name}${targetAgent.title?.trim() ? ` (${targetAgent.title.trim()})` : ''}`
+      : '에이전트';
+
+    const routeHint =
+      prepared.routedVia === 'mention'
+        ? `📩 ${targetLabel}`
+        : formatTelegramRouteHint(prepared.routedVia, targetLabel);
+
     this.lastCommandAt = Date.now();
-    await this.sendToTelegram(`📩 명령 접수 중...\n${text.slice(0, 200)}`);
-    await this.onCommand(text);
+    await this.sendToTelegram(`${routeHint}\n${text.slice(0, 200)}`);
+    await this.onCommand(prepared.command);
   }
 }

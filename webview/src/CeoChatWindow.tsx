@@ -56,6 +56,9 @@ function collabAlignOptions(config: AgentChatThreadConfig) {
 }
 
 function collabTitle(config: AgentChatThreadConfig): string {
+  if (config.teamMode && config.collabParticipants?.length) {
+    return config.collabParticipants.map((p) => p.displayName).join(' · ');
+  }
   if (config.collabParticipants?.length) {
     return config.collabParticipants.map((p) => p.displayName).join(' ↔ ');
   }

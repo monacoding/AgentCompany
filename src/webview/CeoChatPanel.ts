@@ -23,6 +23,8 @@ export interface AgentChatThreadConfig {
   targetAgentId?: string;
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
+  teamMode?: boolean;
+  teamParticipantIds?: string[];
 }
 
 export interface CollabParticipant {
@@ -50,6 +52,33 @@ export class CeoChatPanel {
 
     service.chat.setCollabPanelOpenRequest((collabThreadId, sourceAgentId, targetAgentId) => {
       CeoChatPanel.openCollabChat(extensionUri, service, collabThreadId, sourceAgentId, targetAgentId);
+    });
+
+    service.chat.setTeamPanelOpenRequest((threadId, participantIds, title) => {
+      CeoChatPanel.openTeamChat(extensionUri, service, threadId, participantIds, title);
+    });
+  }
+
+  static openTeamChat(
+    extensionUri: vscode.Uri,
+    service: AgentCompanyService,
+    threadId: string,
+    participantIds: string[],
+    title: string
+  ): CeoChatPanel {
+    const leadId = participantIds[0];
+    const lead = leadId ? service.agents.get(leadId) : null;
+
+    return CeoChatPanel.createOrShow(extensionUri, service, {
+      threadId,
+      agentName: lead?.name ?? '팀',
+      agentTitle: lead?.title,
+      agentDisplayName: lead ? formatAgentLabel(lead) : '팀 협업',
+      agentRole: lead?.title?.trim() || lead?.role,
+      collabMode: true,
+      teamMode: true,
+      teamParticipantIds: participantIds,
+      panelTitle: `팀: ${title}`,
     });
   }
 
@@ -242,9 +271,11 @@ export class CeoChatPanel {
   }
 
   private async buildCollabParticipants(version: number): Promise<CollabParticipant[]> {
-    const ids = [this.thread.collabPeerId, this.thread.targetAgentId].filter(
-      (id): id is string => !!id
-    );
+    const ids = (
+      this.thread.teamParticipantIds?.length
+        ? this.thread.teamParticipantIds
+        : [this.thread.collabPeerId, this.thread.targetAgentId]
+    ).filter((id): id is string => !!id);
     const participants: CollabParticipant[] = [];
 
     for (const id of ids) {

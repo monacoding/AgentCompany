@@ -202,11 +202,30 @@ export interface AppSettings {
   telegramInboundEnabled: boolean;
 }
 
+export type TeamSessionStatus = 'planning' | 'running' | 'done' | 'failed';
+
+export interface TeamSession {
+  id: string;
+  title: string;
+  status: TeamSessionStatus;
+  leadAgentId: string;
+  memberAgentIds: string[];
+  threadId: string;
+  ceoCommand: string;
+  parentTaskId: string | null;
+  plan: string;
+  summary: string;
+  maxTurns: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardPayload {
   agents: Agent[];
   tasks: Task[];
   activities: Activity[];
   ideas: AgentIdea[];
+  teamSessions?: TeamSession[];
   orgChart: AgentOrganization;
   agentPhotos?: Record<string, string>;
   companyInfo: CompanyInfo;

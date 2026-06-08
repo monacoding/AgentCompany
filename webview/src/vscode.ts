@@ -158,6 +158,7 @@ export interface DashboardData {
   tasks: Task[];
   activities: Activity[];
   ideas?: AgentIdea[];
+  teamSessions?: TeamSession[];
   orgChart: AgentOrganization;
   agentPhotos?: Record<string, string>;
   companyInfo?: CompanyInfo;
@@ -248,6 +249,8 @@ export interface AgentChatThreadConfig {
   targetAgentId?: string;
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
+  teamMode?: boolean;
+  teamParticipantIds?: string[];
 }
 
 export interface CollabParticipant {
@@ -274,4 +277,19 @@ export function postMessage(type: string, payload?: unknown): void {
   vscode.postMessage({ type, payload });
 }
 
-export type TabId = 'overview' | 'agents' | 'org' | 'tasks' | 'activity' | 'api' | 'settings';
+export type TabId = 'overview' | 'agents' | 'org' | 'teams' | 'tasks' | 'activity' | 'api' | 'settings';
+
+export interface TeamSession {
+  id: string;
+  title: string;
+  status: 'planning' | 'running' | 'done' | 'failed';
+  leadAgentId: string;
+  memberAgentIds: string[];
+  threadId: string;
+  ceoCommand: string;
+  plan: string;
+  summary: string;
+  maxTurns: number;
+  createdAt: string;
+  updatedAt: string;
+}

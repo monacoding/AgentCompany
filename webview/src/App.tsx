@@ -6,6 +6,7 @@ import { OwnerInfoModal } from './OwnerInfoPanel';
 import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
+import { TeamsTab } from './TeamsTab';
 import { SettingsTab } from './SettingsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task } from './vscode';
 import {
@@ -236,6 +237,8 @@ export default function App() {
 
   const reviewTasks = data.tasks.filter(isReviewReadyTask);
   const pendingIdeas = data.ideas ?? [];
+  const teamSessions = data.teamSessions ?? [];
+  const activeTeamSessions = teamSessions.filter((s) => s.status === 'running' || s.status === 'planning');
 
   const stats = {
     agents: data.agents.length,
@@ -314,6 +317,15 @@ export default function App() {
         </section>
       )}
 
+      {activeTeamSessions.length > 0 && (
+        <section className="review-banner" style={{ borderColor: '#3b82f6' }}>
+          <span>👥 팀 협업 진행 중: {activeTeamSessions.length}건</span>
+          <button className="btn-sm" onClick={() => setActiveTab('teams')}>
+            보기
+          </button>
+        </section>
+      )}
+
       <LlmStatusBar
         status={data.llmStatus}
         checking={llmChecking}
@@ -323,7 +335,7 @@ export default function App() {
       <CeoCommandInput agents={data.agents} />
 
       <nav className="tabs">
-        {(['overview', 'agents', 'org', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
+        {(['overview', 'agents', 'org', 'teams', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -332,6 +344,7 @@ export default function App() {
             {tab === 'overview' && 'Overview'}
             {tab === 'agents' && `Agents (${data.agents.length})`}
             {tab === 'org' && 'Organization'}
+            {tab === 'teams' && `팀 협업 (${data.teamSessions?.length ?? 0})`}
             {tab === 'tasks' && `Tasks (${data.tasks.length})`}
             {tab === 'activity' && 'Activity'}
             {tab === 'api' && `API (${data.externalApis?.length ?? 0})`}
@@ -348,6 +361,8 @@ export default function App() {
             tasks={data.tasks}
             ideas={pendingIdeas}
             reviewTasks={reviewTasks}
+            teamSessionCount={teamSessions.length}
+            onOpenTeams={() => setActiveTab('teams')}
             onAgentDoubleClick={(id) => postMessage('getAgentWorkLog', { agentId: id })}
           />
         )}
@@ -379,6 +394,9 @@ export default function App() {
             agentPhotos={data.agentPhotos ?? {}}
             ownerPhotoUrl={data.ownerProfilePhotoUrl}
           />
+        )}
+        {activeTab === 'teams' && (
+          <TeamsTab sessions={data.teamSessions ?? []} agents={data.agents} />
         )}
         {activeTab === 'tasks' && (
           <TasksTab
@@ -514,6 +532,8 @@ function OverviewTab({
   tasks,
   ideas,
   reviewTasks,
+  teamSessionCount,
+  onOpenTeams,
   onAgentDoubleClick,
 }: {
   stats: Record<string, number>;
@@ -521,6 +541,8 @@ function OverviewTab({
   tasks: Task[];
   ideas: AgentIdea[];
   reviewTasks: Task[];
+  teamSessionCount: number;
+  onOpenTeams: () => void;
   onAgentDoubleClick: (agentId: string) => void;
 }) {
   return (
@@ -531,6 +553,10 @@ function OverviewTab({
         <StatCard label="Progress" value={stats.progress} />
         <StatCard label="Review" value={stats.review} />
         <StatCard label="Completed" value={stats.completed} success />
+        <button type="button" className="stat-card stat-card-button" onClick={onOpenTeams}>
+          <span className="stat-label">팀 협업</span>
+          <span className="stat-value">{teamSessionCount}</span>
+        </button>
       </div>
 
       <div className="panel ideas-panel">

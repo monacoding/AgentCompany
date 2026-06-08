@@ -1,7 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import initSqlJs, { Database as SqlJsDatabase, SqlValue } from 'sql.js';
-import { Agent, Activity, Task, AgentIdea, AgentIdeaStatus, AgentOrganization } from '../types';
+import {
+  Agent,
+  Activity,
+  Task,
+  AgentIdea,
+  AgentIdeaStatus,
+  AgentOrganization,
+  TeamSession,
+} from '../types';
 import { parseJson } from '../utils';
 
 const SCHEMA = `
@@ -67,6 +75,24 @@ CREATE TABLE IF NOT EXISTS dismissed_agents (
   name_key TEXT PRIMARY KEY,
   dismissed_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS team_sessions (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  status TEXT DEFAULT 'planning',
+  lead_agent_id TEXT NOT NULL,
+  member_agent_ids TEXT NOT NULL,
+  thread_id TEXT NOT NULL,
+  ceo_command TEXT DEFAULT '',
+  parent_task_id TEXT,
+  plan TEXT DEFAULT '',
+  summary TEXT DEFAULT '',
+  max_turns INTEGER DEFAULT 12,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_sessions_thread ON team_sessions(thread_id);
 `;
 
 export class Database {
@@ -453,6 +479,102 @@ export class Database {
       (obj) => obj.name_key as string
     );
   }
+
+  // --- Team sessions ---
+
+  insertTeamSession(session: TeamSession): void {
+    this.db!.run(
+      `INSERT INTO team_sessions (
+        id, title, status, lead_agent_id, member_agent_ids, thread_id,
+        ceo_command, parent_task_id, plan, summary, max_turns, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        session.id,
+        session.title,
+        session.status,
+        session.leadAgentId,
+        JSON.stringify(session.memberAgentIds),
+        session.threadId,
+        session.ceoCommand,
+        session.parentTaskId,
+        session.plan,
+        session.summary,
+        session.maxTurns,
+        session.createdAt,
+        session.updatedAt,
+      ]
+    );
+    this.persist();
+  }
+
+  updateTeamSession(id: string, fields: Partial<TeamSession>): void {
+    const existing = this.getTeamSession(id);
+    if (!existing) return;
+
+    const updated: TeamSession = {
+      ...existing,
+      ...fields,
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.db!.run(
+      `UPDATE team_sessions SET
+        title=?, status=?, lead_agent_id=?, member_agent_ids=?, thread_id=?,
+        ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?, updated_at=?
+       WHERE id=?`,
+      [
+        updated.title,
+        updated.status,
+        updated.leadAgentId,
+        JSON.stringify(updated.memberAgentIds),
+        updated.threadId,
+        updated.ceoCommand,
+        updated.parentTaskId,
+        updated.plan,
+        updated.summary,
+        updated.maxTurns,
+        updated.updatedAt,
+        id,
+      ]
+    );
+    this.persist();
+  }
+
+  getTeamSession(id: string): TeamSession | null {
+    return this.queryOne('SELECT * FROM team_sessions WHERE id = ?', [id], this.mapTeamSession);
+  }
+
+  getTeamSessionByThreadId(threadId: string): TeamSession | null {
+    return this.queryOne(
+      'SELECT * FROM team_sessions WHERE thread_id = ?',
+      [threadId],
+      this.mapTeamSession
+    );
+  }
+
+  getAllTeamSessions(): TeamSession[] {
+    return this.queryAll(
+      'SELECT * FROM team_sessions ORDER BY created_at DESC',
+      [],
+      this.mapTeamSession
+    );
+  }
+
+  private mapTeamSession = (obj: Record<string, unknown>): TeamSession => ({
+    id: obj.id as string,
+    title: obj.title as string,
+    status: obj.status as TeamSession['status'],
+    leadAgentId: obj.lead_agent_id as string,
+    memberAgentIds: parseJson<string[]>(obj.member_agent_ids as string, []),
+    threadId: obj.thread_id as string,
+    ceoCommand: (obj.ceo_command as string) ?? '',
+    parentTaskId: (obj.parent_task_id as string | null) ?? null,
+    plan: (obj.plan as string) ?? '',
+    summary: (obj.summary as string) ?? '',
+    maxTurns: Number(obj.max_turns ?? 12),
+    createdAt: obj.created_at as string,
+    updatedAt: obj.updated_at as string,
+  });
 
   close(): void {
     this.db?.close();

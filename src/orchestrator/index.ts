@@ -71,6 +71,12 @@ import { OrgEngine, CEO_NODE_ID, buildCeoFinalReport, reviewAndSummarizeForManag
 import { parseCeoMention } from './mention-parser';
 import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-display';
 import { CeoChatPanel } from '../webview/CeoChatPanel';
+import {
+  TeamEngine,
+  normalizeTeamCommand,
+  proposeTeamMembers,
+  shouldUseTeamCollaboration,
+} from '../team';
 
 const MAX_ORG_REVISIONS = 5;
 
@@ -87,6 +93,8 @@ export class Orchestrator {
   private collabMirrorThreadId: string | null = null;
   private collabSourceAgentId: string | null = null;
   private telegramCommandActive = false;
+  private dashboardRefresh?: () => void;
+  private dashboardNavigate?: (tab: string) => void;
   private workspaceExecutor: WorkspaceActionExecutor;
   private researchAgent: ResearchAgent;
   private productionAgent: ProductionAgent;
@@ -106,7 +114,8 @@ export class Orchestrator {
     private agentFolders: AgentFolderEngine,
     private knowledgeLearner: KnowledgeLearner,
     private orgEngine: OrgEngine,
-    private llmStatus: LlmStatusService
+    private llmStatus: LlmStatusService,
+    private teamEngine: TeamEngine
   ) {
     this.workspaceExecutor = new WorkspaceActionExecutor(workspace, memory);
     this.researchAgent = new ResearchAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
@@ -130,6 +139,11 @@ export class Orchestrator {
 
   endTelegramCommand(): void {
     this.telegramCommandActive = false;
+  }
+
+  setDashboardHooks(refresh?: () => void, navigate?: (tab: string) => void): void {
+    this.dashboardRefresh = refresh;
+    this.dashboardNavigate = navigate;
   }
 
   isTelegramCommand(): boolean {
@@ -363,7 +377,21 @@ export class Orchestrator {
     });
 
     if (this.isTelegramCommand()) {
-      return this.executeConfirmedDelegate(pendingId);
+      if (secretary && this.isConversationalCommand(command)) {
+        return this.executeConversationalReply(secretary, command);
+      }
+      this.agentSay(
+        secretary,
+        `${SecretaryMessages.askConfirmation(softenedRoute, target.name)}\n\n텔레그램에서는 @${target.name} 으로 직접 지정해 주시면 바로 연결됩니다.`,
+        'agent',
+        'done'
+      );
+      this.chat.clearPending();
+      return {
+        taskId: '',
+        success: true,
+        message: 'Telegram: awaiting explicit @mention instead of auto-delegate',
+      };
     }
 
     return {
@@ -411,6 +439,11 @@ export class Orchestrator {
   ): Promise<OrchestratorResult> {
     if (!this.collabMirrorThreadId) {
       this.chat.requestOpenPanel(agent.id, agent.name);
+    }
+
+    const teamTask = normalizeTeamCommand(command);
+    if (shouldUseTeamCollaboration(command) && teamTask) {
+      return this.executeTeamCommand(agent, teamTask, fullCommand);
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
@@ -531,6 +564,68 @@ export class Orchestrator {
         this.agentManager.setStatus(agent.id, 'idle');
       }
       CeoChatPanel.refreshThread(agent.id);
+    }
+  }
+
+  private async executeTeamCommand(
+    lead: Agent,
+    command: string,
+    fullCommand: string
+  ): Promise<OrchestratorResult> {
+    const members = proposeTeamMembers(lead, command, this.agentManager.getAll());
+    if (members.length < 2) {
+      this.agentSay(
+        lead,
+        '사장님, 팀 협업을 하려면 활성 에이전트가 2명 이상 필요해요. Agents 탭에서 에이전트를 추가해 주세요.',
+        'agent',
+        'failed',
+        { ceoMessage: command },
+        true
+      );
+      return { taskId: '', success: false, message: 'Not enough agents for team collaboration' };
+    }
+
+    const session = this.teamEngine.createSession(lead, command, members);
+
+    this.chat.requestOpenTeamPanel(session.threadId, session.memberAgentIds, session.title);
+    CeoChatPanel.refreshThread(session.threadId);
+    this.dashboardRefresh?.();
+    this.dashboardNavigate?.('teams');
+
+    this.agentSay(
+      lead,
+      `사장님, ${members.length}명 팀으로 협업을 시작할게요. 팀 협업방에서 진행 상황을 보실 수 있어요.`,
+      'agent',
+      'done',
+      { ceoMessage: command },
+      true
+    );
+
+    this.collabMirrorThreadId = session.threadId;
+    try {
+      const result = await this.teamEngine.runSession(session, command);
+      this.memory.logActivity(
+        lead.id,
+        null,
+        `팀 협업 완료 (${result.turns}턴): ${command.slice(0, 80)}`
+      );
+      this.agentSay(lead, result.summary.slice(0, 1500), 'agent', 'done', { ceoMessage: command }, true);
+      this.notifications.showInfo(`팀 협업 완료 — ${lead.name}`);
+      this.dashboardRefresh?.();
+      return {
+        taskId: session.id,
+        success: result.success,
+        message: result.summary,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.teamEngine.failSession(session.id, message);
+      this.agentSay(lead, `팀 협업 중 오류가 발생했어요.\n\n${message}`, 'agent', 'failed');
+      return { taskId: session.id, success: false, message };
+    } finally {
+      this.collabMirrorThreadId = null;
+      CeoChatPanel.refreshThread(session.threadId);
+      void fullCommand;
     }
   }
 

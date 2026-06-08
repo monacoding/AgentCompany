@@ -1,0 +1,55 @@
+import { Agent } from '../types';
+import { formatAgentLabel } from '../utils/agent-display';
+
+const MAX_TEAM_SIZE = 4;
+
+/** 리드 에이전트 + 업무에 맞는 전문가 자동 선정 */
+export function proposeTeamMembers(lead: Agent, command: string, agents: Agent[]): Agent[] {
+  const members = new Map<string, Agent>();
+  members.set(lead.id, lead);
+
+  const lower = command.toLowerCase();
+  const candidates = agents.filter((a) => a.status !== 'offline' && a.id !== lead.id);
+
+  const pick = (predicate: (a: Agent) => boolean) => {
+    const found = candidates.find(predicate);
+    if (found) members.set(found.id, found);
+  };
+
+  if (/조사|리서치|검색|수집|크롤|기출|pdf/i.test(lower)) {
+    pick((a) => a.role === 'researcher');
+  }
+  if (/코드|구현|개발|버그|api|refactor|배포/i.test(lower)) {
+    pick((a) => a.role === 'backend' || a.role === 'frontend' || a.role === 'devops');
+  }
+  if (/문서|대본|작성|기획|쇼츠|숏폼|콘텐츠/i.test(lower)) {
+    pick((a) => a.role === 'writer' || a.role === 'pm');
+  }
+  if (/영업|세일즈|고객|제안/i.test(lower)) {
+    pick((a) => a.title?.includes('영업') || a.role === 'pm');
+  }
+  if (/국어|수능|교육|문제/i.test(lower)) {
+    pick((a) => a.title?.includes('국어') || a.capabilities?.some((c) => /korean|education/i.test(c)));
+  }
+
+  for (const agent of candidates) {
+    if (members.size >= MAX_TEAM_SIZE) break;
+    const rolesUsed = new Set([...members.values()].map((m) => m.role));
+    if (!rolesUsed.has(agent.role)) {
+      members.set(agent.id, agent);
+    }
+  }
+
+  if (members.size < 2) {
+    for (const agent of candidates) {
+      if (members.size >= MAX_TEAM_SIZE) break;
+      members.set(agent.id, agent);
+    }
+  }
+
+  return [...members.values()].slice(0, MAX_TEAM_SIZE);
+}
+
+export function formatTeamMemberLabels(members: Agent[]): string {
+  return members.map((a) => formatAgentLabel(a)).join(' · ');
+}
