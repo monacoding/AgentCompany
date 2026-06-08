@@ -1,6 +1,6 @@
 # 최현석 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:55:11.954Z_
+_마지막 동기화: 2026-06-08T11:56:49.926Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -37,15 +37,6 @@ _마지막 동기화: 2026-06-08T11:55:11.954Z_
 - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
 
 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
 
 [KnowledgeLearned: cross-agent-file-transfer.md@ebc7817b]
 # 에이전트 간 파일 이동 규칙 요약
@@ -107,3 +98,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 ## 수학 PDF 검증 태스크
 - 수학 영역 PDF 메타·분류 검증
 - 2차 Project에서 수학 확장 담당
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

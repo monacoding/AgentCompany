@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:54:59.804Z_
+_마지막 동기화: 2026-06-08T11:56:50.625Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -310,15 +310,6 @@ By adhering to this roadmap, we can efficiently deliver high-quality educational
 · role-profile.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/role-profile.md
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [PM 계획] 인터넷에서 수능 문제 pdf 로 다운 받는 작업 해보자
 수능 문제 PDF를 다운로드하는 작업을 진행하기 위해, @한서준 (리서처) 에이전트를 활용하면 좋을 것 같습니다. 한서준 에이전트는 웹 크롤링과 데이터 수집에서 뛰어난 역량을 갖고 있으며, 정확하게 필요한 문서를 찾고 다운로드할 수 있도록 도와줄 수 있습니다.
 
@@ -404,3 +395,12 @@ P1 리서치 → P2 자동화 → P3 검증 → P4 PM 보고
 - @하정우: download_suneung_pdfs.py 스크립트
 - @김윤하: 국어 PDF 검증
 - @최현석: 수학 PDF 검증 (2차)
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

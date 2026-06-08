@@ -20,6 +20,50 @@ var SELF_FOLDER_SIGNAL = /(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|본인(?
 var AGENT_REQUEST_SIGNAL = /(?:에게|한테).{0,80}(?:요청|부탁|전달|제공받|제공해|말씀|연락|협력)/i;
 var FILE_SIGNAL = /(?:파일|폴더|데이터(?:베이스)?|outputs?|다운(?:로드|받)|pdf|자료|산출물|리포트|보관|저장|문서)/i;
 var CROSS_AGENT_FILE_SIGNAL = /(?:다른\s*에이전트|에이전트\s*폴더|서준이|서준|한서준).{0,60}(?:pdf|파일|폴더|갖고|보유|추출|저장)/i;
+
+/** 로컬 폴더·에이전트 간 기존 파일 전달 */
+function isLocalFileTransferCommand(text: string): boolean {
+  return (
+    /(?:다른\s*에이전트|에이전트\s*폴더).{0,40}(?:가져|복사|전달|옮)/i.test(text) ||
+    /(?:내|제|우리|너(?:의)?|당신(?:의)?)\s*폴더.{0,40}(?:가져|복사|전달|있는\s*파일|찾)/i.test(text) ||
+    /(?:가져|복사|전달).{0,30}(?:폴더|outputs?)/i.test(text) ||
+    CROSS_AGENT_FILE_SIGNAL.test(text)
+  );
+}
+
+/**
+ * 인터넷·공식 사이트 등 외부에서 PDF/자료를 수집·다운로드하는 업무.
+ * "다운받아서 저장"은 로컬 폴더 전달이 아님.
+ */
+export function isExternalResourceFetchTask(command: string): boolean {
+  const text = command.trim();
+  if (!text) return false;
+  if (isLocalFileTransferCommand(text)) return false;
+
+  const wantsWebResource =
+    /인터넷|웹|온라인|사이트|공식|평가원|suneung|크롤|검색(?:해서|하여)|찾아(?:서)?\s*(?:받|다운)|다운(?:로드|받)|download|http/i.test(
+      text
+    );
+  const hasCollectTarget = /pdf|파일|문서|자료|기출|수능|문제/i.test(text);
+
+  if (wantsWebResource && hasCollectTarget) return true;
+
+  // 짧은 후속 지시 ("인터넷에서 다운받으라고")
+  if (/인터넷|웹|온라인|사이트/.test(text) && /다운|받|수집|가져/.test(text)) {
+    return true;
+  }
+
+  // "인터넷" 없이도 수능+PDF+다운로드 조합은 외부 수집 업무
+  if (
+    /수능|기출|csat/i.test(text) &&
+    /pdf|다운/i.test(text) &&
+    /다운|받|수집|저장|가져|수행/i.test(text)
+  ) {
+    return true;
+  }
+
+  return false;
+}
 function escapeRegex2(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -79,6 +123,8 @@ export function detectCrossAgentFileRequest(
   const text = command.trim();
   if (!text || !FILE_SIGNAL.test(text))
     return null;
+  if (isExternalResourceFetchTask(text))
+    return null;
   const hasTransferIntent = TRANSFER_SIGNAL.test(text) || AGENT_REQUEST_SIGNAL.test(text) || CROSS_AGENT_FILE_SIGNAL.test(text);
   if (!hasTransferIntent)
     return null;
@@ -129,6 +175,8 @@ export function detectOwnFolderFileRequest(
 ): OwnFolderFileRequest | null {
   const text = command.trim();
   if (!text || !FILE_SIGNAL.test(text))
+    return null;
+  if (isExternalResourceFetchTask(text))
     return null;
   if (detectCrossAgentFileRequest(command, currentAgent, () => null, allAgents)) {
     return null;

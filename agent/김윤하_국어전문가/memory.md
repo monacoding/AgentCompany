@@ -1,6 +1,6 @@
 # 김윤하 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:55:03.494Z_
+_마지막 동기화: 2026-06-08T11:56:50.665Z_
 
 [[김윤하] 윤하씨, 서준이가 찾은 수능 문제 중에 국어 영역만 윤하씨 폴더 데이터 베이스로 가져가줄래요?]
 [OpenAI] API key not configured. .env 파일에 CHATGPT_API_KEY를 설정해 주세요.
@@ -1512,15 +1512,6 @@ With this strategy in place, I'll initiate the first step and loop back for coll
 
 Files modified: 1/1
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@1fb28a1d]
 # 에이전트 간 파일 이동
 
@@ -1570,3 +1561,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - 학년도·영역·회차 메타 확인
 - 누락·중복 체크
 - 승인 시 마지막 줄에 FINISHED
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

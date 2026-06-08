@@ -39,7 +39,11 @@ export {
 export { buildChatMessagesForLlm, formatChatContextString } from './chat-context';
 export { commandNeedsKnowledgeLearning } from './knowledge-policy';
 export type { ResolvedCommand } from './command-context';
-export { detectCrossAgentFileRequest, detectOwnFolderFileRequest } from './cross-agent-file';
+export {
+  detectCrossAgentFileRequest,
+  detectOwnFolderFileRequest,
+  isExternalResourceFetchTask,
+} from './cross-agent-file';
 export type { OwnFolderFileRequest } from './cross-agent-file';
 export type { CrossAgentFileRequest } from './cross-agent-file';
 export { generateFileTransferDialogue } from './file-transfer-dialogue';

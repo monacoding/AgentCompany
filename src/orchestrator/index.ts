@@ -29,6 +29,7 @@ import {
   buildFileTransferReceivedMessage,
   detectChatEmotion,
   detectCrossAgentFileRequest,
+  isExternalResourceFetchTask,
   detectDelegationSuggestion,
   formatChatReply,
   commandNeedsKnowledgeLearning,
@@ -419,6 +420,10 @@ export class Orchestrator {
     const allAgents = this.agentManager.getAll();
     const effective = resolved.effective;
 
+    if (isExternalResourceFetchTask(effective)) {
+      return null;
+    }
+
     const ownFileReq = detectOwnFolderFileRequest(effective, agent, allAgents);
     if (ownFileReq) {
       return this.offerOwnFolderFileMatch(agent, ownFileReq, rawCommand);
@@ -449,6 +454,10 @@ export class Orchestrator {
     const projectTask = normalizeProjectCommand(command);
     if (shouldStartProjectImmediately(command) && projectTask) {
       return this.executeTeamCommand(agent, projectTask, fullCommand);
+    }
+
+    if (this.isPmAgent(agent) && isExternalResourceFetchTask(command)) {
+      return this.executeDirectCommandFlat(agent, command, fullCommand, false);
     }
 
     if (isProjectGoAhead(command) && this.isPmAgent(agent)) {
@@ -1197,6 +1206,9 @@ ${pmBlock}
       const resolved = this.resolveCeoCommandForAgent(agentId, command);
 
       const allAgents = this.agentManager.getAll();
+      if (isExternalResourceFetchTask(resolved.effective)) {
+        // 외부 다운로드 업무 — 폴더 검색 생략, PM/리서치 등 실제 작업으로 진행
+      } else {
       const ownFileReq = detectOwnFolderFileRequest(resolved.effective, agent, allAgents);
       if (ownFileReq) {
         this.memory.logActivity(
@@ -1227,6 +1239,7 @@ ${pmBlock}
         this.taskEngine.transition(taskId, 'completed');
         this.agentManager.setStatus(agentId, 'idle');
         return;
+      }
       }
 
       if (isResearchAgent(agent)) {
@@ -1448,6 +1461,7 @@ ${templateBlock}
 
 사장님과 PM으로 대화합니다.
 - 응답에 **목표 → 계획 → 작업 분배 → 참여 에이전트** 순서로 제시
+- **인터넷·웹 PDF 다운로드** 요청 시 knowledge/폴더·로컬 파일 검색 금지 — @한서준(출처조사)→@하정우(스크립트) Project 계획 제시
 - 팀 에이전트 매칭·협업 계획 시 **위 실제 @에이전트명만** 사용
 - 가상의 외부 전문가·일반 직함 나열 금지
 - 한국어, "사장님" 호칭, @이름: 담당업무 형식 권장
