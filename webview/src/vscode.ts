@@ -290,6 +290,7 @@ export interface TeamSession {
   plan: string;
   summary: string;
   maxTurns: number;
+  requesterAgentId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

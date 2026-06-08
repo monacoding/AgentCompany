@@ -208,6 +208,7 @@ export interface TeamSession {
   id: string;
   title: string;
   status: TeamSessionStatus;
+  /** PM 오케스트레이터 */
   leadAgentId: string;
   memberAgentIds: string[];
   threadId: string;
@@ -216,6 +217,8 @@ export interface TeamSession {
   plan: string;
   summary: string;
   maxTurns: number;
+  /** @멘션으로 지시한 에이전트 */
+  requesterAgentId: string | null;
   createdAt: string;
   updatedAt: string;
 }

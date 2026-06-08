@@ -6,4 +6,6 @@ export {
   normalizeTeamCommand,
 } from './trigger';
 export { proposeTeamMembers, formatTeamMemberLabels } from './member-picker';
+export { resolveTeamPm, planTeamWithPm, shouldOrchestrateWithPm } from './pm-planner';
+export type { TeamPlanResult } from './pm-planner';
 export type { TeamSession, TeamSessionStatus, TeamRunResult } from './types';

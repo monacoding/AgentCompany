@@ -74,7 +74,7 @@ import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
   normalizeTeamCommand,
-  proposeTeamMembers,
+  shouldOrchestrateWithPm,
   shouldUseTeamCollaboration,
 } from '../team';
 
@@ -445,6 +445,9 @@ export class Orchestrator {
     if (shouldUseTeamCollaboration(command) && teamTask) {
       return this.executeTeamCommand(agent, teamTask, fullCommand);
     }
+    if (shouldOrchestrateWithPm(teamTask || command)) {
+      return this.executeTeamCommand(agent, teamTask || command, fullCommand);
+    }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
 
@@ -510,6 +513,15 @@ export class Orchestrator {
       }
     }
 
+    const effectiveTask = fileResolved.effective.trim() || command;
+    if (
+      shouldOrchestrateWithPm(effectiveTask, {
+        suggestedAction: interpretation.suggestedAction,
+      })
+    ) {
+      return this.executeTeamCommand(agent, effectiveTask, fullCommand);
+    }
+
     if (this.orgEngine.shouldUseHierarchicalReport(agent.id)) {
       const chain = this.orgEngine.getReportingChain(agent.id);
       return this.executeHierarchicalCommand(agent, command, fullCommand, chain);
@@ -568,14 +580,31 @@ export class Orchestrator {
   }
 
   private async executeTeamCommand(
-    lead: Agent,
+    requester: Agent,
     command: string,
     fullCommand: string
   ): Promise<OrchestratorResult> {
-    const members = proposeTeamMembers(lead, command, this.agentManager.getAll());
+    let teamPlan;
+    try {
+      teamPlan = await this.teamEngine.prepareTeam(requester, command);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.agentSay(
+        requester,
+        `사장님, PM 팀 구성 중 문제가 생겼어요.\n\n${message}`,
+        'agent',
+        'failed',
+        { ceoMessage: command },
+        true
+      );
+      return { taskId: '', success: false, message };
+    }
+
+    const { pm, plan, members } = teamPlan;
+
     if (members.length < 2) {
       this.agentSay(
-        lead,
+        requester,
         '사장님, 팀 협업을 하려면 활성 에이전트가 2명 이상 필요해요. Agents 탭에서 에이전트를 추가해 주세요.',
         'agent',
         'failed',
@@ -585,16 +614,17 @@ export class Orchestrator {
       return { taskId: '', success: false, message: 'Not enough agents for team collaboration' };
     }
 
-    const session = this.teamEngine.createSession(lead, command, members);
+    const session = this.teamEngine.createSession(pm, command, members, plan, requester.id);
 
     this.chat.requestOpenTeamPanel(session.threadId, session.memberAgentIds, session.title);
     CeoChatPanel.refreshThread(session.threadId);
     this.dashboardRefresh?.();
     this.dashboardNavigate?.('teams');
 
+    const memberLabels = members.map((m) => formatAgentLabel(m)).join(', ');
     this.agentSay(
-      lead,
-      `사장님, ${members.length}명 팀으로 협업을 시작할게요. 팀 협업방에서 진행 상황을 보실 수 있어요.`,
+      requester,
+      `사장님, ${formatAgentLabel(pm)} PM이 팀 계획을 세우고 협업을 시작할게요.\n참여: ${memberLabels}\n팀 협업방에서 진행 상황을 보실 수 있어요.`,
       'agent',
       'done',
       { ceoMessage: command },
@@ -605,12 +635,19 @@ export class Orchestrator {
     try {
       const result = await this.teamEngine.runSession(session, command);
       this.memory.logActivity(
-        lead.id,
+        pm.id,
         null,
-        `팀 협업 완료 (${result.turns}턴): ${command.slice(0, 80)}`
+        `PM 팀 협업 완료 (${result.turns}턴): ${command.slice(0, 80)}`
       );
-      this.agentSay(lead, result.summary.slice(0, 1500), 'agent', 'done', { ceoMessage: command }, true);
-      this.notifications.showInfo(`팀 협업 완료 — ${lead.name}`);
+      this.agentSay(
+        requester,
+        `[PM ${pm.name} 보고]\n${result.summary.slice(0, 1400)}`,
+        'agent',
+        'done',
+        { ceoMessage: command },
+        true
+      );
+      this.notifications.showInfo(`팀 협업 완료 — PM ${pm.name}`);
       this.dashboardRefresh?.();
       return {
         taskId: session.id,
@@ -620,7 +657,7 @@ export class Orchestrator {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.teamEngine.failSession(session.id, message);
-      this.agentSay(lead, `팀 협업 중 오류가 발생했어요.\n\n${message}`, 'agent', 'failed');
+      this.agentSay(requester, `팀 협업 중 오류가 발생했어요.\n\n${message}`, 'agent', 'failed');
       return { taskId: session.id, success: false, message };
     } finally {
       this.collabMirrorThreadId = null;

@@ -138,6 +138,11 @@ export class Database {
     } catch {
       // column already exists
     }
+    try {
+      this.db!.run('ALTER TABLE team_sessions ADD COLUMN requester_agent_id TEXT');
+    } catch {
+      // column already exists
+    }
   }
 
   private persist(): void {
@@ -486,8 +491,9 @@ export class Database {
     this.db!.run(
       `INSERT INTO team_sessions (
         id, title, status, lead_agent_id, member_agent_ids, thread_id,
-        ceo_command, parent_task_id, plan, summary, max_turns, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ceo_command, parent_task_id, plan, summary, max_turns, requester_agent_id,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         session.id,
         session.title,
@@ -500,6 +506,7 @@ export class Database {
         session.plan,
         session.summary,
         session.maxTurns,
+        session.requesterAgentId,
         session.createdAt,
         session.updatedAt,
       ]
@@ -520,7 +527,8 @@ export class Database {
     this.db!.run(
       `UPDATE team_sessions SET
         title=?, status=?, lead_agent_id=?, member_agent_ids=?, thread_id=?,
-        ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?, updated_at=?
+        ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?,
+        requester_agent_id=?, updated_at=?
        WHERE id=?`,
       [
         updated.title,
@@ -533,6 +541,7 @@ export class Database {
         updated.plan,
         updated.summary,
         updated.maxTurns,
+        updated.requesterAgentId,
         updated.updatedAt,
         id,
       ]
@@ -572,6 +581,7 @@ export class Database {
     plan: (obj.plan as string) ?? '',
     summary: (obj.summary as string) ?? '',
     maxTurns: Number(obj.max_turns ?? 12),
+    requesterAgentId: (obj.requester_agent_id as string | null) ?? null,
     createdAt: obj.created_at as string,
     updatedAt: obj.updated_at as string,
   });

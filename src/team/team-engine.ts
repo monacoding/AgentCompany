@@ -1,6 +1,6 @@
 import { AgentFolderEngine } from '../agent-folders';
 import { ChatService } from '../chat';
-import { formatChatReply } from '../chat/reply-format';
+import { formatChatReply, formatLlmError } from '../chat/reply-format';
 import { Database } from '../database';
 import { AgentManager } from '../agents';
 import { ProviderEngine } from '../providers';
@@ -8,6 +8,7 @@ import { Agent, TeamSession } from '../types';
 import { generateId, now } from '../utils';
 import { formatAgentLabel } from '../utils/agent-display';
 import { formatTeamMemberLabels } from './member-picker';
+import { planTeamWithPm, TeamPlanResult } from './pm-planner';
 import {
   buildSpeakerSystemPrompt,
   isTeamTermination,
@@ -25,23 +26,37 @@ export class TeamEngine {
     private agentFolders: AgentFolderEngine
   ) {}
 
-  createSession(lead: Agent, command: string, members: Agent[]): TeamSession {
+  async prepareTeam(
+    requester: Agent,
+    command: string
+  ): Promise<TeamPlanResult> {
+    return planTeamWithPm(this.providers, this.agents.getAll(), requester, command);
+  }
+
+  createSession(
+    pm: Agent,
+    command: string,
+    members: Agent[],
+    plan: string,
+    requesterId?: string
+  ): TeamSession {
     const id = generateId();
     const timestamp = now();
     const session: TeamSession = {
       id,
-      title: command.slice(0, 60) || `${lead.name} 팀 협업`,
+      title: command.slice(0, 60) || `${pm.name} 팀 협업`,
       status: 'planning',
-      leadAgentId: lead.id,
+      leadAgentId: pm.id,
       memberAgentIds: members.map((m) => m.id),
       threadId: buildTeamThreadId(id),
       ceoCommand: command,
       parentTaskId: null,
-      plan: '',
+      plan,
       summary: '',
       maxTurns: 12,
       createdAt: timestamp,
       updatedAt: timestamp,
+      requesterAgentId: requesterId ?? null,
     };
     this.db.insertTeamSession(session);
     return session;
@@ -60,9 +75,9 @@ export class TeamEngine {
   }
 
   async runSession(session: TeamSession, command: string): Promise<TeamRunResult> {
-    const lead = this.agents.get(session.leadAgentId);
-    if (!lead) {
-      return { success: false, summary: '리드 에이전트를 찾을 수 없습니다.', turns: 0 };
+    const pm = this.agents.get(session.leadAgentId);
+    if (!pm) {
+      return { success: false, summary: 'PM 에이전트를 찾을 수 없습니다.', turns: 0 };
     }
 
     const participants = session.memberAgentIds
@@ -76,21 +91,34 @@ export class TeamEngine {
     this.updateSession(session.id, { status: 'running' });
 
     const threadId = session.threadId;
-    this.pushTeamMessage(threadId, null, '시스템', 'system', `👥 팀 협업 시작\n${formatTeamMemberLabels(participants)}`);
+    const requester = session.requesterAgentId
+      ? this.agents.get(session.requesterAgentId)
+      : null;
 
-    const plan = await this.generateTeamPlan(lead, command, participants);
-    this.updateSession(session.id, { plan });
-    this.pushTeamMessage(threadId, lead.id, formatAgentLabel(lead), 'agent', `📋 **팀 계획**\n${plan}`);
+    this.pushTeamMessage(
+      threadId,
+      null,
+      '시스템',
+      'system',
+      `👥 팀 협업 시작 (PM: ${formatAgentLabel(pm)})${requester ? `\n요청: ${formatAgentLabel(requester)}` : ''}\n${formatTeamMemberLabels(participants)}`
+    );
 
-    const history: TeamTurnMessage[] = [{ agentId: lead.id, agentName: lead.name, content: plan }];
-    let lastSpeakerId: string | null = lead.id;
+    const plan = session.plan.trim() || (await this.safeGeneratePlan(pm, command, participants));
+    if (!session.plan.trim()) {
+      this.updateSession(session.id, { plan });
+    }
+
+    this.pushTeamMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `📋 **PM 팀 계획**\n${plan}`);
+
+    const history: TeamTurnMessage[] = [{ agentId: pm.id, agentName: pm.name, content: plan }];
+    let lastSpeakerId: string | null = pm.id;
     let turns = 0;
     let terminated = false;
 
     while (turns < session.maxTurns && !terminated) {
       const nextId = await selectNextSpeaker(
         this.providers,
-        lead,
+        pm,
         participants,
         history,
         lastSpeakerId
@@ -102,15 +130,8 @@ export class TeamEngine {
 
       this.setTeamWorking(threadId, speaker, '팀 논의 중…');
 
-      let content: string;
-      try {
-        content = await this.generateTeamTurn(speaker, command, plan, history, participants);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        content = `죄송해요, 응답 생성 중 문제가 생겼어요: ${message}`;
-      } finally {
-        this.clearTeamWorking(threadId, speaker);
-      }
+      const content = await this.safeGenerateTurn(speaker, command, plan, history, participants);
+      this.clearTeamWorking(threadId, speaker);
 
       const reply = formatChatReply(content) || content.trim() || '…';
       this.pushTeamMessage(threadId, speaker.id, formatAgentLabel(speaker), 'agent', reply);
@@ -123,8 +144,8 @@ export class TeamEngine {
       }
     }
 
-    const summary = await this.generateTeamSummary(lead, command, history);
-    this.pushTeamMessage(threadId, lead.id, formatAgentLabel(lead), 'agent', `✅ **팀 완료 보고**\n${summary}`);
+    const summary = await this.safeGenerateSummary(pm, command, history);
+    this.pushTeamMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `✅ **PM 완료 보고**\n${summary}`);
     this.pushTeamMessage(threadId, null, '시스템', 'system', `팀 협업 종료 (${turns}턴)`);
 
     this.updateSession(session.id, {
@@ -135,34 +156,61 @@ export class TeamEngine {
     return { success: true, summary, turns };
   }
 
-  private async generateTeamPlan(
-    lead: Agent,
+  private async safeGeneratePlan(
+    pm: Agent,
     command: string,
     participants: Agent[]
   ): Promise<string> {
-    const roster = participants
-      .map((a) => `- ${formatAgentLabel(a)} (${a.role}): ${a.description.slice(0, 100)}`)
-      .join('\n');
+    try {
+      const roster = participants
+        .map((a) => `- ${formatAgentLabel(a)} (${a.role}): ${a.description.slice(0, 100)}`)
+        .join('\n');
 
-    const response = await this.providers.chat(
-      [
-        {
-          role: 'system',
-          content: `You are ${lead.name}, team lead. Create a concise Korean task plan.
-Format:
-1. @에이전트명: 할 일
-2. @에이전트명: 할 일
-Keep it under 8 lines. No meta commentary.`,
-        },
-        {
-          role: 'user',
-          content: `## 사장님 지시\n${command}\n\n## 팀원\n${roster}\n\n계획을 세워주세요.`,
-        },
-      ],
-      { type: lead.provider, model: lead.model }
-    );
+      const response = await this.providers.chat(
+        [
+          {
+            role: 'system',
+            content: `You are ${pm.name}, PM. Write a concise Korean task plan. Format: N. @에이전트명: 할 일`,
+          },
+          {
+            role: 'user',
+            content: `## 사장님 지시\n${command}\n\n## 팀원\n${roster}`,
+          },
+        ],
+        { type: pm.provider, model: pm.model }
+      );
 
-    return (response.content || '팀 계획을 수립했습니다.').trim();
+      return (response.content || '팀 계획을 수립했습니다.').trim();
+    } catch (error) {
+      return `팀 계획 (오프라인 초안): ${command}\n\n${formatLlmError(error)}`;
+    }
+  }
+
+  private async safeGenerateTurn(
+    speaker: Agent,
+    command: string,
+    plan: string,
+    history: TeamTurnMessage[],
+    participants: Agent[]
+  ): Promise<string> {
+    try {
+      return await this.generateTeamTurn(speaker, command, plan, history, participants);
+    } catch (error) {
+      return `죄송해요, 응답 생성 중 문제가 생겼어요.\n\n${formatLlmError(error)}`;
+    }
+  }
+
+  private async safeGenerateSummary(
+    pm: Agent,
+    command: string,
+    history: TeamTurnMessage[]
+  ): Promise<string> {
+    try {
+      return await this.generateTeamSummary(pm, command, history);
+    } catch (error) {
+      const last = history.slice(-3).map((m) => `${m.agentName}: ${m.content.slice(0, 120)}`).join('\n');
+      return `팀 협업을 마쳤습니다. (요약 LLM 오류: ${formatLlmError(error)})\n\n최근 논의:\n${last}`;
+    }
   }
 
   private async generateTeamTurn(
@@ -197,11 +245,11 @@ Keep it under 8 lines. No meta commentary.`,
       { type: speaker.provider, model: speaker.model }
     );
 
-    return response.content.trim();
+    return (response.content || '').trim();
   }
 
   private async generateTeamSummary(
-    lead: Agent,
+    pm: Agent,
     command: string,
     history: TeamTurnMessage[]
   ): Promise<string> {
@@ -211,15 +259,14 @@ Keep it under 8 lines. No meta commentary.`,
       [
         {
           role: 'system',
-          content: `You are ${lead.name}, team lead. Summarize the team discussion for the CEO in Korean.
-Be concise (under 500 chars). Include key decisions and next steps.`,
+          content: `You are ${pm.name}, PM. Summarize the team discussion for the CEO in Korean. Be concise (under 500 chars).`,
         },
         {
           role: 'user',
           content: `## 사장님 지시\n${command}\n\n## 팀 대화\n${transcript}\n\n사장님께 보고하세요.`,
         },
       ],
-      { type: lead.provider, model: lead.model }
+      { type: pm.provider, model: pm.model }
     );
 
     return (response.content || '팀 협업이 완료되었습니다.').trim();
@@ -253,9 +300,8 @@ Be concise (under 500 chars). Include key decisions and next steps.`,
     });
   }
 
-  private clearTeamWorking(threadId: string, agent: Agent): void {
+  private clearTeamWorking(threadId: string, _agent: Agent): void {
     this.chat.clearWorking(threadId);
-    void agent;
   }
 
   failSession(id: string, summary?: string): void {
