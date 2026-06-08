@@ -69,6 +69,7 @@ export function sanitizeAcknowledgmentForPendingWork(
 
 function isCasualFallback(command: string): boolean {
   const task = command.trim();
+  if (/폴더\s*경로|내\s*폴더|경로\s*확인/i.test(task)) return true;
   return (
     task.length <= 100 &&
     !/(파일|pdf|구현|조사|만들|작성|전달|다운|크롤|리서치|코드|배포|수능|기출)/i.test(task)

@@ -25,6 +25,7 @@ import {
   buildOwnFolderFileMatchAsk,
   buildFileTransferCompleteMessage,
   buildFileTransferFailedMessage,
+  detectFolderPathInquiry,
   detectOwnFolderFileRequest,
   buildFileTransferReceivedMessage,
   detectChatEmotion,
@@ -47,6 +48,7 @@ import {
 import type {
   CeoCommandInterpretation,
   CrossAgentFileRequest,
+  FolderPathScope,
   OwnFolderFileRequest,
   ResolvedCommand,
 } from '../chat';
@@ -469,6 +471,11 @@ export class Orchestrator {
       return null;
     }
 
+    const folderPathScope = detectFolderPathInquiry(effective);
+    if (folderPathScope) {
+      return this.replyFolderPathInquiry(agent, rawCommand, folderPathScope);
+    }
+
     const ownFileReq = detectOwnFolderFileRequest(effective, agent, allAgents);
     if (ownFileReq) {
       return this.offerOwnFolderFileMatch(agent, ownFileReq, rawCommand);
@@ -536,6 +543,11 @@ export class Orchestrator {
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
+
+    const folderPathScope = detectFolderPathInquiry(resolved.effective);
+    if (folderPathScope) {
+      return this.replyFolderPathInquiry(agent, command, folderPathScope);
+    }
 
     // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변
     if (this.isConversationalCommand(command)) {
@@ -757,6 +769,7 @@ export class Orchestrator {
   private isConversationalCommand(command: string): boolean {
     const text = command.trim();
     if (!text || text.length > 300) return false;
+    if (detectFolderPathInquiry(text)) return true;
     if (isContextDependentCommand(text)) return false;
     if (
       /```|\.(ts|tsx|js|py|md|json)|create|implement|fix|build|deploy|write|research|refactor|조사|구현|작성|수정|배포|리팩터|파일|코드|버그|찾|검색|다운|pdf|크롤|리서치|수집|확인|알아봐|수능|기출|제작|만들|쇼츠|숏폼|대본|기획해|스토리보드|썸네일|브리프/i.test(
@@ -1276,6 +1289,16 @@ ${pmBlock}
     try {
       const command = this.extractCommandFromTask(task);
       const resolved = this.resolveCeoCommandForAgent(agentId, command);
+
+      const folderPathScope = detectFolderPathInquiry(resolved.effective);
+      if (folderPathScope) {
+        const reply = this.agentFolders.buildFolderPathReply(agent, folderPathScope);
+        this.taskEngine.setResult(taskId, reply);
+        this.taskEngine.transition(taskId, 'completed');
+        this.agentManager.setStatus(agentId, 'idle');
+        this.agentSay(agent, reply, 'agent', 'done');
+        return;
+      }
 
       const allAgents = this.agentManager.getAll();
       if (isExternalResourceFetchTask(resolved.effective)) {
@@ -1947,6 +1970,18 @@ ${templateBlock}
     } finally {
       this.agentClearWorking(requester);
     }
+  }
+
+  private replyFolderPathInquiry(
+    agent: Agent,
+    command: string,
+    scope: FolderPathScope
+  ): OrchestratorResult {
+    this.chat.requestOpenPanel(agent.id, agent.name);
+    const reply = this.agentFolders.buildFolderPathReply(agent, scope);
+    this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.memory.logActivity(agent.id, null, `폴더 경로 안내 (${scope})`);
+    return { taskId: '', success: true, message: 'Folder path inquiry answered' };
   }
 
   private async offerOwnFolderFileMatch(

@@ -14,6 +14,28 @@ export interface OwnFolderFileRequest {
   summary: string;
 }
 
+export type FolderPathScope = 'owner' | 'agent' | 'both';
+
+const FOLDER_PATH_SIGNAL =
+  /(?:폴더\s*경로|경로\s*(?:확인|알려|알려줘|뭐|무엇|어디)|폴더\s*(?:위치|어디|확인)|어디에\s*(?:저장|있)|내\s*폴더|제\s*폴더|작업\s*폴더|outputs?\s*경로|folder\s*path)/i;
+
+/** 사장님·에이전트 폴더 **경로 안내** (파일 전달이 아님) */
+export function detectFolderPathInquiry(command: string): FolderPathScope | null {
+  const text = command.trim();
+  if (!text || !FOLDER_PATH_SIGNAL.test(text)) return null;
+  if (isExternalResourceFetchTask(text)) return null;
+  if (/(?:가져|복사|전달|옮기|보내|줄래|줘|드릴|드려|제공)/i.test(text) && /파일|pdf/i.test(text)) {
+    return null;
+  }
+
+  if (/(?:사장님\s*폴더|owner|company\/owner)/i.test(text)) return 'owner';
+  if (/(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|에이전트)\s*폴더|작업\s*폴더|outputs?\s*폴더/i.test(text)) {
+    return 'agent';
+  }
+  if (/내\s*폴더|제\s*폴더|우리\s*폴더/i.test(text)) return 'owner';
+  return 'both';
+}
+
 var TRANSFER_SIGNAL = /(?:가져|옮기|복사|전달|이동|받아|넘겨|공유|옮겨|가져가|가져와|받을|전해|제공받|받은|저장|내\s*폴더|제\s*폴더|우리\s*폴더|갖고\s*있|가지고\s*있|추출하여|추출해서|저장하도록|저장해)/i;
 var GIVE_TO_CEO_SIGNAL = /(?:줄래|줘|주세요|보내|보내줘|드릴|드려|줄게|제공해|전해줘)/i;
 var SELF_FOLDER_SIGNAL = /(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|본인(?:의)?|자기(?:의)?|제\s*폴더|내\s*폴더|우리\s*폴더|여기\s*폴더|여기\s*있)/i;

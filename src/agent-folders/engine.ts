@@ -376,6 +376,43 @@ export class AgentFolderEngine {
     return path.join('agent', slug, ...parts).replace(/\\/g, '/');
   }
 
+  /** CEO 채팅용 폴더 경로 안내 메시지 */
+  buildFolderPathReply(
+    agent: Agent,
+    scope: 'owner' | 'agent' | 'both'
+  ): string {
+    const slug = this.resolveSlug(agent);
+    const lines: string[] = ['사장님, 폴더 경로 확인해 드릴게요.'];
+
+    if (scope === 'owner' || scope === 'both') {
+      const ownerDir = this.getOwnerDir();
+      const ownerRel = this.getCompanyRelativePath('owner');
+      lines.push(
+        '',
+        '📁 사장님(Owner) 데이터 폴더',
+        `· 워크스페이스: \`${ownerRel}\``,
+        `· 절대 경로: \`${ownerDir}\``,
+        '· profile.json, persona.md, photo/ 등'
+      );
+    }
+
+    if (scope === 'agent' || scope === 'both') {
+      const agentDir = this.getAgentDir(slug);
+      const agentRel = this.getRelativePath(slug);
+      const outputsRel = this.getRelativePath(slug, 'outputs');
+      lines.push(
+        '',
+        `📁 ${agent.name} 작업 폴더`,
+        `· 워크스페이스: \`${agentRel}\``,
+        `· 절대 경로: \`${agentDir}\``,
+        `· 산출물: \`${outputsRel}/\` (reports, scripts, downloads)`
+      );
+    }
+
+    lines.push('', '탐색기에서 열어 드릴까요? "폴더 열어줘"라고 말씀해 주세요.');
+    return lines.join('\n');
+  }
+
   getOutputPath(slug: string, ...parts: string[]): string {
     return this.getDisplayPath(slug, AGENT_FOLDER_LAYOUT.outputs, ...parts);
   }

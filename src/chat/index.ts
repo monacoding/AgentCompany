@@ -41,10 +41,11 @@ export { commandNeedsKnowledgeLearning } from './knowledge-policy';
 export type { ResolvedCommand } from './command-context';
 export {
   detectCrossAgentFileRequest,
+  detectFolderPathInquiry,
   detectOwnFolderFileRequest,
   isExternalResourceFetchTask,
 } from './cross-agent-file';
-export type { OwnFolderFileRequest } from './cross-agent-file';
+export type { FolderPathScope, OwnFolderFileRequest } from './cross-agent-file';
 export type { CrossAgentFileRequest } from './cross-agent-file';
 export { generateFileTransferDialogue } from './file-transfer-dialogue';
 export type { FileTransferDialogue } from './file-transfer-dialogue';

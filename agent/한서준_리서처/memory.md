@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T13:46:23.222Z_
+_마지막 동기화: 2026-06-08T14:05:37.819Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -2028,15 +2028,6 @@ P1 … / P2 … / P3 …
 
 이러한 절차를 통해 효율적이고 명확한 프로젝트 관리를 수
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@d56d6769]
 # 에이전트 간 파일 이동 요약
 
@@ -2152,3 +2143,156 @@ P1 … / P2 … / P3 …
      이재명 대통령이 검찰 및 언론 개혁 등 주요 현안에 대해 강경한 입장을 취함. [출처: 디지털타임스 [B]](https://issue.daum.net/focus/gov100)
    - **경제 및 대북 관계에 대한 언급**  
      부동산 및 대북 관계 개선에 대한 지속적인 정책 추진 발표. [출처: 중부일보 [B]](https://issue.daum.net/f
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@67aaa517]
+# 에이전트 간 파일 이동 규칙
+
+## 규칙 요약
+
+- **완료 전 금지 표현 사용 금지**  
+  - 파일 이동 완료 전에는 "저장했어요", "옮겼어요" 등의 완료 표현 사용 금지.  
+  - 진행 중인 경우 "요청해볼게요", "진행할게요" 등의 예정 표현 사용.
+
+- **완료 시 경로 제출 필수**  
+  - 파일 이동이 실제 완료된 후에만 완료 표현 가능하며, 반드시 저장된 파일의 경로를 제공해야 함.  
+  - 예시:  
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직한 보고**  
+  - 파일 이동 실패 시 "완료"라고 보고하지 않으며, 문제 발생 위치 및 다음 조치를 설명해야 함.
+
+- **허위 보고 금지**  
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것은 허위 보고로 간주함. 경로는 필수 증거 자료.
+
+## 주의사항
+
+- 모든 과정은 정확한 경로와 파일 이동 상태를 기반으로 보고해야 신뢰성을 확보할 수 있음.
+- 허위 보고는 신용 문제로 이어질 수 있으며, 조직 내에서의 명성을 해칠 수 있음.
+
+[KnowledgeLearned: owner-data-path.md@e8d088d9]
+# 사장님 데이터 경로 요약
+
+## 데이터 저장 위치
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준**: `company/owner`
+
+## 주요 파일
+- **사장님 프로필**: `profile.json`
+  - 포함 정보: 이름, 성격 등
+- **사장님 페르소나**: `persona.md`
+  - 포함 정보: 대화, 보고 시 참고 사항
+- **사장님 사진 폴더**: `photo/`
+
+## 사용 지침
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **항상 명시된 경로**를 사용해야 함.
+- 다른 위치를 이용하지 않도록 주의 필요.
+
+[KnowledgeLearned: project-playbook.md@3983fd72]
+# Project 협업 플레이북
+
+## AgentCompany Project 표준 절차 (필수)
+
+- 사장님 지시 수신 후, 아래 5단계 절차를 준수합니다.
+
+### 1. 목표
+- 사장님의 지시 내용에서 한 문장으로 목표를 정리하고 산출물, 범위, 제외 항목을 명확히 정의합니다.
+
+### 2. 계획
+- 프로젝트를 Phase 단위로 구분: 리서치, 구현/실행, 검증, PM 보고.
+- 각 태스크는 작업 → 검토의 루프를 최대 5회 반복 (FINISHED 키워드 사용).
+
+### 3. 작업 분배
+- 각 태스크를 번호와 @에이전트명 형식으로 명시합니다. 
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- 실제 회사 에이전트 명단(roster)만 사용. 가상의 직함이나 외부 인력은 사용하지 않습니다.
+- 각 에이전트를 role, title, capabilities에 따라 매칭.
+
+### 5. 승인 후 Project 실행
+- PM이 계획을 사장님께 제시하고 "진행하세요" 승인을 요청합니다.
+- 승인 시 Project 채팅방 개설, Projects 탭 등록, 에이전트 순차 협업 진행.
+- 산출물 저장: `company/projects/{sessionId}/` (tasks/, files/, PM_REPORT.md)
+- 이전 태스크 산출물은 carry_data로 다음 단계에 전달.
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```markdown
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## PM 전용 — Project 오케스트레
+
+[Research: 이재명 관련 최근 기사 검색]
+### 요약
+최근 이재명 대통령 취임 1주년을 기념한 기자회견이 열렸으며, 이 자리에서 민주주의와 민생, 통상 분야에서의 위기를 극복했다는 성과를 강조했다. 그는 반도체 산업의 초과 이윤 문제에 대해 "피할 수 없는 현실"이라고 말하며, 효과적인 활용 방안을 강화하겠다고 밝혔다. 또한, 코스피가 8000선을 두고 변동성이 있음을 인정하면서도 이를 정상적인 과정으로 보고 한국 증시는 여전히 저평가되었다고 주장했다.
+
+### 핵심 발견
+- 이재명 대통령은 취임 1주년 회견에서 지난 1년간 내린 국정 성과에 대해 강조했다. 특히 민주주의, 민생, 통상 분야에서 위기를 넘어섰다고 강조했다. [출처: 연합뉴스](https://www.yna.co.kr/view/AKR20260529160000001) (B)
+- 반도체 산업 초과 이윤에 대한 사회적 논의를 인정하며, 미래세대를 위한 투자를 추진해야 한다고 밝혔다. [출처: SBS](https://news.sbs.co.kr/news/endPage.
+
+[Research: 네트라 주식관련최근 기사 경향 조사]
+## 요약
+최근 Natera Inc.(NTRA) 주식에 대한 추적을 통해 관련 정보 및 기사 경향을 조사한 결과, 주식 시장에서의 Natera 주식에 대한 언급은 미비한 것으로 보입니다. 대신, 글로벌 시장의 흐름과 기술주, 특히 반도체 관련주의 변동성이 강조되면서 관련 시장의 전반적인 반응을 보았습니다. 한국 시장은 AI 관련 주식의 성장이 꾸준하지만 글로벌 투자자들은 현재의 하락세에 대비한 조정 전략을 구사하고 있습니다.
+
+## 핵심 발견
+- **Natera Inc. 주식 정보**: 실제로 Natera Inc. 주식(NTRA)에 대한 직접적인 언급이나 최근 기사에서는 거론되지 않았습니다. [Investing.com](https://kr.investing.com/equities/natera-inc)에서 실시간 주식 정보를 제공하고 있으나, 상세한 기사 내용은 제한되어 있습니다. (출처 B)
+- **글로벌 시장 동향**: 뉴시안 기사에 따르면, AI 산업 및 반도체 관련주의 차익 실
+
+[파일전달→사장님] 2007년도 수능 문제 pdf 로 다운 받아줘
+· 2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md
+· 2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md
+· 2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
+· 2026-06-08-사장님-지시-박준호-인터넷에서-2000-2010년도-수능-문제.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-사장님-지시-박준호-인터넷에서-2000-2010년도-수능-문제.md
+· 2021학년도-대학수학능력시험-국어-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2021학년도-대학수학능력시험-국어-문제.pdf
+· 2021학년도-대학수학능력시험-영어-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2021학년도-대학수학능력시험-영어-문제.pdf
+· 2021학년도-대학수학능력시험-한국사-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2021학년도-대학수학능력시험-한국사-문제.pdf
+· 2022학년도-대학수학능력시험-국어-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2022학년도-대학수학능력시험-국어-문제.pdf
+· 2022학년도-대학수학능력시험-수학-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2022학년도-대학수학능력시험-수학-문제.pdf
+· 2022학년도-대학수학능력시험-영어-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2022학년도-대학수학능력시험-영어-문제.pdf
+· 2022학년도-대학수학능력시험-한국사-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2022학년도-대학수학능력시험-한국사-문제.pdf
+· 2024학년도-대학수학능력시험-국어-문제.pdf
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2024학년도-대학수학능력시험-국어-문제.pdf
+· 2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md
+· 2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md
+· 2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
