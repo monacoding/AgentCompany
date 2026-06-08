@@ -3,6 +3,7 @@ import { KnowledgeLearner } from '../../agent-folders/knowledge-learner';
 import { ProviderEngine } from '../../providers';
 import { WorkspaceEngine } from '../../workspace';
 import { Agent } from '../../types';
+import { Crawl4AiDockerService } from '../docker/crawl4ai-docker';
 import { ExtractedContent, ResearchPipelineStep, ResearchReport, ResearchRunOptions, SearchResult } from '../types';
 import { BrowserEngine, Crawl4AiAdapter } from './browser-engine';
 import { Extractor } from './extractor';
@@ -42,7 +43,8 @@ export class WebCrawlerAgent {
     providers: ProviderEngine,
     reportGenerator: ReportGenerator,
     private agentFolders?: AgentFolderEngine,
-    private knowledgeLearner?: KnowledgeLearner
+    private knowledgeLearner?: KnowledgeLearner,
+    private crawl4aiDocker?: Crawl4AiDockerService
   ) {
     this.fileDownloader = new FileDownloader(workspace, agentFolders);
     this.summarizer = new Summarizer(providers);
@@ -68,6 +70,14 @@ export class WebCrawlerAgent {
     if (options?.preferFallback !== undefined) {
       this.browserEngine.setPreferFallback(options.preferFallback);
       return;
+    }
+
+    if (this.crawl4aiDocker) {
+      const dockerOk = await this.crawl4aiDocker.isDockerRunning(2000);
+      if (!dockerOk) {
+        this.browserEngine.setPreferFallback(true);
+        return;
+      }
     }
 
     const available = await this.crawl4ai.isAvailable();

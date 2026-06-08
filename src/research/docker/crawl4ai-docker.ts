@@ -76,11 +76,26 @@ export class Crawl4AiDockerService {
     }
   }
 
+  /** Docker 데몬 실행 여부 (기본 2초 타임아웃) */
+  async isDockerRunning(timeoutMs = 2000): Promise<boolean> {
+    return this.isDockerDaemonAvailable(timeoutMs);
+  }
+
   /**
-   * Docker/Crawl4AI 상태를 빠르게 판별.
-   * Docker가 없으면 즉시 fallback, 있으면 짧은 시간만 기동 시도 후 fallback.
+   * 리서치 크롤 엔진 결정.
+   * Docker 미실행 → Crawl4AI 확인·기동 없이 즉시 fallback.
+   * Docker 실행 + Crawl4AI 준비됨 → crawl4ai.
    */
   async resolveEngine(): Promise<CrawlEngineResolution> {
+    const dockerOk = await this.isDockerRunning(2000);
+    if (!dockerOk) {
+      return {
+        mode: 'fallback',
+        message: 'Docker 미실행 — 즉시 DuckDuckGo·Jina·Fetch로 조사 진행',
+        attemptedStart: false,
+      };
+    }
+
     if (await this.isHealthy()) {
       return {
         mode: 'crawl4ai',
@@ -92,16 +107,7 @@ export class Crawl4AiDockerService {
     if (!this.isAutoStartEnabled()) {
       return {
         mode: 'fallback',
-        message: 'Crawl4AI auto-start 비활성 — DuckDuckGo·Jina·Fetch로 리서치 진행',
-        attemptedStart: false,
-      };
-    }
-
-    const dockerOk = await this.isDockerDaemonAvailable(5000);
-    if (!dockerOk) {
-      return {
-        mode: 'fallback',
-        message: 'Docker 미실행 — DuckDuckGo·Jina·Fetch로 리서치 진행',
+        message: 'Crawl4AI 미가동 — DuckDuckGo·Jina·Fetch로 조사 진행',
         attemptedStart: false,
       };
     }

@@ -662,6 +662,14 @@ export class AgentCompanyService {
   }
   private async startCrawl4AiDocker(agent?: Agent): Promise<void> {
     const label = agent?.name ?? "\uC6D0\uC601";
+    const dockerOk = await this.crawl4aiDocker.isDockerRunning(2000);
+    if (!dockerOk) {
+      const message = 'Docker 미실행 — 리서치는 DuckDuckGo·Jina·Fetch로 즉시 진행 가능';
+      this.memory.logActivity(agent?.id ?? null, null, message);
+      this.notifications.showWarning(message);
+      return;
+    }
+
     this.notifications.showInfo(`${label}: Crawl4AI Docker \uD655\uC778 \uC911...`);
     const result = await this.crawl4aiDocker.resolveEngine();
     this.memory.logActivity(agent?.id ?? null, null, `Crawl engine: ${result.message}`);

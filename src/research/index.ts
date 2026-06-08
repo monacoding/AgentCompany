@@ -4,6 +4,7 @@ import { MemoryEngine } from '../memory';
 import { ProviderEngine } from '../providers';
 import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
+import { Crawl4AiDockerService } from './docker/crawl4ai-docker';
 import { ResearchPipelineStep, ResearchReport, ResearchRunOptions } from './types';
 import { ReportGenerator } from './webcrawler/report-generator';
 import { WebCrawlerAgent } from './webcrawler';
@@ -16,7 +17,8 @@ export class ResearchAgent {
     providers: ProviderEngine,
     workspace: WorkspaceEngine,
     agentFolders?: AgentFolderEngine,
-    private knowledgeLearner?: KnowledgeLearner
+    private knowledgeLearner?: KnowledgeLearner,
+    crawl4aiDocker?: Crawl4AiDockerService
   ) {
     const reportGenerator = new ReportGenerator(workspace, agentFolders);
     this.webCrawler = new WebCrawlerAgent(
@@ -24,7 +26,8 @@ export class ResearchAgent {
       providers,
       reportGenerator,
       agentFolders,
-      knowledgeLearner
+      knowledgeLearner,
+      crawl4aiDocker
     );
   }
 

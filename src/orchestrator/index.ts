@@ -132,7 +132,14 @@ export class Orchestrator {
     private teamEngine: TeamEngine
   ) {
     this.workspaceExecutor = new WorkspaceActionExecutor(workspace, memory);
-    this.researchAgent = new ResearchAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
+    this.researchAgent = new ResearchAgent(
+      memory,
+      providers,
+      workspace,
+      agentFolders,
+      knowledgeLearner,
+      crawl4aiDocker
+    );
     this.productionAgent = new ProductionAgent(memory, providers, agentFolders, knowledgeLearner);
     this.clineAgent = new ClineAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
     this.externalApiExecutor = new ExternalApiExecutor(externalApis, providers, memory, agentFolders);
