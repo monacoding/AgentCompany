@@ -7,6 +7,22 @@
 
 ---
 
+## [1.8.5] - 2026-06-09
+
+### Fixed
+
+- **한서준 리서치 Docker 멈춤** — Docker Desktop 꺼짐 시 `docker info`가 무한 대기해 조사가 시작되지 않던 문제
+  - `executeTerminal`: spawn + SIGKILL로 타임아웃 보장
+  - `resolveEngine()`: Crawl4AI HTTP 확인만 수행, 미연결 시 즉시 DuckDuckGo·Jina·Fetch fallback
+  - Docker 앱 미실행 시 `pgrep` 선행 검사로 `docker info` hang 방지
+  - knowledge sync를 리서치 전 await에서 백그라운드로 전환
+
+### Changed
+
+- Crawl4AI 미연결 시 컨테이너 기동을 리서치 시작 전에 기다리지 않고 백그라운드만 시도
+
+---
+
 ## [1.7.92] - 2026-06-08
 
 ### Fixed
