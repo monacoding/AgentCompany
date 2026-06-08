@@ -3,7 +3,7 @@ import { KnowledgeLearner } from '../../agent-folders/knowledge-learner';
 import { ProviderEngine } from '../../providers';
 import { WorkspaceEngine } from '../../workspace';
 import { Agent } from '../../types';
-import { ExtractedContent, ResearchPipelineStep, ResearchReport, SearchResult } from '../types';
+import { ExtractedContent, ResearchPipelineStep, ResearchReport, ResearchRunOptions, SearchResult } from '../types';
 import { BrowserEngine, Crawl4AiAdapter } from './browser-engine';
 import { Extractor } from './extractor';
 import {
@@ -53,12 +53,25 @@ export class WebCrawlerAgent {
   async run(
     query: string,
     agent: Agent,
-    onStep?: (step: ResearchPipelineStep) => void
+    onStep?: (step: ResearchPipelineStep) => void,
+    options?: ResearchRunOptions
   ): Promise<ResearchReport> {
+    await this.applyCrawlEngineOptions(options);
+
     if (isDownloadTask(query)) {
       return this.runDownloadPipeline(query, agent, onStep);
     }
     return this.runResearchPipeline(query, agent, onStep);
+  }
+
+  private async applyCrawlEngineOptions(options?: ResearchRunOptions): Promise<void> {
+    if (options?.preferFallback !== undefined) {
+      this.browserEngine.setPreferFallback(options.preferFallback);
+      return;
+    }
+
+    const available = await this.crawl4ai.isAvailable();
+    this.browserEngine.setPreferFallback(!available);
   }
 
   private async runDownloadPipeline(
@@ -225,8 +238,8 @@ export class WebCrawlerAgent {
     }
 
     emit('Browser Engine', 'running', '페이지 크롤링...');
-    const crawl4aiAvailable = await this.crawl4ai.isAvailable();
-    const engineLabel = crawl4aiAvailable ? 'Crawl4AI Docker' : 'Jina/Fetch fallback';
+    const crawl4aiAvailable = !this.browserEngine.isPreferFallback();
+    const engineLabel = crawl4aiAvailable ? 'Crawl4AI Docker' : 'Jina/Fetch (Docker 없음)';
 
     let extracted = await this.crawlPages(searchResults, MAX_CRAWL_PAGES);
 
@@ -240,7 +253,7 @@ export class WebCrawlerAgent {
 
     if (extracted.length === 0) {
       throw new Error(
-        '페이지 크롤링에 실패했습니다. Crawl4AI Docker(localhost:11235) 실행 여부를 확인해 주세요.'
+        '페이지 크롤링에 실패했습니다. 네트워크 연결을 확인하거나 검색 키워드를 바꿔 주세요.'
       );
     }
 

@@ -7,6 +7,12 @@ export interface DockerEnsureResult {
   alreadyRunning: boolean;
 }
 
+export interface CrawlEngineResolution {
+  mode: 'crawl4ai' | 'fallback';
+  message: string;
+  attemptedStart: boolean;
+}
+
 export class Crawl4AiDockerService {
   private starting: Promise<DockerEnsureResult> | null = null;
 
@@ -48,6 +54,110 @@ export class Crawl4AiDockerService {
       return await this.starting;
     } finally {
       this.starting = null;
+    }
+  }
+
+  /** Crawl4AI API 응답 여부 (Docker 컨테이너 기동 완료) */
+  async isHealthy(): Promise<boolean> {
+    const baseUrl = this.getBaseUrl();
+
+    try {
+      const response = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3000) });
+      if (response.ok) return true;
+    } catch {
+      // try root
+    }
+
+    try {
+      const response = await fetch(baseUrl, { signal: AbortSignal.timeout(3000) });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Docker/Crawl4AI 상태를 빠르게 판별.
+   * Docker가 없으면 즉시 fallback, 있으면 짧은 시간만 기동 시도 후 fallback.
+   */
+  async resolveEngine(): Promise<CrawlEngineResolution> {
+    if (await this.isHealthy()) {
+      return {
+        mode: 'crawl4ai',
+        message: 'Crawl4AI Docker 연결됨',
+        attemptedStart: false,
+      };
+    }
+
+    if (!this.isAutoStartEnabled()) {
+      return {
+        mode: 'fallback',
+        message: 'Crawl4AI auto-start 비활성 — DuckDuckGo·Jina·Fetch로 리서치 진행',
+        attemptedStart: false,
+      };
+    }
+
+    const dockerOk = await this.isDockerDaemonAvailable(5000);
+    if (!dockerOk) {
+      return {
+        mode: 'fallback',
+        message: 'Docker 미실행 — DuckDuckGo·Jina·Fetch로 리서치 진행',
+        attemptedStart: false,
+      };
+    }
+
+    const result = await this.ensureRunningWithTimeout(45000);
+    if (result.success && (await this.isHealthy())) {
+      return {
+        mode: 'crawl4ai',
+        message: result.message,
+        attemptedStart: true,
+      };
+    }
+
+    return {
+      mode: 'fallback',
+      message: result.success
+        ? 'Crawl4AI API 미응답 — Jina/Fetch fallback'
+        : `${result.message} — Jina/Fetch fallback`,
+      attemptedStart: true,
+    };
+  }
+
+  private getBaseUrl(): string {
+    return (
+      vscode.workspace.getConfiguration('agentCompany').get<string>('crawl4aiBaseUrl') ||
+      `http://localhost:${this.getPort()}`
+    );
+  }
+
+  private async isDockerDaemonAvailable(timeoutMs = 5000): Promise<boolean> {
+    const result = await this.workspace.executeTerminal(
+      'docker info --format "{{.ServerVersion}}"',
+      timeoutMs
+    );
+    return result.exitCode === 0 && !!result.stdout.trim();
+  }
+
+  private async ensureRunningWithTimeout(timeoutMs: number): Promise<DockerEnsureResult> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        this.ensureRunning(),
+        new Promise<DockerEnsureResult>((resolve) => {
+          timer = setTimeout(
+            () =>
+              resolve({
+                success: false,
+                message: 'Crawl4AI Docker 시작 시간 초과',
+                alreadyRunning: false,
+              }),
+            timeoutMs
+          );
+        }),
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   }
 
@@ -100,8 +210,7 @@ export class Crawl4AiDockerService {
   }
 
   private async isDockerAvailable(): Promise<boolean> {
-    const result = await this.workspace.executeTerminal('docker info --format "{{.ServerVersion}}"');
-    return result.exitCode === 0 && !!result.stdout.trim();
+    return this.isDockerDaemonAvailable(5000);
   }
 
   private async isContainerRunning(): Promise<boolean> {
@@ -155,9 +264,7 @@ export class Crawl4AiDockerService {
   }
 
   private async waitForHealth(timeoutMs: number): Promise<boolean> {
-    const baseUrl =
-      vscode.workspace.getConfiguration('agentCompany').get<string>('crawl4aiBaseUrl') ||
-      `http://localhost:${this.getPort()}`;
+    const baseUrl = this.getBaseUrl();
 
     const deadline = Date.now() + timeoutMs;
     while (Date.now() < deadline) {

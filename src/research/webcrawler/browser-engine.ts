@@ -91,11 +91,25 @@ export class Crawl4AiAdapter {
 }
 
 export class BrowserEngine {
+  private preferFallback = false;
+
   constructor(private crawl4ai: Crawl4AiAdapter) {}
 
+  /** Crawl4AI Docker 미사용 시 Jina → Fetch 순으로 바로 진행 */
+  setPreferFallback(value: boolean): void {
+    this.preferFallback = value;
+  }
+
+  isPreferFallback(): boolean {
+    return this.preferFallback;
+  }
+
   async fetchPage(url: string): Promise<CrawlResult> {
-    const fromCrawl4ai = await this.crawl4ai.crawl(url);
-    if (fromCrawl4ai) return fromCrawl4ai;
+    if (!this.preferFallback) {
+      const fromCrawl4ai = await this.crawl4ai.crawl(url);
+      if (fromCrawl4ai) return fromCrawl4ai;
+      this.preferFallback = true;
+    }
 
     const fromJina = await this.fetchViaJina(url);
     if (fromJina) return fromJina;

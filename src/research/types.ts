@@ -35,6 +35,14 @@ export interface ResearchPipelineStep {
   message: string;
 }
 
+export type CrawlEngineMode = 'crawl4ai' | 'fallback';
+
+export interface ResearchRunOptions {
+  /** true면 Crawl4AI Docker 없이 DuckDuckGo + Jina/Fetch만 사용 */
+  preferFallback?: boolean;
+  crawlEngineMessage?: string;
+}
+
 export const WONYOUNG_AGENT = {
   name: '원영',
   title: '리서처',

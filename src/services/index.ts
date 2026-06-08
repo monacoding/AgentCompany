@@ -663,16 +663,12 @@ export class AgentCompanyService {
   private async startCrawl4AiDocker(agent?: Agent): Promise<void> {
     const label = agent?.name ?? "\uC6D0\uC601";
     this.notifications.showInfo(`${label}: Crawl4AI Docker \uD655\uC778 \uC911...`);
-    const result = await this.crawl4aiDocker.ensureRunning();
-    this.memory.logActivity(agent?.id ?? null, null, `Docker: ${result.message}`);
-    if (result.success) {
-      if (result.alreadyRunning) {
-        this.notifications.showInfo("Crawl4AI Docker \uC2E4\uD589 \uC911");
-      } else {
-        this.notifications.showInfo("Crawl4AI Docker \uC2DC\uC791 \uC644\uB8CC");
-      }
+    const result = await this.crawl4aiDocker.resolveEngine();
+    this.memory.logActivity(agent?.id ?? null, null, `Crawl engine: ${result.message}`);
+    if (result.mode === 'crawl4ai') {
+      this.notifications.showInfo(result.message);
     } else {
-      this.notifications.showWarning(result.message);
+      this.notifications.showWarning(`${result.message} (리서치는 계속 가능)`);
     }
   }
   async seedDefaultAgents() {

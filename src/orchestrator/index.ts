@@ -1734,17 +1734,21 @@ ${templateBlock}
         ])
       );
 
-      const docker = await this.crawl4aiDocker.ensureRunning();
-      if (!docker.success) {
-        this.agentWorking(
-          agent,
-          `Docker: ${docker.message} — fallback 사용`,
-          undefined,
-          this.buildWorkingDetail(agent, '리서치', 'Docker', docker.message)
-        );
-      }
+      const engine = await this.crawl4aiDocker.resolveEngine();
+      this.agentWorking(
+        agent,
+        engine.message,
+        undefined,
+        this.buildWorkingDetail(agent, '리서치', '크롤 엔진', engine.message, [
+          `모드: ${engine.mode === 'crawl4ai' ? 'Crawl4AI Docker' : 'DuckDuckGo + Jina/Fetch'}`,
+        ])
+      );
 
-      const report = await this.researchAgent.execute(query, agent, task.id, (step) => {
+      const report = await this.researchAgent.execute(
+        query,
+        agent,
+        task.id,
+        (step) => {
         const prefix = step.status === 'running' ? '⏳' : step.status === 'done' ? '✓' : '•';
         this.agentWorking(
           agent,
@@ -1752,11 +1756,16 @@ ${templateBlock}
           undefined,
           this.buildWorkingDetail(agent, '리서치', step.step, step.message, [
             `상태: ${step.status}`,
-            `로직: Crawl4AI + LLM 파이프라인으로 자료 수집·요약`,
+            `로직: ${engine.mode === 'crawl4ai' ? 'Crawl4AI + LLM' : 'DuckDuckGo + Jina/Fetch + LLM'} 파이프라인`,
             `요청: ${query.slice(0, 200)}`,
           ])
         );
-      });
+      },
+        {
+          preferFallback: engine.mode === 'fallback',
+          crawlEngineMessage: engine.message,
+        }
+      );
 
       if (report.downloadedFiles && report.downloadedFiles.length > 0) {
         for (const f of report.downloadedFiles) {

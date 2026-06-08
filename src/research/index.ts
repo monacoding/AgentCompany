@@ -4,7 +4,7 @@ import { MemoryEngine } from '../memory';
 import { ProviderEngine } from '../providers';
 import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
-import { ResearchPipelineStep, ResearchReport } from './types';
+import { ResearchPipelineStep, ResearchReport, ResearchRunOptions } from './types';
 import { ReportGenerator } from './webcrawler/report-generator';
 import { WebCrawlerAgent } from './webcrawler';
 
@@ -32,7 +32,8 @@ export class ResearchAgent {
     query: string,
     agent: Agent,
     taskId: string | null,
-    onStep?: (step: ResearchPipelineStep) => void
+    onStep?: (step: ResearchPipelineStep) => void,
+    options?: ResearchRunOptions
   ): Promise<ResearchReport> {
     this.memory.logActivity(agent.id, taskId, `${agent.name} Research Agent started: "${query}"`);
 
@@ -43,7 +44,7 @@ export class ResearchAgent {
         `[${step.step}] ${step.status}: ${step.message}`
       );
       onStep?.(step);
-    });
+    }, options);
 
     this.memory.appendAgentMemory(
       agent.id,
@@ -63,4 +64,4 @@ export class ResearchAgent {
 }
 
 export { isResearchAgent, isResearchTaskQuery, isWonyoungAgent, WONYOUNG_AGENT } from './types';
-export type { ResearchReport, ResearchPipelineStep } from './types';
+export type { ResearchReport, ResearchPipelineStep, ResearchRunOptions, CrawlEngineMode } from './types';

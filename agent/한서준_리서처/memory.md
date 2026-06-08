@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T15:25:08.455Z_
+_마지막 동기화: 2026-06-08T22:34:09.772Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -2407,15 +2407,6 @@ Saved: agent/한서준_리서처/outputs/downloads/2026-06-08-2007-년도-수능
    - 레전드스터디 닷컴에서는 2007년도 수능 관련 문제와 정답의 PDF 파일을 제공하고 있습니다. (출처: [레전드스터디 닷컴](https://legendstudy.com/910), C 등급)
    - 시험지 저장 창고 웹사이트에서도 2007년도
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@71fe6186]
 # `cross-agent-file-transfer.md` 요약 — 한서준(pm)
 
@@ -2528,3 +2519,68 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - 제공된 자료 기준, HD현대중공업 이슈는 **1Q26 실적 개선**, **방산·특수선 성장 기대**, **2026년 임단협 개시**, **증권사 목표주가 상향**으로 압축됩니다. https://news.nate.com/view/20260508n14068 / https://search.newspim.com/news/view/20260512000256 / https://biz.newdaily.co.kr/site/data/html/2026/06/02/2026060200186.html  
 - 실적 측면에서는 유안타증권이 “1H25 영업이익 9,050억 원을 1Q26 한 분기에 달성했다”고 평가했고, 현대차증권도 “전 부문 실적 개선”과 “데이터센터향 중속 엔진”을 긍정 요인으로 제시했습니다. https://news.nate.com/view/20260508n14068 / https://search.newspim.com/news/view/20260512000256  
 -
+
+[파일전달→사장님] 오늘 조선산업에서 가장 중요한 뉴스 3개만 뽑아서 정리해줘
+· web-2026-06-08-natera-inc-오늘의-주가-ntra-실시간-티커-invest.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-natera-inc-오늘의-주가-ntra-실시간-티커-invest.md
+· web-2026-06-08-research-digest-사장님-지시-박준호-인터넷에서-2.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-사장님-지시-박준호-인터넷에서-2.md
+· web-2026-06-08-제21대-이재명-대통령-핫이슈-네이트-뉴스.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-제21대-이재명-대통령-핫이슈-네이트-뉴스.md
+· web-2026-06-08-제9회-지방선거-뉴스-네이버.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-제9회-지방선거-뉴스-네이버.md
+
+[파일전달→사장님] 오늘 조선산업에서 가장 중요한 뉴스 3개만 뽑아서 정리해줘
+· web-2026-06-08-natera-inc-오늘의-주가-ntra-실시간-티커-invest.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-natera-inc-오늘의-주가-ntra-실시간-티커-invest.md
+· web-2026-06-08-research-digest-사장님-지시-박준호-인터넷에서-2.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-사장님-지시-박준호-인터넷에서-2.md
+· web-2026-06-08-제21대-이재명-대통령-핫이슈-네이트-뉴스.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-제21대-이재명-대통령-핫이슈-네이트-뉴스.md
+· web-2026-06-08-제9회-지방선거-뉴스-네이버.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-제9회-지방선거-뉴스-네이버.md
+
+[파일전달→사장님] 아니 그거 말고 조선산업 기사 찾아줘
+· 2026-06-08-네트라-주식관련최근-기사-경향-조사.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-네트라-주식관련최근-기사-경향-조사.md
+· 2026-06-08-서준아-최근-현대중공업-기사조사해봐.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-서준아-최근-현대중공업-기사조사해봐.md
+· 2026-06-08-이재명-관련-최근-기사-검색.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-이재명-관련-최근-기사-검색.md
+· 2026-06-08-최근-이재명-관련-기사-검색해줘.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-최근-이재명-관련-기사-검색해줘.md
+· web-2026-06-08-research-digest-네트라-주식관련최근-기사-경향-조사.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-네트라-주식관련최근-기사-경향-조사.md
+· web-2026-06-08-research-digest-서준아-최근-현대중공업-기사조사해봐.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-서준아-최근-현대중공업-기사조사해봐.md
+· web-2026-06-08-research-digest-이재명-관련-최근-기사-검색.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-이재명-관련-최근-기사-검색.md
+· web-2026-06-08-research-digest-최근-이재명-관련-기사-검색해줘.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-최근-이재명-관련-기사-검색해줘.md
+
+[파일전달→사장님] 아니 그거 말고 조선산업 기사 찾아줘
+· 2026-06-08-네트라-주식관련최근-기사-경향-조사.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-네트라-주식관련최근-기사-경향-조사.md
+· 2026-06-08-서준아-최근-현대중공업-기사조사해봐.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-서준아-최근-현대중공업-기사조사해봐.md
+· 2026-06-08-이재명-관련-최근-기사-검색.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-이재명-관련-최근-기사-검색.md
+· 2026-06-08-최근-이재명-관련-기사-검색해줘.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-08-최근-이재명-관련-기사-검색해줘.md
+· web-2026-06-08-research-digest-네트라-주식관련최근-기사-경향-조사.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-네트라-주식관련최근-기사-경향-조사.md
+· web-2026-06-08-research-digest-서준아-최근-현대중공업-기사조사해봐.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-서준아-최근-현대중공업-기사조사해봐.md
+· web-2026-06-08-research-digest-이재명-관련-최근-기사-검색.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-이재명-관련-최근-기사-검색.md
+· web-2026-06-08-research-digest-최근-이재명-관련-기사-검색해줘.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/web-2026-06-08-research-digest-최근-이재명-관련-기사-검색해줘.md
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
