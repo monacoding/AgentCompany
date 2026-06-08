@@ -1,10 +1,12 @@
 import { AgentFolderEngine, AGENT_FOLDER_LAYOUT } from '../agent-folders';
+import { KnowledgeLearner } from '../agent-folders/knowledge-learner';
 import { MemoryEngine } from '../memory';
 import { ProviderEngine } from '../providers';
 import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
 import { WorkspaceActionExecutor } from '../workspace/action-executor';
 import { KiloCliAdapter } from './adapters/kilo-cli';
+import { tryResearchDownloadBootstrap } from './handlers/research-download-bootstrap';
 import { CodePlanner } from './engine/code-planner';
 import { FileEditor } from './engine/file-editor';
 import { KiloReportGenerator } from './engine/report-generator';
@@ -30,7 +32,9 @@ export class KiloAgent {
     private memory: MemoryEngine,
     providers: ProviderEngine,
     private workspace: WorkspaceEngine,
-    private agentFolders?: AgentFolderEngine
+    private agentFolders?: AgentFolderEngine,
+    private knowledgeLearner?: KnowledgeLearner,
+    private extensionTemplatePath?: string
   ) {
     this.cli = new KiloCliAdapter(workspace);
     this.planner = new CodePlanner(providers);
@@ -38,6 +42,10 @@ export class KiloAgent {
     this.terminal = new TerminalRunner(workspace);
     this.selfChecker = new SelfChecker(providers);
     this.reportGenerator = new KiloReportGenerator(workspace, agentFolders);
+  }
+
+  setExtensionTemplatePath(templatePath: string): void {
+    this.extensionTemplatePath = templatePath;
   }
 
   async execute(
@@ -51,12 +59,30 @@ export class KiloAgent {
       this.memory.logActivity(agent.id, taskId, `[Kilo ${step}] ${status}: ${message}`);
     };
 
+    const bootstrap = await tryResearchDownloadBootstrap(
+      task,
+      agent,
+      this.workspace,
+      this.agentFolders,
+      this.knowledgeLearner,
+      this.extensionTemplatePath
+    );
+    if (bootstrap) {
+      emit('Research Bootstrap', 'done', '다운로드 스크립트·knowledge 등록 완료');
+      bootstrap.reportPath = await this.reportGenerator.save(task, bootstrap, agent);
+      this.memory.appendAgentMemory(agent.id, `[Bootstrap: ${task}]\n${bootstrap.output.slice(0, 500)}`);
+      return bootstrap;
+    }
+
     emit('Mode Router', 'running', 'Detecting mode...');
     const mode = detectKiloMode(task);
     emit('Mode Router', 'done', `${KILO_MODES[mode].label} mode selected`);
 
     emit('Kilo CLI', 'running', 'Checking Kilo CLI...');
-    const cliAvailable = await this.cli.isAvailable();
+    const cliAvailable = await Promise.race([
+      this.cli.isAvailable(),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+    ]);
     if (cliAvailable && mode === 'coder') {
       const cliResult = await this.cli.execute(task);
       if (cliResult) {

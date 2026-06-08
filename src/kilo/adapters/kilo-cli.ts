@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import { WorkspaceEngine } from '../../workspace';
 import { KiloExecutionResult } from '../types';
 
+const CLI_CHECK_TIMEOUT_MS = 5000;
+const CLI_VERSION_TIMEOUT_MS = 5000;
+
 export class KiloCliAdapter {
   constructor(private workspace: WorkspaceEngine) {}
 
@@ -17,16 +20,22 @@ export class KiloCliAdapter {
     return vscode.workspace.getConfiguration('agentCompany').get<boolean>('kiloAutoMode', true);
   }
 
-  async isAvailable(): Promise<boolean> {
-    const cmd = this.getCliCommand();
-    const result = await this.workspace.executeTerminal(`${cmd} --version`, 15000);
-    if (result.exitCode === 0) return true;
+  isCliCheckEnabled(): boolean {
+    return vscode.workspace.getConfiguration('agentCompany').get<boolean>('kiloCliAutoCheck', true);
+  }
 
-    if (cmd === 'kilo') {
-      const npx = await this.workspace.executeTerminal('npx @kilocode/cli --version', 30000);
-      return npx.exitCode === 0;
-    }
-    return false;
+  async isAvailable(): Promise<boolean> {
+    if (!this.isCliCheckEnabled()) return false;
+
+    const cmd = this.getCliCommand();
+    const whichCmd =
+      process.platform === 'win32' ? `where ${cmd}` : `command -v ${cmd}`;
+
+    const located = await this.workspace.executeTerminal(whichCmd, CLI_CHECK_TIMEOUT_MS);
+    if (located.exitCode !== 0) return false;
+
+    const version = await this.workspace.executeTerminal(`${cmd} --version`, CLI_VERSION_TIMEOUT_MS);
+    return version.exitCode === 0;
   }
 
   async execute(prompt: string): Promise<KiloExecutionResult | null> {
@@ -44,7 +53,7 @@ export class KiloCliAdapter {
 
     if (result.exitCode !== 0 && cmd === 'kilo') {
       result = await this.workspace.executeTerminal(
-        `npx @kilocode/cli run ${autoFlag} "${escaped}"`.replace(/\s+/g, ' ').trim(),
+        `npx --yes @kilocode/cli run ${autoFlag} "${escaped}"`.replace(/\s+/g, ' ').trim(),
         300000
       );
     }

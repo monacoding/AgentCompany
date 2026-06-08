@@ -129,7 +129,7 @@ export class Orchestrator {
     this.workspaceExecutor = new WorkspaceActionExecutor(workspace, memory);
     this.researchAgent = new ResearchAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
     this.productionAgent = new ProductionAgent(memory, providers, agentFolders, knowledgeLearner);
-    this.kiloAgent = new KiloAgent(memory, providers, workspace, agentFolders);
+    this.kiloAgent = new KiloAgent(memory, providers, workspace, agentFolders, knowledgeLearner);
     this.externalApiExecutor = new ExternalApiExecutor(externalApis, providers, memory, agentFolders);
   }
 
@@ -165,6 +165,10 @@ export class Orchestrator {
 
   getKiloAgent(): KiloAgent {
     return this.kiloAgent;
+  }
+
+  setKiloTemplatePath(templatePath: string): void {
+    this.kiloAgent.setExtensionTemplatePath(templatePath);
   }
 
   getSecretary(): Agent | null {

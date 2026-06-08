@@ -204,6 +204,10 @@ export class AgentCompanyService {
     );
     this.externalApis = new ExternalApiService(context);
     this.apiRegistrySync = new ExternalApiRegistrySync(this.externalApis, this.agents, this.memory);
+    const kiloTemplatePath = path.join(
+      context.extensionPath,
+      'src/team/templates/download_suneung_pdfs.py'
+    );
     this.orchestrator = new Orchestrator(
       this.agents,
       this.tasks,
@@ -220,6 +224,7 @@ export class AgentCompanyService {
       this.llmStatus,
       this.teams
     );
+    this.orchestrator.setKiloTemplatePath(kiloTemplatePath);
     this.teams.setRunContext({
       workerDeps: {
         workspace: this.workspace,

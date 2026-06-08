@@ -7,6 +7,23 @@
 
 ---
 
+## [1.7.90] - 2026-06-08
+
+### Fixed
+
+- **하정우 Kilo 멈춤** — `kilo --version` / `npx @kilocode/cli` 확인이 45초+ 걸려 `working` 상태로 고착되던 문제
+  - CLI 확인: `command -v` + 5초 타임아웃, `npx`는 `isAvailable`에서 제거
+  - 전체 CLI 체크 8초 상한 (`Promise.race`)
+  - `kiloCliAutoCheck: false` 설정 시 즉시 내부 엔진 사용
+
+### Added
+
+- **Research Download Bootstrap** — 「한서준 자료 자동 다운로드 코드 + 학습」 요청 시 Kilo CLI 없이
+  - `outputs/scripts/download_research_assets.py` 복사
+  - `knowledge/research-auto-download.md` 등록 + 학습 동기화
+
+---
+
 ## [1.7.89] - 2026-06-08
 
 ### Added
