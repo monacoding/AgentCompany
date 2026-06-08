@@ -28,6 +28,7 @@ import {
   parseOwnerProfile,
 } from './owner-persona';
 import { buildOwnerDataPathPromptBlock } from './owner-path-knowledge';
+import { buildPlatformStructurePromptBlock, isDeveloperAgent } from '../platform';
 
 const SUBDIRS = [
   AGENT_FOLDER_LAYOUT.knowledge,
@@ -82,6 +83,15 @@ export class AgentFolderEngine {
     for (const agent of agents) {
       await this.provisionAgent(agent);
     }
+  }
+
+  getGlobalStoragePath(): string {
+    return this.context.globalStorageUri.fsPath;
+  }
+
+  /** 워크스페이스 루트 또는 globalStorage (company·src와 형제) */
+  getWorkspaceRoot(): string {
+    return this.workspace?.getWorkspaceRoot() ?? this.getGlobalStoragePath();
   }
 
   getCompanyDir(): string {
@@ -695,7 +705,7 @@ ${displayTitle}
     this.conversationalContextCache.delete(agentId);
   }
 
-  /** 일상 대화용 — persona·description만 (knowledge/회사/사장 블록 생략) */
+  /** 일상 대화용 — persona·description + 개발자는 플랫폼 구조 블록 */
   async buildConversationalPromptContext(agent: Agent): Promise<string> {
     const cached = this.conversationalContextCache.get(agent.id);
     if (cached && Date.now() - cached.at < CONVERSATIONAL_CONTEXT_CACHE_MS) {
@@ -704,6 +714,10 @@ ${displayTitle}
 
     const slug = this.resolveSlug(agent);
     const parts: string[] = [];
+
+    if (isDeveloperAgent(agent)) {
+      parts.push(buildPlatformStructurePromptBlock(this, agent));
+    }
 
     const persona = await this.loadPersona(slug);
     if (persona) parts.push(`Persona:\n${persona.slice(0, 1200)}`);

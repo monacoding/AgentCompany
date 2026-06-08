@@ -1,3 +1,5 @@
+import { detectPlatformInquiry } from '../platform';
+
 export type KiloMode = 'architect' | 'coder' | 'debugger';
 
 export interface KiloPipelineStep {
@@ -38,26 +40,34 @@ export function isMonaAgent(agent: { name: string }): boolean {
   return agent.name.includes('모나') || agent.name.toLowerCase() === 'mona';
 }
 
-/** Kilo Code 파이프라인 실행 대상 (모나·개발자·kilo-code capability) */
+export function isHaJeongWooAgent(agent: { name: string }): boolean {
+  return agent.name.includes('하정우');
+}
+
+const KILO_CAPABILITIES = ['kilo-code', 'code-gen', 'terminal', 'self-check'] as const;
+
+/** Kilo capability 제거 대상 */
+export function stripKiloCapabilities(capabilities: string[] | undefined): string[] {
+  const caps = capabilities ?? [];
+  return caps.filter((c) => !KILO_CAPABILITIES.includes(c as (typeof KILO_CAPABILITIES)[number]));
+}
+
+/** Kilo Code 파이프라인 실행 대상 (모나·kilo-code capability — 하정우 제외) */
 export function isKiloAgent(agent: {
   name: string;
   title?: string;
   role?: string;
   capabilities?: string[];
 }): boolean {
-  return (
-    isMonaAgent(agent) ||
-    agent.capabilities?.includes('kilo-code') === true ||
-    agent.role === 'backend' ||
-    (agent.title?.includes('개발') ?? false) ||
-    agent.name.includes('하정우')
-  );
+  if (isHaJeongWooAgent(agent)) return false;
+  return isMonaAgent(agent) || agent.capabilities?.includes('kilo-code') === true;
 }
 
 /** 코드·자동화 구현 파이프라인이 필요한 명령 */
 export function isDevTaskQuery(query: string): boolean {
   const text = query.trim();
   if (!text) return false;
+  if (detectPlatformInquiry(text)) return false;
   if (/스택|도구|알려줘|설명만|추천해/i.test(text) && !/구현|자동화|작성/i.test(text)) {
     return false;
   }

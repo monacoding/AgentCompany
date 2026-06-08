@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T14:05:37.819Z_
+_마지막 동기화: 2026-06-08T14:12:13.880Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -2144,15 +2144,6 @@ P1 … / P2 … / P3 …
    - **경제 및 대북 관계에 대한 언급**  
      부동산 및 대북 관계 개선에 대한 지속적인 정책 추진 발표. [출처: 중부일보 [B]](https://issue.daum.net/f
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@67aaa517]
 # 에이전트 간 파일 이동 규칙
 
@@ -2296,3 +2287,12 @@ P1 … / P2 … / P3 …
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-이전-사장-지시-후속-작업-한서준-이-찾은-수능-문제-pdf-파일이-한.md
 · 2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-한서준/2026-06-06-인터넷-교육과정평가원-사이트에서-2021년도-수능-문제-pdf-로-다운받.md
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

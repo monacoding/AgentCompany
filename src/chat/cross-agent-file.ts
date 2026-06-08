@@ -17,7 +17,7 @@ export interface OwnFolderFileRequest {
 export type FolderPathScope = 'owner' | 'agent' | 'both';
 
 const FOLDER_PATH_SIGNAL =
-  /(?:폴더\s*경로|경로\s*(?:확인|알려|알려줘|뭐|무엇|어디)|폴더\s*(?:위치|어디|확인)|어디에\s*(?:저장|있)|내\s*폴더|제\s*폴더|작업\s*폴더|outputs?\s*경로|folder\s*path)/i;
+  /(?:폴더\s*경로|경로(?:는|이)?\s*(?:확인|알려|알려줘|뭐|무엇|어디)|폴더\s*(?:위치|어디|확인)|어디에\s*(?:저장|있)|(?:너|네|니|당신)(?:의)?\s*경로|내\s*폴더|제\s*폴더|작업\s*폴더|outputs?\s*경로|folder\s*path)/i;
 
 /** 사장님·에이전트 폴더 **경로 안내** (파일 전달이 아님) */
 export function detectFolderPathInquiry(command: string): FolderPathScope | null {
@@ -29,7 +29,11 @@ export function detectFolderPathInquiry(command: string): FolderPathScope | null
   }
 
   if (/(?:사장님\s*폴더|owner|company\/owner)/i.test(text)) return 'owner';
-  if (/(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|에이전트)\s*폴더|작업\s*폴더|outputs?\s*폴더/i.test(text)) {
+  if (
+    /(?:너(?:의)?|니(?:가)?|네|당신(?:의)?)\s*경로|(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|에이전트)\s*폴더|작업\s*폴더|outputs?\s*폴더/i.test(
+      text
+    )
+  ) {
     return 'agent';
   }
   if (/내\s*폴더|제\s*폴더|우리\s*폴더/i.test(text)) return 'owner';

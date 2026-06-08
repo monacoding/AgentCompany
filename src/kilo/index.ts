@@ -20,7 +20,9 @@ import {
   KiloExecutionResult,
   KiloPipelineStep,
   detectKiloMode,
+  isHaJeongWooAgent,
 } from './types';
+import { buildPlatformStructurePromptBlock, isDeveloperAgent } from '../platform';
 import { now } from '../utils';
 
 export class KiloAgent {
@@ -57,6 +59,10 @@ export class KiloAgent {
     taskId: string | null,
     onStep?: (step: KiloPipelineStep) => void
   ): Promise<KiloExecutionResult> {
+    if (isHaJeongWooAgent(agent)) {
+      throw new Error('하정우 에이전트는 Kilo 파이프라인을 사용하지 않습니다.');
+    }
+
     const emit = (step: string, status: KiloPipelineStep['status'], message: string) => {
       onStep?.({ step, status, message });
       this.memory.logActivity(agent.id, taskId, `[Kilo ${step}] ${status}: ${message}`);
@@ -100,7 +106,7 @@ export class KiloAgent {
       );
     }
 
-    const gathered = await this.gatherContext(task);
+    const gathered = await this.gatherContext(task, agent);
     const context = prep ? `${prep.contextBlock}\n\n${gathered}` : gathered;
 
     emit('Code Planner', 'running', 'Planning...');
@@ -207,14 +213,18 @@ ${plan.filesToModify.map((f) => `- ${f}`).join('\n') || '_TBD_'}
     return result;
   }
 
-  private async gatherContext(taskTitle: string): Promise<string> {
+  private async gatherContext(taskTitle: string, agent?: Agent): Promise<string> {
+    const lines: string[] = [];
+    if (agent && this.agentFolders && isDeveloperAgent(agent)) {
+      lines.push(buildPlatformStructurePromptBlock(this.agentFolders, agent));
+    }
+
     const keywords = taskTitle
       .replace(/\[.*?\]/g, '')
       .split(/\s+/)
       .filter((w) => w.length > 2)
       .slice(0, 4);
 
-    const lines: string[] = [];
     for (const keyword of keywords) {
       const hits = await this.workspace.searchProject(keyword, 5);
       for (const hit of hits) {
@@ -232,6 +242,15 @@ ${plan.filesToModify.map((f) => `- ${f}`).join('\n') || '_TBD_'}
   }
 }
 
-export { isDevTaskQuery, isKiloAgent, isMonaAgent, MONA_AGENT, detectKiloMode, KILO_MODES } from './types';
+export {
+  isDevTaskQuery,
+  isHaJeongWooAgent,
+  isKiloAgent,
+  isMonaAgent,
+  MONA_AGENT,
+  detectKiloMode,
+  KILO_MODES,
+  stripKiloCapabilities,
+} from './types';
 export type { KiloExecutionResult, KiloMode, KiloPipelineStep } from './types';
 export { KiloCliService } from './services/kilo-cli-service';

@@ -24,7 +24,15 @@ import { Database } from '../database';
 import { ExternalApiRegistrySync } from '../external-api/registry';
 import { IdeaEngine } from '../ideas/idea-engine';
 import { IdeaService } from '../ideas/idea-service';
-import { isKiloAgent, MONA_AGENT } from '../kilo';
+import { isHaJeongWooAgent, isKiloAgent, MONA_AGENT, stripKiloCapabilities } from '../kilo';
+import {
+  buildPlatformStructurePromptBlock,
+  getPlatformStructureBody,
+  isDeveloperAgent,
+  PLATFORM_STRUCTURE_FILENAME,
+  PLATFORM_STRUCTURE_MARKER,
+  resolvePlatformPaths,
+} from '../platform';
 import { KiloCliService } from '../kilo/services/kilo-cli-service';
 import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
@@ -280,6 +288,7 @@ export class AgentCompanyService {
     await this.ensureFileTransferKnowledge();
     await this.ensureOwnerPathKnowledge();
     await this.ensureProjectPlaybookKnowledge();
+    await this.ensurePlatformStructureKnowledge();
     this.orgEngine.ensureAgentNodes(this.agents.getAll());
     await this.settings.ensureProactiveIdeasDefaultOff();
     await this.syncOrgOwnerLabel();
@@ -848,6 +857,44 @@ ${body}
       }
     }
   }
+  /** 개발자 에이전트에 AgentCompany 플랫폼 구조 knowledge + memory 주입 */
+  async ensurePlatformStructureKnowledge() {
+    for (const agent of this.agents.getAll()) {
+      if (!isDeveloperAgent(agent)) continue;
+
+      const slug = this.agentFolders.resolveSlug(agent);
+      const knowledgeDir = path.join(this.agentFolders.getAgentDir(slug), 'knowledge');
+      await fs.mkdir(knowledgeDir, { recursive: true });
+
+      const paths = resolvePlatformPaths(this.agentFolders, agent);
+      const body = getPlatformStructureBody(paths, agent);
+      const summary = buildPlatformStructurePromptBlock(this.agentFolders, agent);
+      const knowledgePath = path.join(knowledgeDir, PLATFORM_STRUCTURE_FILENAME);
+
+      try {
+        const existing = await fs.readFile(knowledgePath, 'utf-8');
+        if (!existing.includes(PLATFORM_STRUCTURE_MARKER)) {
+          await fs.writeFile(
+            knowledgePath,
+            `${existing.trim()}\n\n${body}`.trim() + '\n',
+            'utf-8'
+          );
+        } else if (!existing.includes(paths.dbPath)) {
+          await fs.writeFile(knowledgePath, `${body}\n`, 'utf-8');
+        }
+      } catch {
+        await fs.writeFile(knowledgePath, `${body}\n`, 'utf-8');
+      }
+
+      this.agentFolders.invalidatePromptContext(agent.id);
+
+      const memory = this.memory.getAgentMemory(agent.id);
+      if (!memory.includes(PLATFORM_STRUCTURE_MARKER) || !memory.includes(paths.dbPath)) {
+        this.memory.appendAgentMemory(agent.id, summary.slice(0, 1400));
+      }
+    }
+  }
+
   /** 모든 에이전트에 Project 5단계 플레이북 + 역할별 스니펫 주입 */
   async ensureProjectPlaybookKnowledge() {
     const playbookSummary = getProjectPlaybookSummary();
@@ -964,20 +1011,29 @@ ${roleSnippet}
       }
     }
   }
-  /** 개발자 에이전트에 Kilo 파이프라인 capability 부여 */
+  /** 개발자 에이전트 capability — 모나만 Kilo, 하정우는 Kilo 제외 */
   async ensureDeveloperAgents() {
-    const devCaps = ["kilo-code", "code-gen", "terminal", "self-check"];
+    const kiloCaps = ["kilo-code", "code-gen", "terminal", "self-check"];
     for (const agent of this.agents.getAll()) {
-      const isDev = agent.role === "backend" || agent.title?.includes("\uAC1C\uBC1C") || agent.name.includes("\uD558\uC815\uC6B0") || agent.name.includes("\uBAA8\uB098");
-      if (!isDev)
-        continue;
+      const isDev =
+        agent.role === "backend" ||
+        agent.title?.includes("\uAC1C\uBC1C") ||
+        isHaJeongWooAgent(agent) ||
+        agent.name.includes("\uBAA8\uB098");
+      if (!isDev) continue;
+
       const caps = agent.capabilities ?? [];
-      const merged = [.../* @__PURE__ */ new Set([...caps, ...devCaps])];
-      const patch = {};
-      if (merged.length !== caps.length)
-        patch.capabilities = merged;
-      if (!agent.title?.trim())
-        patch.title = "\uAC1C\uBC1C\uC790";
+      const patch: { capabilities?: string[]; title?: string } = {};
+
+      if (isHaJeongWooAgent(agent)) {
+        const stripped = stripKiloCapabilities(caps);
+        if (stripped.length !== caps.length) patch.capabilities = stripped;
+      } else {
+        const merged = [.../* @__PURE__ */ new Set([...caps, ...kiloCaps])];
+        if (merged.length !== caps.length) patch.capabilities = merged;
+      }
+
+      if (!agent.title?.trim()) patch.title = "\uAC1C\uBC1C\uC790";
       if (Object.keys(patch).length > 0) {
         this.agents.update(agent.id, patch);
       }

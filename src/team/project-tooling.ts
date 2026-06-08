@@ -10,6 +10,8 @@ export function buildWorkerToolingHint(agent: Agent): string {
   const lines: string[] = ['## Tooling'];
 
   if (isKiloAgent(agent) || agent.role === 'backend' || agent.role === 'frontend' || agent.role === 'devops') {
+    lines.push('- **AgentCompany 확장 구조를 알고 있으며 src/ 코드 수정으로 구조 변경 가능**');
+    lines.push('- DB: globalStorage/agentcompany.db · 에이전트: agent/{이름_직책}/ · 사장: company/owner/');
     lines.push('- **프로그램을 작성하면 자동 실행됩니다** (.py / .sh → 터미널 실행)');
     lines.push('- 코드·스크립트는 filepath 블록으로 출력 (저장 후 즉시 run)');
     lines.push(buildWorkspacePrompt(agent.role).trim());

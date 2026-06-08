@@ -57,6 +57,12 @@ import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
 import { ProviderEngine, runWithLlmAgent } from '../providers';
 import { KiloAgent, isDevTaskQuery, isKiloAgent } from '../kilo';
+import {
+  buildPlatformInquiryReply,
+  detectPlatformInquiry,
+  isDeveloperAgent,
+  type PlatformInquiryKind,
+} from '../platform';
 import { ProductionAgent, isProductionAgent, isProductionTaskQuery } from '../production';
 import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research';
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
@@ -471,6 +477,11 @@ export class Orchestrator {
       return null;
     }
 
+    const platformKind = detectPlatformInquiry(effective);
+    if (platformKind) {
+      return this.replyPlatformInquiry(agent, rawCommand, platformKind);
+    }
+
     const folderPathScope = detectFolderPathInquiry(effective);
     if (folderPathScope) {
       return this.replyFolderPathInquiry(agent, rawCommand, folderPathScope);
@@ -543,6 +554,11 @@ export class Orchestrator {
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
+
+    const platformKind = detectPlatformInquiry(resolved.effective);
+    if (platformKind) {
+      return this.replyPlatformInquiry(agent, command, platformKind);
+    }
 
     const folderPathScope = detectFolderPathInquiry(resolved.effective);
     if (folderPathScope) {
@@ -769,6 +785,7 @@ export class Orchestrator {
   private isConversationalCommand(command: string): boolean {
     const text = command.trim();
     if (!text || text.length > 300) return false;
+    if (detectPlatformInquiry(text)) return true;
     if (detectFolderPathInquiry(text)) return true;
     if (isContextDependentCommand(text)) return false;
     if (
@@ -816,10 +833,13 @@ export class Orchestrator {
       const pmBlock = this.isPmAgent(agent)
         ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
         : '';
+      const devBlock = isDeveloperAgent(agent)
+        ? '\n당신은 AgentCompany 확장 개발자입니다. 위 플랫폼 구조·DB·src/ 경로를 정확히 알고 있으며, "경로가 없다"고 하지 마세요. 구조 변경은 src/ 코드 수정으로 수행합니다.'
+        : '';
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
 ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
-${pmBlock}
+${pmBlock}${devBlock}
 
 사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
 **주어 없는 후속 말**(전달해줘, 해줘 등)은 **이전 대화**와 합쳐 의도를 파악하세요.
@@ -1290,6 +1310,16 @@ ${pmBlock}
       const command = this.extractCommandFromTask(task);
       const resolved = this.resolveCeoCommandForAgent(agentId, command);
 
+      const platformKind = detectPlatformInquiry(resolved.effective);
+      if (platformKind) {
+        const reply = buildPlatformInquiryReply(this.agentFolders, agent, platformKind);
+        this.taskEngine.setResult(taskId, reply);
+        this.taskEngine.transition(taskId, 'completed');
+        this.agentManager.setStatus(agentId, 'idle');
+        this.agentSay(agent, reply, 'agent', 'done');
+        return;
+      }
+
       const folderPathScope = detectFolderPathInquiry(resolved.effective);
       if (folderPathScope) {
         const reply = this.agentFolders.buildFolderPathReply(agent, folderPathScope);
@@ -1350,7 +1380,7 @@ ${pmBlock}
         return;
       }
 
-      if (isKiloAgent(agent)) {
+      if (isKiloAgent(agent) && isDevTaskQuery(command)) {
         if (commandNeedsKnowledgeLearning(command)) {
           await this.knowledgeLearner.syncAgent(agent, { force: true });
         }
@@ -1982,6 +2012,18 @@ ${templateBlock}
     this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
     this.memory.logActivity(agent.id, null, `폴더 경로 안내 (${scope})`);
     return { taskId: '', success: true, message: 'Folder path inquiry answered' };
+  }
+
+  private replyPlatformInquiry(
+    agent: Agent,
+    command: string,
+    kind: PlatformInquiryKind
+  ): OrchestratorResult {
+    this.chat.requestOpenPanel(agent.id, agent.name);
+    const reply = buildPlatformInquiryReply(this.agentFolders, agent, kind);
+    this.agentSay(agent, reply, 'agent', 'done', { ceoMessage: command });
+    this.memory.logActivity(agent.id, null, `플랫폼 구조 안내 (${kind})`);
+    return { taskId: '', success: true, message: 'Platform inquiry answered' };
   }
 
   private async offerOwnFolderFileMatch(
