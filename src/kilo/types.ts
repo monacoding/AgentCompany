@@ -61,7 +61,9 @@ export function isDevTaskQuery(query: string): boolean {
   if (/스택|도구|알려줘|설명만|추천해/i.test(text) && !/구현|자동화|작성/i.test(text)) {
     return false;
   }
-  return /구현|자동화|스크립트|코드|개발|빌드|ffmpeg|remotion|파일|작성해|만들어/i.test(text);
+  return /구현|자동화|스크립트|코드|개발|빌드|ffmpeg|remotion|파일|작성해|만들어|다운|저장|수집|실행|python|curl/i.test(
+    text
+  );
 }
 
 export function detectKiloMode(task: string): KiloMode {

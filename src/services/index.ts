@@ -220,6 +220,17 @@ export class AgentCompanyService {
       this.llmStatus,
       this.teams
     );
+    this.teams.setRunContext({
+      workerDeps: {
+        workspace: this.workspace,
+        research: this.orchestrator.getResearchAgent(),
+        kilo: this.orchestrator.getKiloAgent(),
+      },
+      templateScriptPath: path.join(
+        context.extensionPath,
+        'src/team/templates/download_suneung_pdfs.py'
+      ),
+    });
   }
   startKnowledgeWatcher(context: vscode.ExtensionContext): void {
     if (this.knowledgeWatcher)

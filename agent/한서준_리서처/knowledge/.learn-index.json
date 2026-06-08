@@ -8,16 +8,16 @@
       "learnedAt": "2026-06-08T11:55:00.798Z"
     },
     "cross-agent-file-transfer.md": {
-      "hash": "1fb28a1dad1ab562",
-      "mtimeMs": 1780919127022.4707,
-      "size": 45057,
-      "learnedAt": "2026-06-08T11:51:20.002Z"
+      "hash": "1552312c2cafd108",
+      "mtimeMs": 1780919811178.4888,
+      "size": 46129,
+      "learnedAt": "2026-06-08T12:04:43.237Z"
     },
     "owner-data-path.md": {
-      "hash": "42a9c0b0a45ccc42",
-      "mtimeMs": 1780919127041.781,
-      "size": 32296,
-      "learnedAt": "2026-06-08T11:51:23.855Z"
+      "hash": "1ed5b9c22426e8ea",
+      "mtimeMs": 1780919811192.7869,
+      "size": 33083,
+      "learnedAt": "2026-06-08T12:05:06.398Z"
     },
     "2026-06-06-2022년도-수능-문제-인터넷-교육과정평가원-사이트에서-찾아서다운-받아.md": {
       "hash": "9687f3f77fad675f",
@@ -36,6 +36,12 @@
       "mtimeMs": 1780756224346.9028,
       "size": 2368,
       "learnedAt": "2026-06-06T18:14:26.134Z"
+    },
+    "project-playbook.md": {
+      "hash": "f0527c20ac20022d",
+      "mtimeMs": 1780919811205.2822,
+      "size": 2095,
+      "learnedAt": "2026-06-08T12:05:06.405Z"
     }
   }
 }

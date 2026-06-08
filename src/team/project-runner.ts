@@ -11,12 +11,9 @@ import {
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
-import {
-  buildPmReportPhasePrompt,
-  buildReviewPhasePrompt,
-  buildWorkerPhasePrompt,
-} from './phase-prompts';
-import { buildWorkerToolingHint, extractAndSaveProjectFiles } from './project-tooling';
+import { buildPmReportPhasePrompt, buildReviewPhasePrompt } from './phase-prompts';
+import { ProjectWorkerDeps, executeProjectWorkerTask } from './project-worker-engine';
+import { buildWorkerToolingHint } from './project-tooling';
 
 export interface ProjectRunCallbacks {
   onPhase: (phase: ProjectPhase, detail: string) => void;
@@ -31,6 +28,8 @@ export interface ProjectRunCallbacks {
 export interface ProjectRunOptions {
   sessionId: string;
   companyDir: string;
+  workerDeps?: ProjectWorkerDeps;
+  templateScriptPath?: string;
 }
 
 /** CrewAI Task 파싱 — 계획 텍스트에서 @에이전트: 할 일 추출 */
@@ -85,48 +84,6 @@ export function parseProjectTasks(plan: string, members: Agent[]): ProjectTask[]
   });
 }
 
-async function executeWorkerTask(
-  agent: Agent,
-  command: string,
-  plan: string,
-  task: ProjectTask,
-  priorContext: string,
-  providers: ProviderEngine,
-  agentFolders: AgentFolderEngine,
-  revision?: { previousOutput: string; feedback: string }
-): Promise<string> {
-  const folderContext = await agentFolders.buildPromptContext(agent);
-  const toolingHint = buildWorkerToolingHint(agent);
-  const userContent = buildWorkerPhasePrompt(
-    agent,
-    command,
-    plan,
-    task.description,
-    priorContext,
-    toolingHint,
-    revision
-  );
-
-  const response = await providers.chat(
-    [
-      {
-        role: 'system',
-        content: `You are ${formatAgentLabel(agent)} executing ONE project task.
-${folderContext}
-
-Rules:
-- Korean, concise, deliverable-focused
-- Complete the assigned task only
-- Use filepath blocks when producing code/files`,
-      },
-      { role: 'user', content: userContent },
-    ],
-    { type: agent.provider, model: agent.model }
-  );
-
-  return formatChatReply(response.content || '') || response.content.trim() || '완료';
-}
-
 async function reviewWorkerOutput(
   reviewer: Agent,
   worker: Agent,
@@ -164,14 +121,16 @@ async function executeTaskWithReviewLoop(
   members: Agent[],
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
-  callbacks: ProjectRunCallbacks
-): Promise<{ output: string; approved: boolean; iterations: number }> {
+  callbacks: ProjectRunCallbacks,
+  runOptions: ProjectRunOptions
+): Promise<{ output: string; approved: boolean; iterations: number; extractedFiles: string[] }> {
   const reviewer = resolveProjectReviewer(pm, members, worker);
   const max = PROJECT_REVIEW_MAX_ITERATIONS;
   let output = '';
   let feedback: string | undefined;
   let approved = false;
   let usedIterations = 0;
+  const allExtracted: string[] = [];
 
   for (let iteration = 1; iteration <= max; iteration++) {
     usedIterations = iteration;
@@ -183,7 +142,7 @@ async function executeTaskWithReviewLoop(
     );
 
     const previousOutput = iteration > 1 ? output : undefined;
-    output = await executeWorkerTask(
+    const workerResult = await executeProjectWorkerTask(
       worker,
       command,
       plan,
@@ -191,8 +150,22 @@ async function executeTaskWithReviewLoop(
       priorContext,
       providers,
       agentFolders,
+      runOptions.workerDeps!,
+      {
+        companyDir: runOptions.companyDir,
+        sessionId: runOptions.sessionId,
+        templateScriptPath: runOptions.templateScriptPath,
+      },
       previousOutput && feedback ? { previousOutput, feedback } : undefined
     );
+    output = workerResult.output;
+    for (const f of workerResult.extractedFiles) {
+      if (!allExtracted.includes(f)) allExtracted.push(f);
+      callbacks.onArtifactSaved?.(f);
+    }
+    for (const f of workerResult.executedArtifacts) {
+      callbacks.onArtifactSaved?.(f);
+    }
 
     if (isDeliverableApproved(output)) {
       approved = true;
@@ -232,7 +205,12 @@ async function executeTaskWithReviewLoop(
     }
   }
 
-  return { output: output.slice(0, 4000), approved, iterations: usedIterations };
+  return {
+    output: output.slice(0, 4000),
+    approved,
+    iterations: usedIterations,
+    extractedFiles: allExtracted,
+  };
 }
 
 export async function runProjectSequential(
@@ -260,6 +238,14 @@ export async function runProjectSequential(
   const priorDeliverables: PriorDeliverable[] = [];
   const { sessionId, companyDir } = options;
 
+  if (!options.workerDeps) {
+    return {
+      tasks,
+      summary:
+        'Project 실행 엔진이 초기화되지 않았습니다. Reload Window 후 다시 시도해 주세요.',
+    };
+  }
+
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
     const agent = members.find((a) => a.id === task.agentId);
@@ -275,7 +261,7 @@ export async function runProjectSequential(
     callbacks.onPhase('executing', `태스크 ${i + 1}/${tasks.length} — @${agent.name}`);
 
     try {
-      const { output, approved } = await executeTaskWithReviewLoop(
+      const { output, approved, extractedFiles } = await executeTaskWithReviewLoop(
         pm,
         agent,
         command,
@@ -285,10 +271,9 @@ export async function runProjectSequential(
         members,
         providers,
         agentFolders,
-        callbacks
+        callbacks,
+        options
       );
-
-      const extractedFiles = extractAndSaveProjectFiles(companyDir, sessionId, output);
       const artifactPath = saveProjectTaskArtifact(
         companyDir,
         sessionId,

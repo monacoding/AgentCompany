@@ -8,6 +8,7 @@ import { generateId, now } from '../utils';
 import { formatAgentLabel } from '../utils/agent-display';
 import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
+import { ProjectWorkerDeps } from './project-worker-engine';
 import { parseProjectTasks, runProjectSequential } from './project-runner';
 import { buildTeamThreadId } from './thread-id';
 import { TeamRunResult } from './types';
@@ -20,8 +21,14 @@ const PHASE_LABEL: Record<ProjectPhase, string> = {
   failed: '❌ Failed',
 };
 
+export interface TeamRunContext {
+  workerDeps: ProjectWorkerDeps;
+  templateScriptPath?: string;
+}
+
 export class TeamEngine {
   private runningSessionId: string | null = null;
+  private runContext: TeamRunContext | null = null;
 
   constructor(
     private db: Database,
@@ -33,6 +40,10 @@ export class TeamEngine {
 
   isRunning(): boolean {
     return this.runningSessionId !== null;
+  }
+
+  setRunContext(ctx: TeamRunContext): void {
+    this.runContext = ctx;
   }
 
   async prepareTeam(
@@ -204,7 +215,12 @@ export class TeamEngine {
             );
           },
         },
-        { sessionId: session.id, companyDir }
+        {
+          sessionId: session.id,
+          companyDir,
+          workerDeps: this.runContext?.workerDeps,
+          templateScriptPath: this.runContext?.templateScriptPath,
+        }
       );
 
       const doneCount = tasks.filter((t) => t.status === 'done').length;

@@ -1,0 +1,43 @@
+# PM Project Report
+
+- saved: 2026-06-08T12:09:00.000Z
+- session: `proj_suneung_2010_2020`
+- title: 수능 기출 PDF 2010~2020 다운로드
+
+## 참여 에이전트
+
+@박준호 (PM) · @한서준 (리서치) · @하정우 (개발)
+
+## 결과 요약
+
+| 항목 | 내용 |
+|------|------|
+| 요청 범위 | 2010~2020학년도 국어·수학 PDF |
+| 다운로드 완료 | **2014~2020** — 14개 PDF (36 MB) |
+| 미제공 | **2010~2013** — 평가원 공식 게시판에 없음 |
+
+## 산출물
+
+```
+company/projects/proj_suneung_2010_2020/
+  files/pdfs/대학수학능력시험/
+    2014학년도_국어영역_문제지.pdf
+    2014학년도_수학영역_문제지.pdf
+    … (2015~2020 국어·수학 각 1건)
+  files/scripts/download_suneung_pdfs.py
+  tasks/
+  PM_REPORT.md
+```
+
+## 2010~2013 안내
+
+한국교육과정평가원 suneung.re.kr 기출 게시판(10페이지)에는 **2014학년도가 가장 오래된** 국어·수학 PDF입니다. 2010~2013은 2차 조사(구 사이트·EBS)가 필요합니다.
+
+## 재실행
+
+```bash
+python3 company/projects/proj_suneung_2010_2020/files/scripts/download_suneung_pdfs.py \
+  --out company/projects/proj_suneung_2010_2020/files/pdfs \
+  --subjects 국어,수학,영어 \
+  --years 2014,2015,2016,2017,2018,2019,2020
+```

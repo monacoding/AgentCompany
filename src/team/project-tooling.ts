@@ -10,10 +10,12 @@ export function buildWorkerToolingHint(agent: Agent): string {
   const lines: string[] = ['## Tooling'];
 
   if (isKiloAgent(agent) || agent.role === 'backend' || agent.role === 'frontend' || agent.role === 'devops') {
-    lines.push('- 코드·설정 파일이 필요하면 filepath 블록으로 출력 (워크스페이스에 저장됨)');
+    lines.push('- **프로그램을 작성하면 자동 실행됩니다** (.py / .sh → 터미널 실행)');
+    lines.push('- 코드·스크립트는 filepath 블록으로 출력 (저장 후 즉시 run)');
     lines.push(buildWorkspacePrompt(agent.role).trim());
   } else if (isResearchAgent(agent) || agent.role === 'researcher') {
-    lines.push('- 조사 결과는 출처·핵심 요약·다음 단계 권장을 포함');
+    lines.push('- **리서치 파이프라인이 자동 실행됩니다** (검색·크롤·PDF 다운로드)');
+    lines.push('- 조사 결과는 출처·핵심 요약·다운로드 경로를 포함');
     lines.push('- 필요 시 markdown 표·목록으로 구조화');
   } else if (isProductionAgent(agent) || agent.role === 'writer' || agent.role === 'designer') {
     lines.push('- 대본·기획·콘텐츠 산출물은 섹션별 markdown으로 작성');

@@ -1,6 +1,6 @@
 # 김윤하 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:56:50.665Z_
+_마지막 동기화: 2026-06-08T12:04:45.975Z_
 
 [[김윤하] 윤하씨, 서준이가 찾은 수능 문제 중에 국어 영역만 윤하씨 폴더 데이터 베이스로 가져가줄래요?]
 [OpenAI] API key not configured. .env 파일에 CHATGPT_API_KEY를 설정해 주세요.
@@ -1570,3 +1570,137 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1552312c]
+# 에이전트 간 파일 이동
+
+## 핵심 규칙
+
+- **완료 전 금지**  
+  - 실제 파일 복사·이동이 끝나기 전에는 완료 표현 사용 금지.
+  - 대체 표현: "요청해볼게요", "여쭤볼게요", "진행할게요" 등 예정 표현 사용.
+
+- **완료 시 경로 필수**  
+  - 복사가 완료되면 저장된 파일 경로를 전부 명시.
+  - 경로 형식 예시 제공:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**  
+  - 파일 찾기 실패나 복사 불가 시, "완료" 대신 상황 보고 및 후속 조치 안내.
+
+- **허위 보고 금지**  
+  - 경로 없이 "옮겼다", "저장했다"는 허위 보고 금지. 경로가 증거 역할을 함. 
+
+이 규칙들은 파일 이동의 신뢰성과 효과성을 높이는 데 필수적입니다. 에이전트 간의 파일 이동에서 부정확한 정보를 줄여 업무의 효율성을 보장합니다.
+
+[KnowledgeLearned: owner-data-path.md@1ed5b9c2]
+# 사장님 데이터 경로 요약
+
+## 데이터 위치
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+
+## 주요 파일 설명
+
+- **프로필 파일**: `/profile.json`
+  - 포함 정보: 이름, 성격 등
+- **페르소나 파일**: `/persona.md`
+  - 사용 시기: 대화 및 보고
+- **사진 폴더**: `/photo/`
+  - 포함 내용: 사장님 사진
+
+## 경로 사용 지침
+
+- 에이전트는 사장님 관련 정보를 **반드시 위 경로**를 통해 접근해야 하며, 다른 경로를 추측하지 않음.
+
+이 경로 정보는 사장님 데이터에 접근할 때 항상 필요하며, 일관된 방식으로 사용되어야 합니다.
+
+[KnowledgeLearned: project-playbook.md@f0527c20]
+# Project 협업 플레이북
+
+## AgentCompany Project 표준 절차 (필수)
+
+사장님이 PM에게 업무를 지시하면 아래 **5단계**를 따릅니다.
+
+### 1. 목표
+- 사장님 지시에서 **한 문장 목표** + 산출물·범위·제외 항목을 명확히 합니다.
+
+### 2. 계획
+- Phase 단위로 나눕니다 (리서치 → 구현/실행 → 검증 → PM 보고).
+- 각 태스크마다 **작업 → 검토 루프**(최대 5회, FINISHED 키워드)가 돌아갑니다.
+
+### 3. 작업 분배
+- 계획을 **번호 + @에이전트명: 할 일** 형식으로 작성합니다.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **실제 회사 에이전트 roster만** 사용 (가상 직함·외부 인력 금지).
+- role·title·capabilities로 매칭 (리서치→researcher, 자동화→backend, 도메인→전문가).
+
+### 5. 승인 후 Project 실행
+- PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
+- 승인 시: Project 채팅방 생성 → Projects 탭 등록 → 에이전트 순차 협업.
+- 산출물: `company/projects/{sessionId}/` (tasks/, files/, PM_REPORT.md)
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+
+##
+
+[KnowledgeLearned: suneung-pdf-download.md@400f0e7f]
+# 수능 PDF 다운로드
+
+[SuneungPdfPlaybook v1]
+
+## 수능 PDF 다운로드 — 검증된 방법 (2026-06-08)
+
+### 공식 출처 (A급)
+- 사이트: https://www.suneung.re.kr
+- 기출 목록: `boardCnts/list.do?boardID=1500234&m=0403&s=suneung`
+- 모의평가: `boardCnts/list.do?boardID=1500236&m=0403&s=suneung`
+- 다운로드: `boardCnts/fileDown.do?fileSeq={hex}`
+- 로그인 불필요, curl/Python urllib로 직접 다운로드 가능
+
+### 파일명 규칙
+- `{학년도}학년도_{영역}영역_문제지.pdf`
+- 예: 2026학년도_국어영역_문제지.pdf
+
+### Project 산출물 경로
+- `company/projects/{sessionId}/files/pdfs/대학수학능력시험/`
+- `company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py`
+
+### 실행 예시
+```bash
+python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
+  --out company/projects/{sessionId}/files/pdfs \
+  --subjects 국어,수학 --years 2025,2026
+```
+
+### 검증된 fileSeq (2025·2026 국어·수학)
+| 학년도 | 영역 | fileSeq |
+|--------|------|---------|
+| 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
+| 2026 | 수학 | f9055b3484e917

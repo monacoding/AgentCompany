@@ -7,6 +7,23 @@
 
 ---
 
+## [1.7.85] - 2026-06-08
+
+### Added
+
+- **Project Worker 실행 엔진** — Cursor처럼 프로그램 작성·실행
+  - @한서준 → Research 파이프라인 실제 실행 (검색·크롤·PDF 다운로드)
+  - @하정우 → Kilo 파이프라인 실제 실행 (코드·터미널)
+  - `.py` / `.sh` 스크립트 저장 후 **자동 터미널 실행**
+  - 수능 PDF → 번들 `download_suneung_pdfs.py` 자동 실행
+
+### Changed
+
+- `isDevTaskQuery` — 다운로드·저장·수집 키워드 시 개발자 에이전트 Kilo 경로
+- Project Tooling 힌트 — 「작성하면 자동 실행」 명시
+
+---
+
 ## [1.7.84] - 2026-06-08
 
 ### Fixed

@@ -18,6 +18,9 @@ export {
   resolveProjectReviewer,
 } from './project-loop';
 export { listProjectArtifacts, getProjectWarehouseDir } from './project-artifacts';
+export type { ProjectWorkerDeps } from './project-worker-engine';
+export { needsProgramExecution, executeProjectWorkerTask } from './project-worker-engine';
+export type { TeamRunContext } from './team-engine';
 export { proposeTeamMembers, formatTeamMemberLabels } from './member-picker';
 export type { TeamPlanResult } from './pm-planner';
 export {

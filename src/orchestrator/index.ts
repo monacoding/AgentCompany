@@ -156,6 +156,14 @@ export class Orchestrator {
     return this.telegramCommandActive;
   }
 
+  getResearchAgent(): ResearchAgent {
+    return this.researchAgent;
+  }
+
+  getKiloAgent(): KiloAgent {
+    return this.kiloAgent;
+  }
+
   getSecretary(): Agent | null {
     return (
       this.agentManager.getAll().find((a) => isSecretaryAgent(a)) ??

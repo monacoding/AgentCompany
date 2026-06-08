@@ -5,6 +5,16 @@
 
 ---
 
+## [1.7.85] - 2026-06-08
+
+**파일:** `agent-company-1.7.85.vsix`
+
+### Added
+
+- Project Worker 실행 엔진 (Research/Kilo/스크립트 자동 실행)
+
+---
+
 ## [1.7.84] - 2026-06-08
 
 **파일:** `agent-company-1.7.84.vsix`

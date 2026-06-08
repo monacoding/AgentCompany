@@ -1,7 +1,7 @@
 # Learned: project-playbook.md
 
 _hash: f0527c20ac20022d_  
-_learned: 2026-06-08T12:04:46.068Z_
+_learned: 2026-06-08T12:05:06.400Z_
 
 # Project 협업 플레이북
 

@@ -1,7 +1,7 @@
 # Learned: project-playbook.md
 
-_hash: f0527c20ac20022d_  
-_learned: 2026-06-08T12:04:46.068Z_
+_hash: 3ce96f6535f4b9b9_  
+_learned: 2026-06-08T12:04:45.286Z_
 
 # Project 협업 플레이북
 
@@ -50,11 +50,7 @@ P1 … / P2 … / P3 …
 ```
 
 
-## PM 전용 — Project 오케스트레이션
-
-- 사장님 지시 수신 → **목표·계획·분배·에이전트** 4블록을 먼저 제시
-- roster에 없는 인물·역할을 만들지 말 것
-- PDF/수집 업무: @한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증) 순
-- 영상/콘텐츠: @서윤아델린 + @하정우 조합 검토
-- 계획 확정 전에는 Project 채팅방을 열지 않음
-- 승인 키워드: "진행하세요", "시작하세요", "프로젝트 진행"
+## @하정우 — Project 자동화 역할
+- 이전 태스크(carry_data)의 URL·fileSeq를 기반으로 스크립트 구현
+- 산출물은 filepath 블록으로 `company/projects/{sessionId}/files/` 에 저장
+- Python urllib/curl 등으로 실제 다운로드 후 %PDF 헤더 검증
