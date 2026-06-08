@@ -7,6 +7,7 @@ import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
 import { ProjectsTab } from './ProjectsTab';
+import { ProjectDetail, ProjectDetailModal } from './ProjectDetailModal';
 import { SettingsTab } from './SettingsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task } from './vscode';
 import {
@@ -110,6 +111,7 @@ export default function App() {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [createAgentError, setCreateAgentError] = useState<string | null>(null);
   const [agentWorkLog, setAgentWorkLog] = useState<AgentWorkLog | null>(null);
+  const [projectDetail, setProjectDetail] = useState<ProjectDetail | null>(null);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showOwnerModal, setShowOwnerModal] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -174,6 +176,10 @@ export default function App() {
       if (event.data.type === 'agentWorkLog') {
         const log = event.data.payload as AgentWorkLog | null;
         if (log) setAgentWorkLog(log);
+      }
+      if (event.data.type === 'projectDetail') {
+        const detail = event.data.payload as ProjectDetail | null;
+        if (detail) setProjectDetail(detail);
       }
     };
     window.addEventListener('message', handler);
@@ -464,6 +470,15 @@ export default function App() {
       {agentWorkLog && (
         <AgentWorkLogModal log={agentWorkLog} onClose={() => setAgentWorkLog(null)} />
       )}
+      {projectDetail && (
+        <ProjectDetailModal
+          detail={projectDetail}
+          onClose={() => setProjectDetail(null)}
+          onOpenChat={() => {
+            postMessage('openProjectChat', { sessionId: projectDetail.session.id });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -553,10 +568,7 @@ function OverviewTab({
         <StatCard label="Progress" value={stats.progress} />
         <StatCard label="Review" value={stats.review} />
         <StatCard label="Completed" value={stats.completed} success />
-        <button type="button" className="stat-card stat-card-button" onClick={onOpenProjects}>
-          <span className="stat-label">Project</span>
-          <span className="stat-value">{teamSessionCount}</span>
-        </button>
+        <StatCard label="Project" value={teamSessionCount} onClick={onOpenProjects} />
       </div>
 
       <div className="panel ideas-panel">
@@ -1041,14 +1053,25 @@ function StatCard({
   value,
   accent,
   success,
+  onClick,
 }: {
   label: string;
   value: number;
   accent?: boolean;
   success?: boolean;
+  onClick?: () => void;
 }) {
+  const className = `stat-card ${accent ? 'accent' : ''} ${success ? 'success' : ''} ${onClick ? 'stat-card-interactive' : ''}`;
+  if (onClick) {
+    return (
+      <button type="button" className={className} onClick={onClick}>
+        <span className="stat-value">{value}</span>
+        <span className="stat-label">{label}</span>
+      </button>
+    );
+  }
   return (
-    <div className={`stat-card ${accent ? 'accent' : ''} ${success ? 'success' : ''}`}>
+    <div className={className}>
       <span className="stat-value">{value}</span>
       <span className="stat-label">{label}</span>
     </div>

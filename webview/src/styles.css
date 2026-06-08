@@ -1377,16 +1377,162 @@ select:focus {
   border-color: #22c55e;
 }
 
-.stat-card-button {
+.stat-card-interactive {
   cursor: pointer;
-  border-color: #8b5cf6;
   background: inherit;
   color: inherit;
   width: 100%;
 }
 
-.stat-card-button:hover {
-  border-color: #a78bfa;
+.stat-card-interactive:hover {
+  border-color: var(--vscode-focusBorder, #3b82f6);
+}
+
+/* Project tab */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-card {
+  background: var(--vscode-editor-background, #252526);
+  border: 1px solid var(--vscode-panel-border, #333);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: default;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.project-card:hover {
+  border-color: var(--vscode-focusBorder, #3b82f6);
+}
+
+.project-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.project-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.project-status {
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.project-status-planning {
+  color: #a78bfa;
+  border-color: #6d28d9;
+}
+
+.project-status-running {
+  color: #60a5fa;
+  border-color: #2563eb;
+}
+
+.project-status-done {
+  color: #4ade80;
+  border-color: #16a34a;
+}
+
+.project-status-failed {
+  color: #f87171;
+  border-color: #dc2626;
+}
+
+.project-card-meta {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.5;
+}
+
+.project-meta-sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.project-card-time {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.8;
+}
+
+.project-card-preview,
+.project-card-summary {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.project-card-summary {
+  color: #4ade80;
+}
+
+.project-detail-modal {
+  max-width: 720px;
+  max-height: 85vh;
+}
+
+.project-detail-pre {
+  margin: 0;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--vscode-textCodeBlock-background, #1e1e1e);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.project-detail-result {
+  border-left: 3px solid #22c55e;
+}
+
+.project-chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.project-chat-line {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--vscode-editor-background, #252526);
+  border: 1px solid var(--vscode-panel-border, #333);
+}
+
+.project-chat-sender {
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.project-chat-time {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.project-chat-content {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 .stat-value {

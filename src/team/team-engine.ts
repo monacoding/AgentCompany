@@ -35,8 +35,12 @@ export class TeamEngine {
     return this.runningSessionId !== null;
   }
 
-  async prepareTeam(requester: Agent, command: string): Promise<TeamPlanResult> {
-    return planTeamWithPm(this.providers, this.agents.getAll(), requester, command);
+  async prepareTeam(
+    requester: Agent,
+    command: string,
+    forcedPm?: Agent
+  ): Promise<TeamPlanResult> {
+    return planTeamWithPm(this.providers, this.agents.getAll(), requester, command, forcedPm);
   }
 
   createSession(

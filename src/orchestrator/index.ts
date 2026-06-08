@@ -73,8 +73,11 @@ import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-displ
 import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
+  extractProjectBriefFromChat,
+  hasProjectPlanningContext,
+  isProjectGoAhead,
   normalizeProjectCommand,
-  shouldStartProject,
+  shouldStartProjectImmediately,
 } from '../team';
 
 const MAX_ORG_REVISIONS = 5;
@@ -441,8 +444,25 @@ export class Orchestrator {
     }
 
     const projectTask = normalizeProjectCommand(command);
-    if (shouldStartProject(command) && projectTask) {
+    if (shouldStartProjectImmediately(command) && projectTask) {
       return this.executeTeamCommand(agent, projectTask, fullCommand);
+    }
+
+    if (isProjectGoAhead(command) && this.isPmAgent(agent)) {
+      const threadMessages = this.chat.getMessages(agent.id);
+      if (hasProjectPlanningContext(threadMessages)) {
+        const brief = extractProjectBriefFromChat(threadMessages, command);
+        return this.executeTeamCommand(agent, brief, fullCommand, { leadPm: agent });
+      }
+      this.agentSay(
+        agent,
+        '사장님, Project로 진행할 업무 내용이 아직 정리되지 않았어요. 먼저 목표·범위·참여 에이전트를 말씀해 주시고, 확정 후 "진행하세요"라고 해 주세요.',
+        'agent',
+        'done',
+        { ceoMessage: command },
+        true
+      );
+      return { taskId: '', success: true, message: 'Awaiting project brief' };
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
@@ -509,11 +529,6 @@ export class Orchestrator {
       }
     }
 
-    const effectiveTask = fileResolved.effective.trim() || command;
-    if (shouldStartProject(effectiveTask)) {
-      return this.executeTeamCommand(agent, effectiveTask, fullCommand);
-    }
-
     if (this.orgEngine.shouldUseHierarchicalReport(agent.id)) {
       const chain = this.orgEngine.getReportingChain(agent.id);
       return this.executeHierarchicalCommand(agent, command, fullCommand, chain);
@@ -571,14 +586,19 @@ export class Orchestrator {
     }
   }
 
+  private isPmAgent(agent: Agent): boolean {
+    return agent.role === 'pm' || isSecretaryAgent(agent);
+  }
+
   private async executeTeamCommand(
     requester: Agent,
     command: string,
-    fullCommand: string
+    fullCommand: string,
+    options?: { leadPm?: Agent }
   ): Promise<OrchestratorResult> {
     let teamPlan;
     try {
-      teamPlan = await this.teamEngine.prepareTeam(requester, command);
+      teamPlan = await this.teamEngine.prepareTeam(requester, command, options?.leadPm);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.agentSay(
@@ -615,7 +635,7 @@ export class Orchestrator {
     const memberLabels = members.map((m) => formatAgentLabel(m)).join(', ');
     this.agentSay(
       requester,
-      `사장님, ${formatAgentLabel(pm)} PM이 Project 계획을 세우고 순차 실행을 시작할게요.\n참여: ${memberLabels}\nProject 탭에서 진행 상황을 보실 수 있어요.`,
+      `사장님, ${formatAgentLabel(pm)} PM이 Project 채팅방을 열고 순차 실행을 시작할게요.\n참여: ${memberLabels}\nProject 탭에서 진행 상황을 보실 수 있어요.`,
       'agent',
       'done',
       { ceoMessage: command },

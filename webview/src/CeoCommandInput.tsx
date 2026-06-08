@@ -27,7 +27,7 @@ export function CeoCommandInput({ agents }: { agents: Agent[] }) {
     <section className="ceo-section">
       <label className="ceo-label">CEO Command</label>
       <p className="ceo-hint">
-        Project 모드: PM이 계획·에이전트 배정 후 순차 실행합니다 · 강제: <code>/project</code> 또는 &quot;협업&quot;
+        PM과 계획 확정 후 <code>진행하세요</code> → Project 채팅방 생성 · 즉시 실행: <code>/project</code>
       </p>
 
       <div className="ceo-input-wrap">

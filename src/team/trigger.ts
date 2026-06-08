@@ -1,25 +1,38 @@
-/** Project 모드 — 명시적 키워드 또는 복합 멀티스텝 업무만 (1:1 채팅은 유지) */
-export function shouldStartProject(command: string): boolean {
+/** 즉시 Project 실행 — 명시적 슬래시/멘션 명령만 */
+export function shouldStartProjectImmediately(command: string): boolean {
   const text = command.trim();
   if (!text) return false;
 
   if (/(?:^|\s)\/(?:project|팀|proj)(?:\s|$)/i.test(text)) return true;
   if (/^@(?:project|팀)\b|^#(?:project|팀)\b/i.test(text)) return true;
-  if (/\bproject\b/i.test(text) && /시작|실행|진행|모드/i.test(text)) return true;
-  if (/협업|함께|연계|공동으로|멀티\s*에이전트|에이전트\s*팀|분업|역할\s*분담/i.test(text)) return true;
-  if (/같이\s*(?:작업|진행|만들|해|하자|해줘)/i.test(text)) return true;
-
-  // 복합 파이프라인 (A 하고 B) — CrewAI sequential crew 패턴
-  if (text.length >= 35 && /(.+)(?:하고|한\s*뒤|후에|다음|이후|해서).+(?:만들|작성|분석|조사|구현|기획)/i.test(text)) {
-    return true;
-  }
+  if (/\bproject\b/i.test(text) && /시작|실행|개설|모드/i.test(text)) return true;
 
   return false;
 }
 
-/** @deprecated use shouldStartProject */
+/** PM과 계획 확정 후 사장님 최종 승인 — 이때만 Project 채팅방 생성 */
+export function isProjectGoAhead(command: string): boolean {
+  const text = command.trim();
+  if (!text || text.length > 120) return false;
+
+  return (
+    /^(?:그럼\s*)?(?:이제\s*)?(?:최종적으로\s*)?(?:진행(?:하세요|해(?:\s*주세요)?|합니다)?|시작(?:하세요|해(?:\s*주세요)?)|실행(?:하세요|해(?:\s*주세요)?)|개시(?:하세요|해)?)(?:\s*[!\.。]*)?$/i.test(
+      text
+    ) ||
+    /프로젝트\s*(?:진행|시작|실행|개설)/i.test(text) ||
+    /project\s*(?:go|start|run|proceed)/i.test(text) ||
+    /(?:좋아|오케이|ok|확인)[,.]?\s*(?:진행|시작|실행)/i.test(text)
+  );
+}
+
+/** @deprecated — 협업 단어만으로는 Project를 시작하지 않음 */
+export function shouldStartProject(command: string): boolean {
+  return shouldStartProjectImmediately(command);
+}
+
+/** @deprecated use shouldStartProjectImmediately */
 export function shouldUseTeamCollaboration(command: string): boolean {
-  return shouldStartProject(command);
+  return shouldStartProjectImmediately(command);
 }
 
 export function stripProjectCommandPrefix(command: string): string {

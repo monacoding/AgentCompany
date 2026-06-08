@@ -8,11 +8,11 @@ const STATUS_LABEL: Record<TeamSession['status'], string> = {
   failed: '실패',
 };
 
-const STATUS_COLOR: Record<TeamSession['status'], string> = {
-  planning: '#8b5cf6',
-  running: '#3b82f6',
-  done: '#22c55e',
-  failed: '#ef4444',
+const STATUS_CLASS: Record<TeamSession['status'], string> = {
+  planning: 'project-status-planning',
+  running: 'project-status-running',
+  done: 'project-status-done',
+  failed: 'project-status-failed',
 };
 
 const PHASE_LABEL: Record<string, string> = {
@@ -23,6 +23,14 @@ const PHASE_LABEL: Record<string, string> = {
   failed: 'Failed',
 };
 
+function memberLabels(session: TeamSession, agentMap: Map<string, Agent>): string {
+  return session.memberAgentIds
+    .map((id) => agentMap.get(id))
+    .filter(Boolean)
+    .map((a) => formatAgentLabel(a!))
+    .join(', ') || '—';
+}
+
 export function ProjectsTab({
   sessions,
   agents,
@@ -32,69 +40,74 @@ export function ProjectsTab({
 }) {
   const agentMap = new Map(agents.map((a) => [a.id, a]));
 
+  const openDetail = (sessionId: string) => {
+    postMessage('getProjectDetail', { sessionId });
+    postMessage('openProjectChat', { sessionId });
+  };
+
   if (sessions.length === 0) {
     return (
-      <section className="card">
+      <section className="panel">
         <h3>Project</h3>
-        <p className="muted">
-          아직 Project 세션이 없습니다. CEO 명령에 <code>/project</code> 또는 &quot;협업&quot;, &quot;함께&quot; 같은
-          키워드를 넣으면 PM이 계획을 세우고 에이전트가 순차 실행합니다.
+        <p className="panel-hint">
+          PM(예: 박준호)과 1:1로 계획을 확정한 뒤 <strong>「진행하세요」</strong>라고 하면 Project 채팅방이
+          생성됩니다. 즉시 실행은 <code>/project</code> 명령을 사용하세요.
         </p>
-        <p className="muted" style={{ marginTop: 8 }}>
-          예: <code>@김윤하 /project 수능 기출 분석하고 쇼츠 대본까지 협업해줘</code>
+        <p className="panel-hint" style={{ marginTop: 8 }}>
+          예: 박준호와 협업 계획 논의 → 확정 후 <code>진행하세요</code>
         </p>
       </section>
     );
   }
 
   return (
-    <section className="card">
+    <section className="panel">
       <h3>Project ({sessions.length})</h3>
-      <p className="muted" style={{ marginBottom: 12 }}>
-        PM 계획 → 순차 태스크 실행(CrewAI 스타일) 세션입니다. 항목을 클릭하면 Project 대화방을 엽니다.
+      <p className="panel-hint" style={{ marginBottom: 12 }}>
+        항목을 <strong>더블클릭</strong>하면 진행 상황·결과 팝업과 Project 채팅방이 열립니다.
       </p>
-      <ul className="task-list">
+      <div className="project-list">
         {sessions.map((session) => {
           const lead = agentMap.get(session.leadAgentId);
-          const members = session.memberAgentIds
-            .map((id) => agentMap.get(id))
-            .filter(Boolean) as Agent[];
+          const members = memberLabels(session, agentMap);
           const phase = session.phase ? PHASE_LABEL[session.phase] ?? session.phase : null;
 
           return (
-            <li
+            <article
               key={session.id}
-              className="task-item"
-              style={{ cursor: 'pointer' }}
-              onClick={() => postMessage('openProjectChat', { sessionId: session.id })}
+              className="project-card"
+              onDoubleClick={() => openDetail(session.id)}
+              title="더블클릭: 상세 보기 + 채팅방 열기"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                <strong>{session.title}</strong>
-                <span style={{ color: STATUS_COLOR[session.status], fontSize: 12 }}>
+              <div className="project-card-head">
+                <h4 className="project-card-title">{session.title}</h4>
+                <span className={`project-status ${STATUS_CLASS[session.status]}`}>
                   {STATUS_LABEL[session.status]}
                   {phase && session.status === 'running' ? ` · ${phase}` : ''}
                 </span>
               </div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                PM: {lead ? formatAgentLabel(lead) : '—'} · {members.length}명 ·{' '}
+              <p className="project-card-meta">
+                <span>
+                  <strong>PM:</strong> {lead ? formatAgentLabel(lead) : '—'}
+                </span>
+                <span className="project-meta-sep">/</span>
+                <span>
+                  <strong>팀원:</strong> {members}
+                </span>
+              </p>
+              <p className="project-card-time">
                 {new Date(session.createdAt).toLocaleString('ko-KR')}
-              </div>
+              </p>
               {session.plan && (
-                <div style={{ fontSize: 12, marginTop: 6, whiteSpace: 'pre-wrap' }}>
-                  {session.plan.slice(0, 160)}
-                  {session.plan.length > 160 ? '…' : ''}
-                </div>
+                <p className="project-card-preview">{session.plan.slice(0, 140)}{session.plan.length > 140 ? '…' : ''}</p>
               )}
-              {session.summary && session.status === 'done' && (
-                <div style={{ fontSize: 12, marginTop: 6, color: '#22c55e' }}>
-                  {session.summary.slice(0, 120)}
-                  {session.summary.length > 120 ? '…' : ''}
-                </div>
+              {session.summary && (session.status === 'done' || session.status === 'failed') && (
+                <p className="project-card-summary">{session.summary.slice(0, 160)}{session.summary.length > 160 ? '…' : ''}</p>
               )}
-            </li>
+            </article>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
 }

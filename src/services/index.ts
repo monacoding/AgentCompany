@@ -885,6 +885,30 @@ ${body}
       memorySnippet: agent.memory.slice(-1500)
     };
   }
+
+  getProjectDetail(sessionId: string) {
+    const session = this.teams.getSession(sessionId);
+    if (!session) return null;
+
+    const messages = this.chat
+      .getMessages(session.threadId)
+      .slice(-40)
+      .map((m) => ({
+        id: m.id,
+        senderName: m.senderName,
+        content: m.content,
+        type: m.type,
+        status: m.status,
+        timestamp: m.timestamp,
+      }));
+
+    const agents = session.memberAgentIds
+      .map((id) => this.agents.get(id))
+      .filter((a): a is NonNullable<typeof a> => a !== null)
+      .map((a) => this.mapAgentForDisplay(a));
+
+    return { session, messages, agents };
+  }
   saveOrgChart(org: AgentOrganization) {
     return this.orgEngine.save(org);
   }

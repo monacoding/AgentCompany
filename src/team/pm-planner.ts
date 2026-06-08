@@ -106,9 +106,10 @@ export async function planTeamWithPm(
   providers: ProviderEngine,
   allAgents: Agent[],
   requester: Agent,
-  command: string
+  command: string,
+  forcedPm?: Agent
 ): Promise<TeamPlanResult> {
-  const pm = resolveTeamPm(allAgents, requester);
+  const pm = forcedPm ?? resolveTeamPm(allAgents, requester);
   if (!pm) {
     throw new Error('PM 에이전트를 찾을 수 없습니다.');
   }
