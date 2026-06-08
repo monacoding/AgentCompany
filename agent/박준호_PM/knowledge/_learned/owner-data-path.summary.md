@@ -1,3 +1,8 @@
+# Learned: owner-data-path.md
+
+_hash: cdb398b531bacbf3_  
+_learned: 2026-06-08T11:31:24.534Z_
+
 # 사장님 데이터 경로
 
 ## 사장님(Owner) 데이터 위치 (필수 인지)

@@ -32,14 +32,34 @@ export function resolveTeamPm(agents: Agent[], requester?: Agent | null): Agent 
   return requester ?? active[0] ?? null;
 }
 
-function buildAgentRoster(agents: Agent[]): string {
-  return agents
-    .filter((a) => a.status !== 'offline')
+export function buildCompanyAgentRoster(agents: Agent[]): string {
+  const active = agents.filter((a) => a.status !== 'offline');
+  if (active.length === 0) {
+    return '(활성 에이전트 없음 — Agents 탭에서 에이전트를 추가·활성화하세요)';
+  }
+  return active
     .map(
       (a) =>
-        `- id:${a.id} | @${a.name} | ${formatAgentLabel(a)} | role:${a.role} | ${a.description.slice(0, 80)}`
+        `- @${a.name} | ${formatAgentLabel(a)} | role:${a.role} | status:${a.status} | ${a.description.slice(0, 120)}`
     )
     .join('\n');
+}
+
+/** PM 1:1 대화·계획 시 LLM에 주입할 팀 컨텍스트 */
+export function buildPmOrchestrationPromptBlock(allAgents: Agent[], pm?: Agent): string {
+  const roster = buildCompanyAgentRoster(allAgents);
+  const pmLine = pm ? `당신은 PM ${formatAgentLabel(pm)}입니다.` : '당신은 PM입니다.';
+  return `${pmLine}
+
+## 우리 회사 실제 에이전트 (가상 역할·외부 인력 금지 — 이 목록만 사용)
+${roster}
+
+PM 필수 규칙:
+- "스크립트 전문가", "백엔드 개발자" 같은 **일반 직함을 새로 만들지 마세요**
+- 협업·매칭·배정 시 **반드시 @에이전트명**으로 지목 (예: 1. @김윤하: 리서치)
+- 각 에이전트의 role·description·title을 근거로 업무를 매칭하세요
+- offline 에이전트는 배정하지 마세요
+- 계획 확정 후 사장님이 "진행하세요"라고 하면 Project 채팅방이 생성됩니다`;
 }
 
 function parseAgentsFromPlan(plan: string, agents: Agent[]): Agent[] {

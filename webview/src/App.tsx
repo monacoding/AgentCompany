@@ -563,12 +563,12 @@ function OverviewTab({
   return (
     <div className="overview">
       <div className="stats-grid">
+        <StatCard label="Project" value={teamSessionCount} onClick={onOpenProjects} />
         <StatCard label="Agents" value={stats.agents} />
         <StatCard label="Working" value={stats.working} accent />
         <StatCard label="Progress" value={stats.progress} />
         <StatCard label="Review" value={stats.review} />
         <StatCard label="Completed" value={stats.completed} success />
-        <StatCard label="Project" value={teamSessionCount} onClick={onOpenProjects} />
       </div>
 
       <div className="panel ideas-panel">
@@ -1062,20 +1062,33 @@ function StatCard({
   onClick?: () => void;
 }) {
   const className = `stat-card ${accent ? 'accent' : ''} ${success ? 'success' : ''} ${onClick ? 'stat-card-interactive' : ''}`;
-  if (onClick) {
-    return (
-      <button type="button" className={className} onClick={onClick}>
-        <span className="stat-value">{value}</span>
-        <span className="stat-label">{label}</span>
-      </button>
-    );
-  }
-  return (
-    <div className={className}>
+  const content = (
+    <>
       <span className="stat-value">{value}</span>
       <span className="stat-label">{label}</span>
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <div
+        className={className}
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }
 
 function AgentDetailModal({

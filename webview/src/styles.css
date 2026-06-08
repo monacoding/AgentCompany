@@ -1379,9 +1379,6 @@ select:focus {
 
 .stat-card-interactive {
   cursor: pointer;
-  background: inherit;
-  color: inherit;
-  width: 100%;
 }
 
 .stat-card-interactive:hover {

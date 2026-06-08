@@ -22,6 +22,11 @@ export function proposeTeamMembers(lead: Agent, command: string, agents: Agent[]
   if (/코드|구현|개발|버그|api|refactor|배포/i.test(lower)) {
     pick((a) => a.role === 'backend' || a.role === 'frontend' || a.role === 'devops');
   }
+  if (/유튜브|youtube|영상|업로드|tts|ffmpeg|편집|제작/i.test(lower)) {
+    pick((a) => a.role === 'writer' || /영상|제작|콘텐츠/i.test(a.title ?? ''));
+    pick((a) => a.role === 'backend' || a.role === 'devops');
+    pick((a) => a.role === 'researcher');
+  }
   if (/문서|대본|작성|기획|쇼츠|숏폼|콘텐츠/i.test(lower)) {
     pick((a) => a.role === 'writer' || a.role === 'pm');
   }

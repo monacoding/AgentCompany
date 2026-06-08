@@ -1,3 +1,8 @@
+# Learned: cross-agent-file-transfer.md
+
+_hash: 0634504f193ce473_  
+_learned: 2026-06-08T11:31:24.528Z_
+
 # 에이전트 간 파일 이동
 
 ## 에이전트 간 파일 이동 규칙 (필수)

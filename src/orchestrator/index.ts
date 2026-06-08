@@ -73,10 +73,12 @@ import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-displ
 import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
+  buildPmOrchestrationPromptBlock,
   extractProjectBriefFromChat,
   hasProjectPlanningContext,
   isProjectGoAhead,
   normalizeProjectCommand,
+  proposeTeamMembers,
   shouldStartProjectImmediately,
 } from '../team';
 
@@ -574,7 +576,10 @@ export class Orchestrator {
         this.agentFolders,
         agent,
         taskForLlm,
-        history
+        history,
+        this.isPmAgent(agent)
+          ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
+          : undefined
       );
     } finally {
       this.agentClearWorking(agent);
@@ -719,11 +724,16 @@ export class Orchestrator {
       const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
       const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
         excludeLastCeo: true,
+        limit: this.isPmAgent(agent) ? 20 : 12,
       });
       const memorySnippet = agent.memory?.trim().slice(0, 600);
+      const pmBlock = this.isPmAgent(agent)
+        ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
+        : '';
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
 ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
+${pmBlock}
 
 사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
 **주어 없는 후속 말**(전달해줘, 해줘 등)은 **이전 대화**와 합쳐 의도를 파악하세요.
@@ -1239,6 +1249,11 @@ ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
         return;
       }
 
+      if (this.isPmAgent(agent)) {
+        await this.runPmPlanningTask(agent, task, command, resolved);
+        return;
+      }
+
       const enabledApis = this.externalApis.getEnabled();
       const chatContext = this.buildChatContext(agent.id);
       const apiCommand = this.resolveApiCommand(agent.id, command);
@@ -1390,6 +1405,72 @@ Complete this task. If code/files are needed, output them in the specified file 
 
   private extractCommandFromTask(task: Task): string {
     return task.title.replace(/^\[[^\]]+\]\s*/, '').trim();
+  }
+
+  /** PM 전용 — 실제 팀 에이전트 목록 + 대화 맥락 기반 계획·매칭 */
+  private async runPmPlanningTask(
+    agent: Agent,
+    task: Task,
+    command: string,
+    resolved: ResolvedCommand
+  ): Promise<void> {
+    const allAgents = this.agentManager.getAll();
+    const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
+    const pmBlock = buildPmOrchestrationPromptBlock(allAgents, agent);
+    const memorySnippet = agent.memory?.trim().slice(0, 800);
+
+    const recentCeoContext = this.chat
+      .getMessages(agent.id)
+      .filter((m) => m.type === 'ceo')
+      .slice(-5)
+      .map((m) => m.content)
+      .join('\n');
+    const matchHint = proposeTeamMembers(agent, `${recentCeoContext}\n${command}`, allAgents);
+    const hintBlock =
+      matchHint.length > 0
+        ? `\n## 참고: 업무 키워드 기반 추천 조합\n${matchHint.map((m, i) => `${i + 1}. @${m.name} (${formatAgentLabel(m)})`).join('\n')}`
+        : '';
+
+    const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
+      excludeLastCeo: true,
+      limit: 20,
+    });
+
+    const systemPrompt = `You are ${formatAgentLabel(agent)}, PM in AgentCompany.
+${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
+${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
+${pmBlock}
+${hintBlock}
+
+사장님과 PM으로 대화합니다.
+- 팀 에이전트 매칭·협업 계획 시 **위 실제 @에이전트명만** 사용
+- 가상의 외부 전문가·일반 직함 나열 금지
+- 한국어, "사장님" 호칭, @이름: 담당업무 형식 권장
+- 계획이 확정되면 사장님께 "진행하세요"라고 말씀해 주시면 Project를 시작할 수 있다고 안내`;
+
+    const userLine = resolved.usedContext
+      ? `${command}\n(이전 맥락: ${resolved.contextSummary})`
+      : command;
+
+    const response = await this.providers.chat(
+      agent.provider,
+      [
+        { role: 'system', content: systemPrompt },
+        ...history,
+        { role: 'user', content: userLine },
+      ],
+      { type: agent.provider, model: agent.model }
+    );
+
+    const raw = (response.content || '').trim();
+    const resultSummary = formatChatReply(raw) || raw || '계획을 정리했습니다.';
+
+    this.taskEngine.setResult(task.id, resultSummary);
+    this.memory.appendAgentMemory(agent.id, `[PM 계획] ${command.slice(0, 80)}\n${resultSummary.slice(0, 500)}`);
+    this.memory.logActivity(agent.id, task.id, `${agent.name} PM planning: "${command.slice(0, 60)}"`);
+    this.taskEngine.transition(task.id, 'completed');
+    this.agentManager.setStatus(agent.id, 'idle');
+    this.notifications.showTaskComplete(task.title);
   }
 
   private async runProductionTask(agent: Agent, task: Task): Promise<void> {
