@@ -1502,6 +1502,79 @@ select:focus {
   max-height: 85vh;
 }
 
+.project-detail-simple {
+  max-width: 520px;
+}
+
+.project-detail-simple-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-detail-field h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.project-detail-value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.project-detail-subvalue {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.45;
+}
+
+.project-detail-agents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-detail-agents li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.project-detail-agent-role {
+  display: inline-block;
+  min-width: 36px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--vscode-badge-background, #4d4d4d);
+  color: var(--vscode-badge-foreground, #fff);
+}
+
+.project-detail-path {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-descriptionForeground);
+  word-break: break-all;
+}
+
+.overview-project-panel {
+  margin-top: 4px;
+}
+
 .project-detail-pre {
   margin: 0;
   padding: 10px;

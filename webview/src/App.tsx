@@ -7,9 +7,10 @@ import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
 import { ProjectsTab } from './ProjectsTab';
+import { openProjectDetail, ProjectListPanel } from './ProjectListPanel';
 import { ProjectDetail, ProjectDetailModal } from './ProjectDetailModal';
 import { SettingsTab } from './SettingsTab';
-import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task } from './vscode';
+import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task, TeamSession } from './vscode';
 import {
   formatAgentLabel,
   isInProgressTask,
@@ -376,12 +377,12 @@ export default function App() {
           <OverviewTab
             stats={stats}
             agents={data.agents}
-            tasks={data.tasks}
             ideas={pendingIdeas}
             reviewTasks={reviewTasks}
+            teamSessions={teamSessions}
             teamSessionCount={teamSessions.length}
             onOpenProjects={() => setActiveTab('projects')}
-            onAgentDoubleClick={(id) => postMessage('getAgentWorkLog', { agentId: id })}
+            onProjectDoubleClick={openProjectDetail}
           />
         )}
         {activeTab === 'agents' && (
@@ -483,13 +484,7 @@ export default function App() {
         <AgentWorkLogModal log={agentWorkLog} onClose={() => setAgentWorkLog(null)} />
       )}
       {projectDetail && (
-        <ProjectDetailModal
-          detail={projectDetail}
-          onClose={() => setProjectDetail(null)}
-          onOpenChat={() => {
-            postMessage('openProjectChat', { sessionId: projectDetail.session.id });
-          }}
-        />
+        <ProjectDetailModal detail={projectDetail} onClose={() => setProjectDetail(null)} />
       )}
     </div>
   );
@@ -556,21 +551,21 @@ function AgentFormFields({
 function OverviewTab({
   stats,
   agents,
-  tasks,
   ideas,
   reviewTasks,
+  teamSessions,
   teamSessionCount,
   onOpenProjects,
-  onAgentDoubleClick,
+  onProjectDoubleClick,
 }: {
   stats: Record<string, number>;
   agents: Agent[];
-  tasks: Task[];
   ideas: AgentIdea[];
   reviewTasks: Task[];
+  teamSessions: TeamSession[];
   teamSessionCount: number;
   onOpenProjects: () => void;
-  onAgentDoubleClick: (agentId: string) => void;
+  onProjectDoubleClick: (sessionId: string) => void;
 }) {
   return (
     <div className="overview">
@@ -628,32 +623,12 @@ function OverviewTab({
         </div>
       )}
 
-      <div className="overview-columns">
-        <div className="panel">
-          <h3>Active Agents</h3>
-          <p className="panel-hint">더블클릭 → 작업 기록 보기</p>
-          {agents.filter((a) => a.status === 'working' || a.status === 'progress').length === 0 ? (
-            <p className="empty">No agents working</p>
-          ) : (
-            agents
-              .filter((a) => a.status === 'working' || a.status === 'progress')
-              .map((a) => (
-                <AgentCard
-                  key={a.id}
-                  agent={a}
-                  compact
-                  onDoubleClick={() => onAgentDoubleClick(a.id)}
-                />
-              ))
-          )}
-        </div>
-        <div className="panel">
-          <h3>Recent Tasks</h3>
-          {tasks.slice(0, 5).map((t) => (
-            <TaskRow key={t.id} task={t} compact />
-          ))}
-        </div>
-      </div>
+      <ProjectListPanel
+        sessions={teamSessions}
+        agents={agents}
+        onDoubleClick={onProjectDoubleClick}
+        emptyHint="완료된 Project 작업이 여기에 표시됩니다. PM과 계획 확정 후 「진행하세요」 또는 /project 로 시작하세요."
+      />
     </div>
   );
 }

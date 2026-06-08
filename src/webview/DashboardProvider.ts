@@ -414,6 +414,14 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
         break;
       }
 
+      case 'openProjectWarehouse': {
+        const { sessionId } = message.payload as { sessionId: string };
+        if (sessionId) {
+          await this.service.openProjectWarehouse(sessionId);
+        }
+        break;
+      }
+
       case 'requestIdeas': {
         const count = await this.service.ideas.requestIdeasNow(3);
         if (count > 0) {

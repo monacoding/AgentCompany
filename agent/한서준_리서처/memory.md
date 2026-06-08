@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T13:09:42.005Z_
+_마지막 동기화: 2026-06-08T13:12:12.930Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1902,15 +1902,6 @@ P1 … / P2 … / P3 …
 공통: %PDF 헤더 검증 → company/projects/{폴더}/files/pdfs/ 저장
 주요 과목(기본): 국어, 수학, 영어, 한국사
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [Research: ## 사장님 지시
 
 @박준호 인터넷에서 2000~2010년도 수능 문제 pdf 로 다운 받는 작업 계획 짜줘
@@ -1944,3 +1935,12 @@ P4. PM 보고: 프로젝트 결과와 보고서를 작성하여 제출
 
 ### 요약
 2023년 10월 현재, 교육과정평가원 웹사이트(suneung.re.kr)에서 2000~2010년도 수능 문제 PDF를 직접 다운로드할 수 있는 페이지를 찾을 수 없습니다. 이는 해당 콘텐츠가 삭제되거나 이동된 결과일 수 있습니다. 정확한 URL이나 페이지 검색 방법을 다시 확인해야 할 필요성이 있습니다
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

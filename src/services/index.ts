@@ -32,7 +32,6 @@ import { TelegramInboundPoller } from '../notifications/telegram-inbound';
 import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
 import { TeamEngine, formatProjectDisplayTitle, resolveSessionWarehouseFolder } from '../team';
-import { listProjectArtifacts } from '../team/project-artifacts';
 import {
   getProjectPlaybookSummary,
   getRoleProjectPlaybookSnippet,
@@ -1016,29 +1015,48 @@ ${roleSnippet}
     const session = this.teams.getSession(sessionId);
     if (!session) return null;
 
-    const artifacts = listProjectArtifacts(
-      this.agentFolders.getCompanyDir(),
-      resolveSessionWarehouseFolder(session)
-    );
+    const companyDir = this.agentFolders.getCompanyDir();
+    const warehouseFolder = resolveSessionWarehouseFolder(session);
+    const warehousePath = path.join(companyDir, 'projects', warehouseFolder);
+    const warehouseRelativePath = path
+      .join('company', 'projects', warehouseFolder)
+      .replace(/\\/g, '/');
 
-    const messages = this.chat
-      .getMessages(session.threadId)
-      .slice(-40)
-      .map((m) => ({
-        id: m.id,
-        senderName: m.senderName,
-        content: m.content,
-        type: m.type,
-        status: m.status,
-        timestamp: m.timestamp,
-      }));
+    const threadMessages = this.chat.getMessages(session.threadId);
+    let promptTokens = 0;
+    let completionTokens = 0;
+    for (const msg of threadMessages) {
+      if (!msg.tokenUsage) continue;
+      promptTokens += msg.tokenUsage.promptTokens;
+      completionTokens += msg.tokenUsage.completionTokens;
+    }
+    const tokenUsage =
+      promptTokens > 0 || completionTokens > 0
+        ? {
+            promptTokens,
+            completionTokens,
+            totalTokens: promptTokens + completionTokens,
+          }
+        : null;
 
     const agents = session.memberAgentIds
       .map((id) => this.agents.get(id))
       .filter((a): a is NonNullable<typeof a> => a !== null)
       .map((a) => this.mapAgentForDisplay(a));
 
-    return { session, messages, agents, artifacts };
+    return {
+      session,
+      agents,
+      tokenUsage,
+      warehousePath,
+      warehouseRelativePath,
+    };
+  }
+
+  async openProjectWarehouse(sessionId: string): Promise<void> {
+    const session = this.teams.getSession(sessionId);
+    if (!session) return;
+    await this.agentFolders.openProjectWarehouse(resolveSessionWarehouseFolder(session));
   }
   saveOrgChart(org: AgentOrganization) {
     return this.orgEngine.save(org);

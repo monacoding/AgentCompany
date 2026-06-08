@@ -725,6 +725,15 @@ ${displayTitle}
     await this.revealFolderInExplorer(uri);
   }
 
+  async openProjectWarehouse(warehouseFolder: string): Promise<void> {
+    const folder = warehouseFolder.trim();
+    if (!folder) return;
+    const dir = path.join(this.getCompanyDir(), 'projects', folder);
+    await fs.mkdir(dir, { recursive: true });
+    const uri = vscode.Uri.file(dir);
+    await this.revealFolderInExplorer(uri);
+  }
+
   /** Cursor·VS Code 모두에서 동작하도록 탐색기 reveal (실패해도 throw 안 함) */
   private async revealFolderInExplorer(uri: vscode.Uri): Promise<void> {
     const candidates = ['revealFileInExplorer', 'revealInExplorer', 'revealFileInOS'];

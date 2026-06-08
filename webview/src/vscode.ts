@@ -297,6 +297,7 @@ export interface TeamSession {
   leadAgentId: string;
   memberAgentIds: string[];
   threadId: string;
+  warehouseFolder?: string;
   ceoCommand: string;
   plan: string;
   summary: string;
