@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:35:06.879Z_
+_마지막 동기화: 2026-06-08T11:41:12.643Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -304,3 +304,17 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[파일전달→사장님] 인터넷에서 수능 문제 pdf 로 다운 받는 작업
+· README.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/README.md
+· cross-agent-file-transfer.summary.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/cross-agent-file-transfer.summary.md
+· owner-data-path.summary.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/owner-data-path.summary.md
+· cross-agent-file-transfer.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/cross-agent-file-transfer.md
+· owner-data-path.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/owner-data-path.md
+· role-profile.md
+  /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/role-profile.md

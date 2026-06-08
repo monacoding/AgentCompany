@@ -211,6 +211,16 @@ export interface ProjectTask {
   description: string;
   status: 'pending' | 'running' | 'done' | 'failed';
   output?: string;
+  artifactPath?: string;
+  extractedFiles?: string[];
+}
+
+export interface ProjectArtifact {
+  name: string;
+  relativePath: string;
+  absolutePath: string;
+  sizeBytes: number;
+  kind: 'task' | 'summary' | 'file';
 }
 
 /** DB/API: Project 세션 (legacy table name team_sessions) */

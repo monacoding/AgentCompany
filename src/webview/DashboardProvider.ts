@@ -364,6 +364,20 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
         break;
       }
 
+      case 'openProjectArtifact': {
+        const { absolutePath } = message.payload as { absolutePath: string };
+        if (absolutePath) {
+          try {
+            const uri = vscode.Uri.file(absolutePath);
+            const doc = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(doc, { preview: false });
+          } catch {
+            this.service.notifications.showError('산출물 파일을 열 수 없습니다.');
+          }
+        }
+        break;
+      }
+
       case 'requestIdeas': {
         const count = await this.service.ideas.requestIdeasNow(3);
         if (count > 0) {

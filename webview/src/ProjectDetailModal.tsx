@@ -1,4 +1,4 @@
-import { Agent, CeoChatMessage, TeamSession } from './vscode';
+import { Agent, CeoChatMessage, ProjectArtifact, TeamSession, postMessage } from './vscode';
 import { formatAgentLabel } from './agent-display';
 
 const STATUS_LABEL: Record<TeamSession['status'], string> = {
@@ -8,10 +8,22 @@ const STATUS_LABEL: Record<TeamSession['status'], string> = {
   failed: '실패',
 };
 
+const ARTIFACT_KIND: Record<ProjectArtifact['kind'], string> = {
+  task: '태스크',
+  summary: 'PM 보고',
+  file: '추출 파일',
+};
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
 export interface ProjectDetail {
   session: TeamSession;
   messages: CeoChatMessage[];
   agents: Agent[];
+  artifacts?: ProjectArtifact[];
 }
 
 export function ProjectDetailModal({
@@ -23,7 +35,7 @@ export function ProjectDetailModal({
   onClose: () => void;
   onOpenChat: () => void;
 }) {
-  const { session, messages, agents } = detail;
+  const { session, messages, agents, artifacts = [] } = detail;
   const agentMap = new Map(agents.map((a) => [a.id, a]));
   const lead = agentMap.get(session.leadAgentId);
   const members = session.memberAgentIds
@@ -63,6 +75,33 @@ export function ProjectDetailModal({
               <pre className="project-detail-pre project-detail-result">{session.summary}</pre>
             </section>
           )}
+
+          <section className="worklog-section">
+            <h3>산출물 WareHouse ({artifacts.length})</h3>
+            {artifacts.length === 0 ? (
+              <p className="empty">저장된 산출물이 없습니다.</p>
+            ) : (
+              <ul className="project-artifact-list">
+                {artifacts.map((art) => (
+                  <li key={art.absolutePath} className="project-artifact-item">
+                    <button
+                      type="button"
+                      className="project-artifact-btn"
+                      onClick={() =>
+                        postMessage('openProjectArtifact', { absolutePath: art.absolutePath })
+                      }
+                    >
+                      <span className="project-artifact-name">{art.name}</span>
+                      <span className="project-artifact-meta">
+                        {ARTIFACT_KIND[art.kind]} · {formatSize(art.sizeBytes)}
+                      </span>
+                      <span className="project-artifact-path">{art.relativePath}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           <section className="worklog-section">
             <h3>채팅 기록 ({messages.length})</h3>

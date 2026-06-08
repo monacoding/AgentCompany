@@ -3,12 +3,20 @@ import { formatChatReply, formatLlmError } from '../chat/reply-format';
 import { ProviderEngine } from '../providers';
 import { Agent, ProjectPhase, ProjectTask } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
+import { saveProjectSummaryArtifact, saveProjectTaskArtifact } from './project-artifacts';
+import { buildPriorDeliverablesContext, PriorDeliverable } from './project-context';
 import {
   PROJECT_REVIEW_MAX_ITERATIONS,
   formatLoopExhaustedNote,
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
+import {
+  buildPmReportPhasePrompt,
+  buildReviewPhasePrompt,
+  buildWorkerPhasePrompt,
+} from './phase-prompts';
+import { buildWorkerToolingHint, extractAndSaveProjectFiles } from './project-tooling';
 
 export interface ProjectRunCallbacks {
   onPhase: (phase: ProjectPhase, detail: string) => void;
@@ -17,6 +25,12 @@ export interface ProjectRunCallbacks {
   onMessage: (agent: Agent, content: string) => void;
   onReviewStart?: (task: ProjectTask, reviewer: Agent, iteration: number, max: number) => void;
   onReviewDone?: (task: ProjectTask, reviewer: Agent, approved: boolean, iteration: number) => void;
+  onArtifactSaved?: (relativePath: string) => void;
+}
+
+export interface ProjectRunOptions {
+  sessionId: string;
+  companyDir: string;
 }
 
 /** CrewAI Task 파싱 — 계획 텍스트에서 @에이전트: 할 일 추출 */
@@ -40,7 +54,7 @@ export function parseProjectTasks(plan: string, members: Agent[]): ProjectTask[]
     const agent =
       members.find((a) => a.name === name) ??
       members.find((a) => a.name.startsWith(name)) ??
-      members.find((a) => name.startsWith(a.name));
+      members.find((a) => a.name.startsWith(name));
 
     if (!agent) continue;
 
@@ -76,15 +90,22 @@ async function executeWorkerTask(
   command: string,
   plan: string,
   task: ProjectTask,
+  priorContext: string,
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
   revision?: { previousOutput: string; feedback: string }
 ): Promise<string> {
   const folderContext = await agentFolders.buildConversationalPromptContext(agent);
-
-  const revisionBlock = revision
-    ? `\n\n## 이전 산출물\n${revision.previousOutput}\n\n## 검토 피드백 (반영 필수)\n${revision.feedback}\n\n피드백을 반영해 수정하세요. 더 수정할 내용이 없으면 마지막 줄에 FINISHED 를 포함하세요.`
-    : '\n\n결과물을 작성하세요. 작업이 완료되면 마지막 줄에 FINISHED 를 포함할 수 있습니다.';
+  const toolingHint = buildWorkerToolingHint(agent);
+  const userContent = buildWorkerPhasePrompt(
+    agent,
+    command,
+    plan,
+    task.description,
+    priorContext,
+    toolingHint,
+    revision
+  );
 
   const response = await providers.chat(
     [
@@ -96,12 +117,9 @@ ${folderContext}
 Rules:
 - Korean, concise, deliverable-focused
 - Complete the assigned task only
-- No meta commentary`,
+- Use filepath blocks when producing code/files`,
       },
-      {
-        role: 'user',
-        content: `## 사장님 지시\n${command}\n\n## PM 계획\n${plan}\n\n## 당신의 태스크\n${task.description}${revisionBlock}`,
-      },
+      { role: 'user', content: userContent },
     ],
     { type: agent.provider, model: agent.model }
   );
@@ -119,24 +137,16 @@ async function reviewWorkerOutput(
   agentFolders: AgentFolderEngine
 ): Promise<string> {
   const folderContext = await agentFolders.buildConversationalPromptContext(reviewer);
+  const userContent = buildReviewPhasePrompt(reviewer, worker, command, task.description, output);
 
   const response = await providers.chat(
     [
       {
         role: 'system',
-        content: `You are ${formatAgentLabel(reviewer)}, project reviewer (ChatDev Code Reviewer role).
-${folderContext}
-
-Review the worker deliverable against the task and CEO command.
-Rules:
-- Korean, concise
-- If acceptable: brief approval AND include FINISHED on its own line
-- If revision needed: list specific issues only (do NOT include FINISHED)`,
+        content: `You are ${formatAgentLabel(reviewer)}, project reviewer.
+${folderContext}`,
       },
-      {
-        role: 'user',
-        content: `## 사장님 지시\n${command}\n\n## 태스크\n${task.description}\n\n## 담당\n@${worker.name}\n\n## 산출물\n${output}\n\n검토하세요.`,
-      },
+      { role: 'user', content: userContent },
     ],
     { type: reviewer.provider, model: reviewer.model }
   );
@@ -144,13 +154,13 @@ Rules:
   return formatChatReply(response.content || '') || response.content.trim() || '';
 }
 
-/** ChatDev SDLC: 작업 → 검토 → (미승인 시) 수정 루프 */
 async function executeTaskWithReviewLoop(
   pm: Agent,
   worker: Agent,
   command: string,
   plan: string,
   task: ProjectTask,
+  priorContext: string,
   members: Agent[],
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
@@ -178,6 +188,7 @@ async function executeTaskWithReviewLoop(
       command,
       plan,
       task,
+      priorContext,
       providers,
       agentFolders,
       previousOutput && feedback ? { previousOutput, feedback } : undefined
@@ -221,7 +232,7 @@ async function executeTaskWithReviewLoop(
     }
   }
 
-  return { output: output.slice(0, 2000), approved, iterations: usedIterations };
+  return { output: output.slice(0, 4000), approved, iterations: usedIterations };
 }
 
 export async function runProjectSequential(
@@ -231,7 +242,8 @@ export async function runProjectSequential(
   members: Agent[],
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
-  callbacks: ProjectRunCallbacks
+  callbacks: ProjectRunCallbacks,
+  options: ProjectRunOptions
 ): Promise<{ tasks: ProjectTask[]; summary: string }> {
   const tasks = parseProjectTasks(plan, members);
   callbacks.onPhase('planning', 'PM 계획 확정');
@@ -245,8 +257,8 @@ export async function runProjectSequential(
 
   callbacks.onPhase('executing', `0/${tasks.length} 완료 (검토 루프 최대 ${PROJECT_REVIEW_MAX_ITERATIONS}회)`);
 
-  const completedOutputs: Array<{ agent: string; description: string; output: string; approved: boolean }> =
-    [];
+  const priorDeliverables: PriorDeliverable[] = [];
+  const { sessionId, companyDir } = options;
 
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
@@ -255,6 +267,8 @@ export async function runProjectSequential(
       task.status = 'failed';
       continue;
     }
+
+    const priorContext = buildPriorDeliverablesContext(priorDeliverables);
 
     task.status = 'running';
     callbacks.onTaskStart(task, i, tasks.length);
@@ -267,27 +281,50 @@ export async function runProjectSequential(
         command,
         plan,
         task,
+        priorContext,
         members,
         providers,
         agentFolders,
         callbacks
       );
 
+      const extractedFiles = extractAndSaveProjectFiles(companyDir, sessionId, output);
+      const artifactPath = saveProjectTaskArtifact(
+        companyDir,
+        sessionId,
+        i,
+        agent.name,
+        task.description,
+        output,
+        approved
+      );
+
       task.status = 'done';
       task.output = output;
-      completedOutputs.push({
+      task.artifactPath = artifactPath;
+      task.extractedFiles = extractedFiles;
+      callbacks.onArtifactSaved?.(artifactPath);
+      for (const f of extractedFiles) {
+        callbacks.onArtifactSaved?.(f);
+      }
+
+      priorDeliverables.push({
         agent: agent.name,
         description: task.description,
         output: task.output,
         approved,
       });
+
       callbacks.onTaskDone(task, task.output);
 
+      const fileNote =
+        extractedFiles.length > 0 ? `\n\n📁 파일 ${extractedFiles.length}개 저장` : '';
+      const artifactNote = `\n\n📄 산출물: company/${artifactPath}`;
       const statusIcon = approved ? '✅' : '⚠️';
       const statusNote = approved ? '검토 통과' : '검토 루프 한도 도달';
       callbacks.onMessage(
         agent,
-        `${statusIcon} **태스크 완료** (${statusNote})\n${task.description}\n\n${task.output}`
+        `${statusIcon} **태스크 완료** (${statusNote})\n${task.description}\n\n${task.output}${fileNote}${artifactNote}`
       );
     } catch (error) {
       task.status = 'failed';
@@ -299,25 +336,29 @@ export async function runProjectSequential(
 
   callbacks.onPhase('reviewing', 'PM 최종 보고 작성 중');
 
+  const completedOutputs = tasks
+    .filter((t) => t.status === 'done' && t.output)
+    .map((t) => ({
+      agent: t.agentName,
+      description: t.description,
+      output: t.output!,
+      approved: true,
+    }));
+
   let summary: string;
   try {
     const deliverables = completedOutputs
-      .map(
-        (d) =>
-          `### ${d.agent} (${d.approved ? '검토통과' : '루프한도'})\n${d.description}\n${d.output}`
-      )
+      .map((d) => `### ${d.agent}\n${d.description}\n${d.output}`)
       .join('\n\n');
 
+    const reportPrompt = buildPmReportPhasePrompt(command, deliverables);
     const review = await providers.chat(
       [
         {
           role: 'system',
-          content: `You are ${pm.name}, PM. Review project deliverables and report to CEO in Korean (under 600 chars).`,
+          content: `You are ${pm.name}, PM. Report to CEO in Korean.`,
         },
-        {
-          role: 'user',
-          content: `## 사장님 지시\n${command}\n\n## 산출물\n${deliverables}\n\n완료 보고를 작성하세요.`,
-        },
+        { role: 'user', content: reportPrompt },
       ],
       { type: pm.provider, model: pm.model }
     );
@@ -325,6 +366,9 @@ export async function runProjectSequential(
   } catch (error) {
     summary = `Project 완료 (PM 검토 LLM 오류: ${formatLlmError(error)})`;
   }
+
+  const summaryPath = saveProjectSummaryArtifact(companyDir, sessionId, summary);
+  callbacks.onArtifactSaved?.(summaryPath);
 
   const doneCount = tasks.filter((t) => t.status === 'done').length;
   callbacks.onPhase('done', `${doneCount}/${tasks.length} 완료`);

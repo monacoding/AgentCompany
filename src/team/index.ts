@@ -17,6 +17,7 @@ export {
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
+export { listProjectArtifacts, getProjectWarehouseDir } from './project-artifacts';
 export { proposeTeamMembers, formatTeamMemberLabels } from './member-picker';
 export type { TeamPlanResult } from './pm-planner';
 export {

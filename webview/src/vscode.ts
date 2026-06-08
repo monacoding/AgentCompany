@@ -279,6 +279,14 @@ export function postMessage(type: string, payload?: unknown): void {
 
 export type TabId = 'overview' | 'agents' | 'org' | 'projects' | 'tasks' | 'activity' | 'api' | 'settings';
 
+export interface ProjectArtifact {
+  name: string;
+  relativePath: string;
+  absolutePath: string;
+  sizeBytes: number;
+  kind: 'task' | 'summary' | 'file';
+}
+
 export interface TeamSession {
   id: string;
   title: string;
@@ -294,4 +302,13 @@ export interface TeamSession {
   requesterAgentId?: string | null;
   createdAt: string;
   updatedAt: string;
+  projectTasks?: Array<{
+    agentId: string;
+    agentName: string;
+    description: string;
+    status: string;
+    output?: string;
+    artifactPath?: string;
+    extractedFiles?: string[];
+  }>;
 }

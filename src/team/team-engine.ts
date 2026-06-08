@@ -149,6 +149,7 @@ export class TeamEngine {
         ? session.projectTasks.map((t) => ({ ...t }))
         : parseProjectTasks(plan, participants);
 
+      const companyDir = this.agentFolders.getCompanyDir();
       const { tasks, summary } = await runProjectSequential(
         pm,
         command,
@@ -193,7 +194,17 @@ export class TeamEngine {
           onMessage: (agent, content) => {
             this.pushMessage(threadId, agent.id, formatAgentLabel(agent), 'agent', content);
           },
-        }
+          onArtifactSaved: (relativePath) => {
+            this.pushMessage(
+              threadId,
+              null,
+              '시스템',
+              'system',
+              `📁 **산출물 저장** \`company/${relativePath}\``
+            );
+          },
+        },
+        { sessionId: session.id, companyDir }
       );
 
       const doneCount = tasks.filter((t) => t.status === 'done').length;

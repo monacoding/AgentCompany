@@ -1532,6 +1532,56 @@ select:focus {
   white-space: pre-wrap;
 }
 
+.project-artifact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-artifact-item {
+  margin: 0;
+}
+
+.project-artifact-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--vscode-panel-border, #333);
+  background: var(--vscode-editor-background, #252526);
+  color: inherit;
+  cursor: pointer;
+}
+
+.project-artifact-btn:hover {
+  border-color: var(--vscode-focusBorder, #3b82f6);
+}
+
+.project-artifact-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.project-artifact-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 2px;
+}
+
+.project-artifact-path {
+  display: block;
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.85;
+  margin-top: 2px;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
 .stat-value {
   display: block;
   font-size: 20px;

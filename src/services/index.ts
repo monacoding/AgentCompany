@@ -32,6 +32,7 @@ import { TelegramInboundPoller } from '../notifications/telegram-inbound';
 import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
 import { TeamEngine } from '../team';
+import { listProjectArtifacts } from '../team/project-artifacts';
 import { isProductionAgent } from '../production';
 import { LlmUsageTracker, ProviderEngine } from '../providers';
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
@@ -890,6 +891,8 @@ ${body}
     const session = this.teams.getSession(sessionId);
     if (!session) return null;
 
+    const artifacts = listProjectArtifacts(this.agentFolders.getCompanyDir(), sessionId);
+
     const messages = this.chat
       .getMessages(session.threadId)
       .slice(-40)
@@ -907,7 +910,7 @@ ${body}
       .filter((a): a is NonNullable<typeof a> => a !== null)
       .map((a) => this.mapAgentForDisplay(a));
 
-    return { session, messages, agents };
+    return { session, messages, agents, artifacts };
   }
   saveOrgChart(org: AgentOrganization) {
     return this.orgEngine.save(org);
