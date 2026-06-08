@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T13:01:21.628Z_
+_마지막 동기화: 2026-06-08T13:02:54.510Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -1924,3 +1924,147 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@34464093]
+# 에이전트 간 파일 이동 규칙 요약
+
+## 기본 규칙
+
+- **완료 전 표현 금지**
+  - 실제 복사·이동 완료 전 "저장", "전달" 등의 완료 표현 절대 금지.
+  - 사장님 지시 후에는 "요청", "진행" 등 **예정** 표현만 사용 가능.
+
+- **완료 시 파일 경로 필수**
+  - 복사가 완료되면 저장 경로를 명확히 기록하여 완료 보고. 경로가 증거임.
+  - 경로 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직하게**
+  - 파일을 찾지 못했거나 복사 실패 시, "완료"라고 하지 않음. 찾은 위치, 조건, 다음 조치를 구체적으로 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것은 금지. 반드시 경로 표시해야 함.
+
+## 요약 및 강조
+
+- 모든 완료 표현은 실제 파일 이동·복사 완료 전까지 금지.
+- 파일 이동이 완료되면 반드시 저장된 정확한 파일 경로를 명시.
+- 실패한 경우엔 솔직하게 실패 이유 설명 및 후속 조치 제안.
+- 허위 보고는 금지, 경로 제공이 필수. 경로가 없으면 증거로 인정되지 않음.
+
+[KnowledgeLearned: owner-data-path.md@70a8f1f6]
+# 사장님 데이터 경로
+
+- 사장님의 프로필, 페르소나 및 사진은 특정 폴더에 저장되어 있음. 에이전트는 해당 경로를 이용해야 함.
+  
+## 경로 정보
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+## 주요 파일
+- **프로필 파일:** `profile.json`
+  - 내용: 사장님의 이름과 성격 등 기본 정보
+- **페르소나 파일:** `persona.md`
+  - 내용: 사장님과의 대화나 보고 시 필요한 정보를 담고 있음
+- **사진 폴더:** `photo/`
+  - 내용: 사장님의 각종 사진이 저장되어 있음
+
+## 유의 사항
+- 사장님 관련 정보를 찾거나 저장하는 작업 시 **반드시 지정된 경로** 사용
+- 다른 경로를 추측하거나 이용하지 않음
+
+이 내용을 바탕으로 에이전트는 사장님 관련 정보 작업을 수행해야 함.
+
+[KnowledgeLearned: project-playbook.md@b371d30c]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차
+
+### 1. 목표 설정
+- 사장님의 지시를 한 문장으로 목표화.
+- 산출물, 범위, 제외 항목 명확히 정의.
+
+### 2. 계획 수립
+- 프로젝트를 Phase(단계)로 분할: 리서치 → 구현/실행 → 검증 → PM 보고.
+- 태스크는 최대 5회 작업-검토 루프(FINISHED).
+
+### 3. 작업 분배
+- `번호 + @에이전트명: 할 일` 형식으로 계획 작성.
+- 예시: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- 실제 회사 에이전트만 사용 가능.
+- 역할, 직급, 역량에 따라 매칭.
+
+### 5. Project 실행 승인
+- PM이 계획을 사장님께 제시 후 승인 요청.
+- 승인되면 Project 채팅방 생성 및 Projects 탭 등록, 에이전트 차례대로 협업.
+- 산출물 저장: `company/projects/{sessionId}/`
+- 이전 태스크 산출물은 carry_data로 전달.
+
+## PM 1:1 대화 권장 형식
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## @하정우 — Project 자동화 역할
+- 이전 태스크의 URL 및 fileSeq 기반 스크립트 구현.
+- 산출물은 `company/projects/{sessionId}/files/`에 저장.
+- Python urllib/curl로 다운로드 후 %PDF 헤더 검증. 
+
+이 플레이북은 AgentCompany의 프로젝트 진행을 위한 표준 절차를 제공하며,
+
+[KnowledgeLearned: research-auto-download.md@15a1d4f3]
+# 리서치 자료 자동 다운로드 (하정우)
+
+## 역할
+@한서준(리서처)이 조사한 **fileSeq·URL·출처**를 바탕으로 PDF를 일괄 다운로드합니다.
+
+## 스크립트
+- 경로: `agent/하정우_개발자/outputs/scripts/download_research_assets.py`
+- 원본 템플릿: `src/team/templates/download_suneung_pdfs.py`
+
+## 수능 PDF (평가원 공식)
+```bash
+python3 agent/하정우_개발자/download_research_assets.py \
+  --out company/projects/{프로젝트폴더}/files/pdfs \
+  --subjects 국어,수학 \
+  --years 2005,2006,2010
+```
+
+- 공식 게시판: https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234
+- 구 영역명: **언어=국어**, **수리=수학** (2006년 이전)
+- page 18까지 (2005년~)
+
+## Project 연동
+1. @한서준 — 출처·fileSeq 조사 (Research Planner)
+2. @하정우 — 이 스크립트 실행·경로 저장
+3. @박준호 — PDF 검증·PM 보고
+
+## 검증
+- 다운로드 파일은 %PDF 헤더 확인
+- 완료 보고 시 **저장 경로 전체** 필수
+
+[Bootstrap: 한서준이 인터넷에서 찾는 자료들 다운 받는 코드 짜줘]
+✅ 리서치 자료 자동 다운로드 스크립트·지식을 등록했습니다.
+📚 Knowledge: agent/하정우_개발자/knowledge/research-auto-download.md
+🐍 Script: agent/하정우_개발자/outputs/scripts/download_research_assets.py
+한서준이 찾은 fileSeq/URL을 `--years`, `--subjects`에 맞춰 실행하면 됩니다.
+FINISHED

@@ -6,7 +6,10 @@ import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
 import { WorkspaceActionExecutor } from '../workspace/action-executor';
 import { KiloCliAdapter } from './adapters/kilo-cli';
-import { tryResearchDownloadBootstrap } from './handlers/research-download-bootstrap';
+import {
+  buildResearchDownloadDeliverableReport,
+  prepareResearchDownloadAssets,
+} from './handlers/research-download-bootstrap';
 import { CodePlanner } from './engine/code-planner';
 import { FileEditor } from './engine/file-editor';
 import { KiloReportGenerator } from './engine/report-generator';
@@ -59,7 +62,7 @@ export class KiloAgent {
       this.memory.logActivity(agent.id, taskId, `[Kilo ${step}] ${status}: ${message}`);
     };
 
-    const bootstrap = await tryResearchDownloadBootstrap(
+    const prep = await prepareResearchDownloadAssets(
       task,
       agent,
       this.workspace,
@@ -67,11 +70,8 @@ export class KiloAgent {
       this.knowledgeLearner,
       this.extensionTemplatePath
     );
-    if (bootstrap) {
-      emit('Research Bootstrap', 'done', '다운로드 스크립트·knowledge 등록 완료');
-      bootstrap.reportPath = await this.reportGenerator.save(task, bootstrap, agent);
-      this.memory.appendAgentMemory(agent.id, `[Bootstrap: ${task}]\n${bootstrap.output.slice(0, 500)}`);
-      return bootstrap;
+    if (prep) {
+      emit('Research Bootstrap', 'done', `템플릿·knowledge 준비 (${prep.files.length}개)`);
     }
 
     emit('Mode Router', 'running', 'Detecting mode...');
@@ -100,7 +100,8 @@ export class KiloAgent {
       );
     }
 
-    const context = await this.gatherContext(task);
+    const gathered = await this.gatherContext(task);
+    const context = prep ? `${prep.contextBlock}\n\n${gathered}` : gathered;
 
     emit('Code Planner', 'running', 'Planning...');
     const plan = await this.planner.plan(task, mode, context, agent);
@@ -142,7 +143,7 @@ ${plan.filesToModify.map((f) => `- ${f}`).join('\n') || '_TBD_'}
         mode,
         plan,
         output: plan.steps.join('\n'),
-        filesModified: [],
+        filesModified: prep?.files ?? [],
         selfCheckPassed: true,
         reportPath,
         usedCli: false,
@@ -152,7 +153,7 @@ ${plan.filesToModify.map((f) => `- ${f}`).join('\n') || '_TBD_'}
     }
 
     emit('File Editor', 'running', 'Generating code...');
-    const { summary, filesModified } = await this.fileEditor.generateAndApply(
+    const { summary, filesModified: editorFiles } = await this.fileEditor.generateAndApply(
       task,
       plan,
       context,
@@ -160,28 +161,49 @@ ${plan.filesToModify.map((f) => `- ${f}`).join('\n') || '_TBD_'}
       agent.id,
       taskId ?? ''
     );
-    emit('File Editor', 'done', `${filesModified.length} files modified`);
+    emit('File Editor', 'done', `${editorFiles.length} files modified`);
 
     emit('Terminal Runner', 'running', 'Checking terminal...');
     const terminalOutput = await this.terminal.runIfNeeded(task);
     emit('Terminal Runner', 'done', terminalOutput ? 'Command executed' : 'Skipped');
 
     emit('Self-Checker', 'running', 'Reviewing work...');
-    const check = await this.selfChecker.check(task, summary, filesModified, terminalOutput, agent);
+    const allFiles = [...new Set([...(prep?.files ?? []), ...editorFiles])];
+    const check = await this.selfChecker.check(task, summary, allFiles, terminalOutput, agent);
     emit('Self-Checker', 'done', check.passed ? 'Passed' : `Issues: ${check.feedback}`);
+
+    let output: string;
+    if (prep) {
+      output = buildResearchDownloadDeliverableReport(prep, {
+        editorSummary: summary,
+        allFiles,
+        selfCheckPassed: check.passed,
+      });
+    } else {
+      output = `${summary}\n\nSelf-check: ${check.feedback}`;
+    }
 
     const result: KiloExecutionResult = {
       mode,
       plan,
-      output: `${summary}\n\nSelf-check: ${check.feedback}`,
-      filesModified,
+      output,
+      filesModified: allFiles,
       terminalOutput,
       selfCheckPassed: check.passed,
       usedCli: false,
     };
 
     result.reportPath = await this.reportGenerator.save(task, result, agent);
-    this.memory.appendAgentMemory(agent.id, `[Kilo ${mode}: ${task}]\n${summary.slice(0, 500)}`);
+    if (prep && result.reportPath) {
+      result.output = buildResearchDownloadDeliverableReport(prep, {
+        editorSummary: summary,
+        allFiles,
+        reportPath: result.reportPath,
+        selfCheckPassed: check.passed,
+      });
+    }
+
+    this.memory.appendAgentMemory(agent.id, `[Kilo ${mode}: ${task}]\n${output.slice(0, 500)}`);
     return result;
   }
 

@@ -54,10 +54,22 @@ export function isImplementationPlanReply(content: string): boolean {
   const text = content.trim();
   if (!text)
     return false;
+  // Kilo/리서치 완료 보고 — 산출물 경로·FINISHED가 있으면 채팅에 표시
+  if (
+    /FINISHED/i.test(text) &&
+    (/##\s*(학습|작성|산출물|실행)/i.test(text) || /agent\/[^\s]+\/(?:knowledge|outputs)\//i.test(text))
+  ) {
+    return false;
+  }
   if (/```/i.test(text) && /python|py|PyPDF|javascript|typescript/i.test(text)) {
     return true;
   }
-  if (/PyPDF2|start_page|end_page|저장\s*경로:|Files\s+modified:/i.test(text) || /수행하기\s*위한\s*단계|다음은\s*이를\s*(?:수행|처리|위한)/i.test(text) || /Python의|라이브러리를\s*사용하여|아래는.*(?:코드|Python|python)/i.test(text)) {
+  if (
+    /PyPDF2|start_page|end_page|저장\s*경로:/i.test(text) ||
+    (/Files\s+modified:/i.test(text) && !/FINISHED/i.test(text)) ||
+    /수행하기\s*위한\s*단계|다음은\s*이를\s*(?:수행|처리|위한)/i.test(text) ||
+    /Python의|라이브러리를\s*사용하여|아래는.*(?:코드|Python|python)/i.test(text)
+  ) {
     return true;
   }
   if (/^\s*\d+\.\s*\*\*/m.test(text) && /(?:서준|협력|PDF|추출|폴더|저장|제공받)/i.test(text)) {

@@ -7,6 +7,19 @@
 
 ---
 
+## [1.7.92] - 2026-06-08
+
+### Fixed
+
+- **하정우 완료 보고 누락** — `Files modified:` 포함 시 `isImplementationPlanReply`가 채팅 답변 전체를 차단하던 문제
+- **Bootstrap 조기 종료** — 템플릿 복사만 하고 Kilo File Editor 없이 FINISHED 처리하던 문제 → 준비 후 File Editor·자체검증 계속 실행
+
+### Changed
+
+- 리서치 다운로드 작업 완료 시 **학습 내용·코드·산출물 경로·실행 예시** 구조화 보고
+
+---
+
 ## [1.7.91] - 2026-06-08
 
 ### Added

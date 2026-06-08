@@ -1473,7 +1473,8 @@ Complete this task. If code/files are needed, output them in the specified file 
       }
       resultSummary += `\n\nMode: ${result.mode} | Engine: ${result.usedCli ? 'Kilo CLI' : 'Internal'}`;
 
-      this.taskEngine.setResult(task.id, resultSummary);
+      const chatReply = formatChatReply(resultSummary) || resultSummary;
+      this.taskEngine.setResult(task.id, chatReply);
       this.memory.logActivity(agent.id, task.id, `${agent.name} Kilo complete (${result.mode})`);
       this.taskEngine.transition(task.id, result.selfCheckPassed ? 'review' : 'completed');
       this.agentManager.setStatus(agent.id, 'idle');

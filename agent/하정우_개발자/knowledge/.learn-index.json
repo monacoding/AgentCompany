@@ -2,16 +2,16 @@
   "version": 1,
   "files": {
     "cross-agent-file-transfer.md": {
-      "hash": "438e5f17eb78e202",
-      "mtimeMs": 1780922022893.9023,
-      "size": 51489,
-      "learnedAt": "2026-06-08T12:51:39.452Z"
+      "hash": "34464093ff1ad4d2",
+      "mtimeMs": 1780923730582.2612,
+      "size": 54705,
+      "learnedAt": "2026-06-08T13:02:44.366Z"
     },
     "owner-data-path.md": {
-      "hash": "c86098cd963b9e13",
-      "mtimeMs": 1780922022903.879,
-      "size": 37018,
-      "learnedAt": "2026-06-08T12:51:44.147Z"
+      "hash": "70a8f1f691110cd5",
+      "mtimeMs": 1780923730589.7285,
+      "size": 39379,
+      "learnedAt": "2026-06-08T13:02:48.689Z"
     },
     "suneung-pdf-download.md": {
       "hash": "3e00da9d5fe8cdeb",
@@ -20,10 +20,16 @@
       "learnedAt": "2026-06-08T11:55:02.975Z"
     },
     "project-playbook.md": {
-      "hash": "15d8841ec3123857",
-      "mtimeMs": 1780922022917.7317,
-      "size": 11231,
-      "learnedAt": "2026-06-08T12:51:50.182Z"
+      "hash": "b371d30c6a76835c",
+      "mtimeMs": 1780923730600.8455,
+      "size": 16847,
+      "learnedAt": "2026-06-08T13:02:54.119Z"
+    },
+    "research-auto-download.md": {
+      "hash": "15a1d4f38a9dde63",
+      "mtimeMs": 1780923774171.5708,
+      "size": 1025,
+      "learnedAt": "2026-06-08T13:02:54.189Z"
     }
   }
 }
