@@ -50,10 +50,60 @@ export function formatBossReport(content: string): string {
   }
   return text;
 }
+export function isResearchReportReply(content: string): boolean {
+  const text = content.trim();
+  if (!text) return false;
+  return (
+    /📄\s*보고서:/i.test(text) ||
+    (/핵심\s*발견|출처\s*신뢰도|교차검증/i.test(text) &&
+      (/https?:\/\//i.test(text) || /\[출처/i.test(text))) ||
+    (/평가원\s*공식|fileSeq|Known\s*Sources/i.test(text) && /https?:\/\//i.test(text))
+  );
+}
+
+/** 리서치 파이프라인 결과를 CEO 채팅용으로 요약 */
+export function formatResearchChatReply(
+  summary: string,
+  options?: {
+    reportPath?: string;
+    sources?: Array<{ title: string; url: string }>;
+    downloadedFiles?: Array<{ path: string; filename?: string }>;
+    knownSourceNote?: string;
+  }
+): string {
+  const parts: string[] = [];
+  const body = summary.trim();
+  if (body) {
+    parts.push(body.length > 2200 ? `${body.slice(0, 2200)}…` : body);
+  }
+  if (options?.knownSourceNote?.trim()) {
+    parts.push(`\n📌 공식 출처 (Known Sources)\n${options.knownSourceNote.trim()}`);
+  }
+  if (options?.sources?.length) {
+    parts.push('\n📌 주요 출처');
+    for (const s of options.sources.slice(0, 5)) {
+      parts.push(`· ${s.title} — ${s.url}`);
+    }
+  }
+  if (options?.downloadedFiles?.length) {
+    parts.push('\n📥 다운로드');
+    for (const f of options.downloadedFiles.slice(0, 5)) {
+      parts.push(`· ${f.path}`);
+    }
+  }
+  if (options?.reportPath) {
+    parts.push(`\n📄 보고서: ${options.reportPath}`);
+  }
+  return parts.join('\n').trim();
+}
+
 export function isImplementationPlanReply(content: string): boolean {
   const text = content.trim();
   if (!text)
     return false;
+  if (isResearchReportReply(text)) {
+    return false;
+  }
   // Kilo/리서치 완료 보고 — 산출물 경로·FINISHED가 있으면 채팅에 표시
   if (
     /FINISHED/i.test(text) &&
@@ -72,7 +122,10 @@ export function isImplementationPlanReply(content: string): boolean {
   ) {
     return true;
   }
-  if (/^\s*\d+\.\s*\*\*/m.test(text) && /(?:서준|협력|PDF|추출|폴더|저장|제공받)/i.test(text)) {
+  if (
+    /^\s*\d+\.\s*\*\*/m.test(text) &&
+    /(?:PyPDF|추출(?:할|하는)\s*코드|페이지\s*범위|서준.*(?:폴더|추출)|협력.*코드)/i.test(text)
+  ) {
     return true;
   }
   if (/갖고\s*있는\s*수능|수능\s*문제\s*PDF.{0,40}(?:추출|저장|영역)/i.test(text) && /(?:단계|코드|페이지|PyPDF)/i.test(text)) {

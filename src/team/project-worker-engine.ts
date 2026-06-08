@@ -1,5 +1,5 @@
 import { AgentFolderEngine } from '../agent-folders';
-import { formatChatReply } from '../chat/reply-format';
+import { formatChatReply, formatResearchChatReply } from '../chat/reply-format';
 import { isExternalResourceFetchTask } from '../chat/cross-agent-file';
 import { KiloAgent, isDevTaskQuery, isKiloAgent } from '../kilo';
 import { ProviderEngine } from '../providers';
@@ -49,17 +49,16 @@ async function executeViaResearch(
   if (!isResearchTaskQuery(query)) return null;
 
   const report = await deps.research.execute(query, agent, null);
-  let output = report.summary;
-  if (report.downloadedFiles?.length) {
-    output += '\n\n📥 다운로드 완료:\n';
-    for (const f of report.downloadedFiles) {
-      output += `- ${f.path} (${f.size} bytes)\n`;
-    }
-  }
-  if (report.reportPath) {
-    output += `\n📄 보고서: ${report.reportPath}`;
-  }
-  output += '\n\nFINISHED';
+  const output =
+    formatResearchChatReply(report.summary, {
+      reportPath: report.reportPath,
+      sources: report.sources.map((s) => ({ title: s.title, url: s.url })),
+      downloadedFiles: report.downloadedFiles?.map((f) => ({
+        path: f.path,
+        filename: f.filename,
+      })),
+      knownSourceNote: report.knownSourceNote,
+    }) + '\n\nFINISHED';
   return output;
 }
 

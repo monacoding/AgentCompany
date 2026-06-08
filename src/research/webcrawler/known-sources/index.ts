@@ -3,9 +3,12 @@ import { buildHoraengDirectUrls, getKnownListPageUrls, parseDownloadIntent } fro
 import { FileDownloader } from '../file-downloader';
 import {
   filterEntriesByYears,
+  formatSuneungEntriesBrief,
   parseRequestedSubjects,
   parseSuneungBoardHtml,
+  parseSuneungMarkdownTable,
   parseYearRangeFromQuery,
+  SuneungBoardEntry,
   SUNEUNG_MAX_LIST_PAGES,
   SUNEUNG_OFFICIAL_LIST_BASE,
 } from '../suneung-official';
@@ -49,10 +52,11 @@ class SuneungOfficialConnector implements KnownSourceConnector {
       try {
         const crawl = await browserEngine.fetchPage(listUrl);
         const html = crawl.rawHtml ?? crawl.markdown;
-        const entries = filterEntriesByYears(
-          parseSuneungBoardHtml(html, requestedSubjects),
-          years
-        );
+        let parsed = parseSuneungBoardHtml(html, requestedSubjects);
+        if (parsed.length === 0) {
+          parsed = parseSuneungMarkdownTable(crawl.markdown, requestedSubjects);
+        }
+        const entries = filterEntriesByYears(parsed, years);
         if (entries.length === 0 && page > 1) break;
         for (const entry of entries) {
           if (seen.has(entry.fileSeq)) continue;
@@ -126,6 +130,58 @@ export async function resolveKnownSources(
     const rank = { official: 0, list: 1, mirror: 2 };
     return rank[a.priority] - rank[b.priority];
   });
+}
+
+/** 수능 공식 기출 항목을 구조화해 리서치 보고에 포함 */
+export async function resolveSuneungOfficialEntries(
+  query: string,
+  browserEngine: BrowserEngine
+): Promise<SuneungBoardEntry[]> {
+  if (!/수능|suneung|기출|csat/i.test(query)) return [];
+
+  const requestedSubjects = parseRequestedSubjects(query);
+  const years = parseYearRangeFromQuery(query);
+  const entries: SuneungBoardEntry[] = [];
+  const seen = new Set<string>();
+
+  for (let page = 1; page <= SUNEUNG_MAX_LIST_PAGES; page++) {
+    const listUrl = `${SUNEUNG_OFFICIAL_LIST_BASE}&page=${page}`;
+    try {
+      const crawl = await browserEngine.fetchPage(listUrl);
+      const html = crawl.rawHtml ?? crawl.markdown;
+      let parsed = parseSuneungBoardHtml(html, requestedSubjects);
+      if (parsed.length === 0) {
+        parsed = parseSuneungMarkdownTable(crawl.markdown, requestedSubjects);
+      }
+      const batch = filterEntriesByYears(parsed, years);
+      if (batch.length === 0 && page > 1) break;
+      for (const entry of batch) {
+        if (seen.has(entry.fileSeq)) continue;
+        seen.add(entry.fileSeq);
+        entries.push(entry);
+      }
+    } catch {
+      if (page > 1) break;
+    }
+  }
+
+  return entries;
+}
+
+export function formatKnownSourceBrief(
+  matches: KnownSourceMatch[],
+  suneungEntries: SuneungBoardEntry[] = []
+): string {
+  const parts: string[] = [];
+  if (suneungEntries.length > 0) {
+    parts.push(formatSuneungEntriesBrief(suneungEntries));
+  }
+  for (const match of matches) {
+    if (match.urls.length > 0) {
+      parts.push(`${match.name}: ${match.urls.length}개 URL`);
+    }
+  }
+  return parts.join('\n');
 }
 
 export function flattenKnownSourceUrls(matches: KnownSourceMatch[]): string[] {

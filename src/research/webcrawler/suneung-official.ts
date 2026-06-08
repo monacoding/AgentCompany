@@ -133,3 +133,42 @@ export function filterEntriesByYears(
   if (years.size === 0) return entries;
   return entries.filter((e) => years.has(e.examYear));
 }
+
+/** Jina/Crawl4AI 마크다운 테이블에서 기출 항목 파싱 (HTML fileDown 폴백) */
+export function parseSuneungMarkdownTable(
+  text: string,
+  requestedSubjects: Set<string>
+): SuneungBoardEntry[] {
+  const entries: SuneungBoardEntry[] = [];
+  const rowRe = /\|\s*(\d+)\s*\|\s*(\d{4})\s*\|\s*(국어|수학|영어|한국사|언어|수리|외국어)\s*\|/gi;
+  let match: RegExpExecArray | null;
+  const seen = new Set<string>();
+
+  while ((match = rowRe.exec(text)) !== null) {
+    const boardSubject = match[3];
+    if (!boardSubjectMatches(requestedSubjects, boardSubject)) continue;
+    const fileSeq = match[1];
+    if (seen.has(fileSeq)) continue;
+    seen.add(fileSeq);
+    entries.push({
+      examYear: match[2],
+      subject: LEGACY_SUBJECT_MAP[boardSubject] ?? boardSubject,
+      boardSubject,
+      fileSeq,
+      downloadUrl: `${SUNEUNG_OFFICIAL_DOWNLOAD_BASE}${fileSeq}`,
+    });
+  }
+
+  return entries;
+}
+
+export function formatSuneungEntriesBrief(entries: SuneungBoardEntry[], limit = 12): string {
+  if (entries.length === 0) return '';
+  const lines = entries.slice(0, limit).map(
+    (e) => `· ${e.examYear} ${e.subject} — fileSeq=${e.fileSeq} — ${e.downloadUrl}`
+  );
+  if (entries.length > limit) {
+    lines.push(`… 외 ${entries.length - limit}건`);
+  }
+  return lines.join('\n');
+}

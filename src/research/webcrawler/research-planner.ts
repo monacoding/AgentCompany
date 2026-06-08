@@ -98,13 +98,29 @@ ${knowledge || '(none)'}`,
       return this.planHeuristic(query, '');
     }
 
-    return {
+    const plan: ResearchPlan = {
       goal: parsed.goal?.trim() || query,
       taskType: parsed.taskType ?? (isDownloadTask(query) ? 'download' : 'research'),
       searchQueries: searchQueries.slice(0, MAX_QUERIES),
       officialUrls: officialUrls.slice(0, 6),
       notes: parsed.notes?.trim() || '',
     };
+
+    return this.mergeTrustedOfficialUrls(plan, query);
+  }
+
+  /** LLM이 잘못된 URL을 넣어도 검증된 공식 출처는 항상 포함 */
+  private mergeTrustedOfficialUrls(plan: ResearchPlan, query: string): ResearchPlan {
+    const trusted: string[] = [];
+    if (/수능|suneung|기출|csat/i.test(query)) {
+      trusted.push(
+        'https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung'
+      );
+    }
+
+    const filtered = plan.officialUrls.filter((url) => !/boardID=147|menuID=247/i.test(url));
+    const merged = [...new Set([...trusted, ...filtered])];
+    return { ...plan, officialUrls: merged.slice(0, 8) };
   }
 
   planHeuristic(query: string, knowledge: string): ResearchPlan {
@@ -155,12 +171,13 @@ ${knowledge || '(none)'}`,
       );
     }
 
-    return {
+    const plan: ResearchPlan = {
       goal: query,
       taskType: isDownload ? (isSuneung ? 'mixed' : 'download') : 'research',
       searchQueries: [...queries].slice(0, MAX_QUERIES),
       officialUrls,
       notes: '휴리스틱 플랜 (LLM 미사용 또는 실패 시)',
     };
+    return this.mergeTrustedOfficialUrls(plan, query);
   }
 }

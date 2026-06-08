@@ -52,4 +52,11 @@ export { interpretCeoCommand, sanitizeAcknowledgmentForPendingWork } from './ceo
 export type { CeoCommandInterpretation, CeoCommandAction } from './ceo-command-interpreter';
 export { CHAT_EMOTIONS, detectChatEmotion, detectSpeakerEmotion } from './emotion';
 export type { ChatEmotion, EmotionContext } from './emotion';
-export { formatBossReport, formatChatReply, formatLlmError, isImplementationPlanReply } from './reply-format';
+export {
+  formatBossReport,
+  formatChatReply,
+  formatLlmError,
+  formatResearchChatReply,
+  isImplementationPlanReply,
+  isResearchReportReply,
+} from './reply-format';

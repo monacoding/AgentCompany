@@ -12,7 +12,13 @@ import {
   FileDownloader,
   isDownloadTask,
 } from './file-downloader';
-import { flattenKnownSourceUrls, resolveKnownSources } from './known-sources';
+import {
+  flattenKnownSourceUrls,
+  formatKnownSourceBrief,
+  resolveKnownSources,
+  resolveSuneungOfficialEntries,
+} from './known-sources';
+import { formatSuneungEntriesBrief } from './suneung-official';
 import { ReportGenerator } from './report-generator';
 import { ResearchPlanner } from './research-planner';
 import { SearchEngine } from './search-engine';
@@ -182,9 +188,30 @@ export class WebCrawlerAgent {
     const plan = existingPlan ?? (await this.planner.plan(query, agent));
     emit('Research Planner', 'done', `${plan.searchQueries.length}개 검색어 · ${plan.officialUrls.length}개 공식 URL`);
 
+    emit('Known Sources', 'running', '등록된 공식 출처 탐색...');
+    const knownMatches = await resolveKnownSources(query, this.browserEngine, this.fileDownloader);
+    const suneungEntries = await resolveSuneungOfficialEntries(query, this.browserEngine);
+    const knownSourceNote = formatKnownSourceBrief(knownMatches, suneungEntries);
+    if (knownMatches.length > 0 || suneungEntries.length > 0) {
+      const label = [
+        ...knownMatches.map((m) => `${m.name}(${m.urls.length})`),
+        suneungEntries.length > 0 ? `평가원 fileSeq ${suneungEntries.length}건` : '',
+      ]
+        .filter(Boolean)
+        .join(', ');
+      emit('Known Sources', 'done', label);
+    } else {
+      emit('Known Sources', 'done', '매칭 없음');
+    }
+
     emit('Search Engine', 'running', '다중 검색 실행...');
     let searchResults = await this.collectSearchResults(plan, query);
-    emit('Search Engine', 'done', `${searchResults.length}개 결과 (공식 출처 우선 정렬)`);
+    const knownUrlResults = this.searchEngine.officialUrlsToResults(
+      flattenKnownSourceUrls(knownMatches)
+    );
+    searchResults = this.mergeSearchResults(knownUrlResults, searchResults);
+    searchResults = this.searchEngine.filterByQueryRelevance(query, searchResults);
+    emit('Search Engine', 'done', `${searchResults.length}개 결과 (관련도·공식 출처 우선)`);
 
     if (searchResults.length === 0) {
       emit('Search Engine', 'running', '검색 0건 — 쿼리 변형 재시도...');
@@ -220,11 +247,18 @@ export class WebCrawlerAgent {
     emit('Extractor', 'done', `${this.extractor.merge(extracted).length} chars extracted`);
 
     emit('Summarizer', 'running', '교차검증 요약 생성...');
-    const summary = await this.summarizer.summarize(query, extracted, agent, plan);
+    let summary = await this.summarizer.summarize(query, extracted, agent, plan);
+    if (suneungEntries.length > 0) {
+      const table = formatSuneungEntriesBrief(suneungEntries, 15);
+      summary = `## 평가원 공식 기출 (Known Sources)\n${table}\n\n${summary}`;
+    } else if (knownSourceNote.trim()) {
+      summary = `## Known Sources\n${knownSourceNote}\n\n${summary}`;
+    }
     emit('Summarizer', 'done', 'Summary complete');
 
     emit('Report Generator', 'running', '리포트 생성...');
     const report = await this.reportGenerator.saveReport(query, summary, extracted, agent);
+    report.knownSourceNote = knownSourceNote || undefined;
     emit('Report Generator', 'done', report.reportPath ? `Saved: ${report.reportPath}` : 'Report generated');
 
     await this.captureExtractedPages(agent, query, extracted, summary);

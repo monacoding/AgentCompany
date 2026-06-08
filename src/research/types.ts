@@ -25,6 +25,7 @@ export interface ResearchReport {
   sources: { title: string; url: string; excerpt: string }[];
   markdown: string;
   reportPath?: string;
+  knownSourceNote?: string;
   downloadedFiles?: { url: string; path: string; size: number; filename: string }[];
 }
 

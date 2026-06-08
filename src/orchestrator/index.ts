@@ -32,6 +32,7 @@ import {
   isExternalResourceFetchTask,
   detectDelegationSuggestion,
   formatChatReply,
+  formatResearchChatReply,
   commandNeedsKnowledgeLearning,
   formatLlmError,
   isContextDependentCommand,
@@ -1696,18 +1697,23 @@ ${templateBlock}
         );
       });
 
-      let resultSummary = report.summary;
       if (report.downloadedFiles && report.downloadedFiles.length > 0) {
         for (const f of report.downloadedFiles) {
-          resultSummary += `\n\n📥 Downloaded: ${f.path} (${f.size} bytes)`;
           this.notifications.showInfo(`${agent.name} downloaded → ${f.path}`);
         }
       }
-      if (report.reportPath) {
-        resultSummary += `\n\n📄 Report: ${report.reportPath}`;
-      }
 
-      this.taskEngine.setResult(task.id, resultSummary);
+      const chatReply = formatResearchChatReply(report.summary, {
+        reportPath: report.reportPath,
+        sources: report.sources.map((s) => ({ title: s.title, url: s.url })),
+        downloadedFiles: report.downloadedFiles?.map((f) => ({
+          path: f.path,
+          filename: f.filename,
+        })),
+        knownSourceNote: report.knownSourceNote,
+      });
+
+      this.taskEngine.setResult(task.id, chatReply);
       this.memory.logActivity(agent.id, task.id, `${agent.name} research complete: ${report.sources.length} sources`);
       this.taskEngine.transition(task.id, 'review');
       this.agentManager.setStatus(agent.id, 'idle');

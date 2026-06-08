@@ -114,6 +114,51 @@ export class SearchEngine {
     return [...new Set(variants)];
   }
 
+  filterByQueryRelevance(query: string, results: SearchResult[]): SearchResult[] {
+    const terms = this.extractQueryTerms(query);
+    if (terms.length === 0) return results;
+
+    const scored = results
+      .map((result) => ({
+        result,
+        score: this.scoreRelevance(terms, result),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return scored.length > 0 ? scored.map((item) => item.result) : results.slice(0, 6);
+  }
+
+  private extractQueryTerms(query: string): string[] {
+    const cleaned = query
+      .replace(/https?:\/\/[^\s]+/gi, '')
+      .replace(
+        /검색|조사|찾아|알려|해줘|주세요|관련|최근|기사|뉴스|리서치|수집|다운|pdf|filetype:\S+/gi,
+        ' '
+      )
+      .trim();
+    const terms: string[] = [];
+    for (const m of cleaned.matchAll(/[가-힣]{2,}|[A-Za-z]{3,}/g)) {
+      const t = m[0].trim();
+      if (t.length >= 2 && !/수능|기출|평가원|공식|출처|문제/i.test(t)) {
+        terms.push(t.toLowerCase());
+      }
+    }
+    return [...new Set(terms)].slice(0, 6);
+  }
+
+  private scoreRelevance(terms: string[], result: SearchResult): number {
+    const hay = `${result.title} ${result.snippet} ${result.url}`.toLowerCase();
+    let score = this.scoreUrl(result.url);
+    for (const term of terms) {
+      if (hay.includes(term)) score += 12;
+    }
+    if (/sports\.news|\/election\/|\/e스포츠|\/sports\//i.test(result.url) && !terms.some((t) => hay.includes(t))) {
+      score -= 20;
+    }
+    return score;
+  }
+
   private rankResults(results: SearchResult[]): SearchResult[] {
     return [...results].sort((a, b) => this.scoreUrl(b.url) - this.scoreUrl(a.url));
   }
