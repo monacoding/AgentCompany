@@ -11,7 +11,11 @@ alwaysApply: true
 
 1. `package.json`의 `version` 갱신
 2. 코드 변경 완료
-3. 아래 명령으로 빌드·설치·커밋·푸시를 한 번에 수행:
+3. **`CHANGELOG.md` (루트) 최상단에 해당 버전 항목 추가** — 반드시 기록
+   - 형식: `## [X.Y.Z] - YYYY-MM-DD` + `### Added` / `### Changed` / `### Fixed`
+   - 한국어로 무엇이 바뀌었는지 구체적으로 작성
+   - 상세 이력이 길면 `releases/CHANGELOG.md`에도 동일 버전 블록 추가
+4. 아래 명령으로 빌드·설치·커밋·푸시를 한 번에 수행:
 
 ```bash
 npm run release
@@ -30,9 +34,16 @@ INSTALL_EXTENSION=0 npm run release
 - Remote: `https://github.com/monacoding/AgentCompany.git`
 - Branch: `main`
 
+## CHANGELOG 필수 (누락 금지)
+
+- 루트 `CHANGELOG.md`는 **매 릴리스마다** 갱신한다.
+- 버전 번호·날짜·변경 요약이 없으면 릴리스를 마치지 않는다.
+- 사용자에게 완료 안내 시 CHANGELOG에 기록된 핵심 변경 1~3줄을 함께 전달한다.
+
 ## 커밋 규칙
 
 - 커밋 메시지: `release: vX.Y.Z`
+- `CHANGELOG.md` 변경은 릴리스 커밋에 **반드시 포함**
 - `.env`는 절대 커밋하지 않는다 (`.gitignore` 유지)
 - `node_modules/`, `dist/`, `*.vsix`, `*.db`는 커밋하지 않는다
 

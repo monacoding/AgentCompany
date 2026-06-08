@@ -95,7 +95,7 @@ async function executeWorkerTask(
   agentFolders: AgentFolderEngine,
   revision?: { previousOutput: string; feedback: string }
 ): Promise<string> {
-  const folderContext = await agentFolders.buildConversationalPromptContext(agent);
+  const folderContext = await agentFolders.buildPromptContext(agent);
   const toolingHint = buildWorkerToolingHint(agent);
   const userContent = buildWorkerPhasePrompt(
     agent,
@@ -136,7 +136,7 @@ async function reviewWorkerOutput(
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine
 ): Promise<string> {
-  const folderContext = await agentFolders.buildConversationalPromptContext(reviewer);
+  const folderContext = await agentFolders.buildPromptContext(reviewer);
   const userContent = buildReviewPhasePrompt(reviewer, worker, command, task.description, output);
 
   const response = await providers.chat(

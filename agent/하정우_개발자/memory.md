@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:40:26.521Z_
+_마지막 동기화: 2026-06-08T11:55:03.128Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -1539,3 +1539,70 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1fb28a1d]
+# 에이전트 간 파일 이동 규칙
+
+## 기본 규칙
+
+- **완료 전 금지 표현 사용**  
+  - 실제 파일 이동이 완료되기 전까지 "저장했어요", "옮겼어요" 등 완료 표현 금지.
+  - 사전 지시 후 "요청해볼게요", "진행할게요" 등으로 예정 상태만 보고.
+
+- **완료 시 경로 공유 필수**  
+  - 파일 이동이 완료되면 저장된 파일 경로를 반드시 자세히 기재.
+  - 경로 양식 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히 알림**  
+  - 복사가 실패하거나 파일이 없을 경우, 완료 표현 금지하며, 찾은 위치, 실패 조건, 대체 조치를 안내.
+
+- **허위 보고 금지**  
+  - 경로 없이 완료 보고 시 허위로 간주. 경로가 없는 완료 보고는 금지.
+
+이 규칙들은 파일 이동의 정확성과 투명성 보장을 위한 필수 사항으로, 모든 에이전트가 준수해야 합니다.
+
+[KnowledgeLearned: owner-data-path.md@42a9c0b0]
+# 사장님 데이터 경로 요약
+
+## 데이터 위치
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+
+## 주요 파일
+
+- **사장님 프로필 파일:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`  
+  - 내용: 이름, 성격 등 기본 프로필 정보
+
+- **사장님 페르소나 파일:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`  
+  - 내용: 대화 및 보고 시 참고할 페르소나 정보
+
+- **사장님 사진 폴더:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+
+## 중요 사항
+
+- 에이전트는 사장님 관련 정보를 검색하거나 저장할 때 반드시 위 경로를 사용해야 함.
+- 다른 경로는 추측하거나 사용하면 안 됨.
+
+[KnowledgeLearned: suneung-pdf-download.md@3e00da9d]
+# 수능 PDF 다운로드 — 자동화
+
+[SuneungPdfPlaybook v1]
+
+## 구현 규칙
+- @한서준 조사 결과의 fileSeq 사용
+- Python urllib로 `fileDown.do?fileSeq=` 호출
+- 저장: `company/projects/{sessionId}/files/pdfs/대학수학능력시험/`
+- 파일명: `{학년도}학년도_{영역}영역_문제지.pdf`
+- %PDF 헤더 검증 후 FINISHED
+
+## 참고 템플릿
+- `src/team/templates/download_suneung_pdfs.py`

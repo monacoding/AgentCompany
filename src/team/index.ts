@@ -25,5 +25,18 @@ export {
   planTeamWithPm,
   buildCompanyAgentRoster,
   buildPmOrchestrationPromptBlock,
+  buildPmPlanningContextBlock,
 } from './pm-planner';
+export {
+  PROJECT_PLAYBOOK_MARKER,
+  PROJECT_PLAYBOOK_FILENAME,
+  SUNEUNG_PDF_PLAYBOOK_FILENAME,
+  detectProjectTemplate,
+  formatProjectTemplateHint,
+  getProjectPlaybookSummary,
+  getPmProjectPlaybookExtension,
+  getRoleProjectPlaybookSnippet,
+  getSuneungPdfPlaybook,
+} from './project-playbook';
+export type { ProjectTemplateHint } from './project-playbook';
 export type { TeamSession, TeamSessionStatus, TeamRunResult } from './types';

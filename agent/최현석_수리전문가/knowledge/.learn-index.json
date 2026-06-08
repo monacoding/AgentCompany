@@ -1,4 +1,23 @@
 {
   "version": 1,
-  "files": {}
+  "files": {
+    "cross-agent-file-transfer.md": {
+      "hash": "ebc7817b3d7d3ede",
+      "mtimeMs": 1780919126996.4397,
+      "size": 7537,
+      "learnedAt": "2026-06-08T11:55:08.045Z"
+    },
+    "owner-data-path.md": {
+      "hash": "5d7416c107d95ecf",
+      "mtimeMs": 1780919127036.308,
+      "size": 5538,
+      "learnedAt": "2026-06-08T11:55:11.866Z"
+    },
+    "project-playbook.md": {
+      "hash": "f298300bb5183c77",
+      "mtimeMs": 1780919703563.0986,
+      "size": 176,
+      "learnedAt": "2026-06-08T11:55:11.874Z"
+    }
+  }
 }

@@ -33,6 +33,14 @@ import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
 import { TeamEngine } from '../team';
 import { listProjectArtifacts } from '../team/project-artifacts';
+import {
+  getProjectPlaybookSummary,
+  getRoleProjectPlaybookSnippet,
+  getSuneungPdfPlaybook,
+  PROJECT_PLAYBOOK_FILENAME,
+  PROJECT_PLAYBOOK_MARKER,
+  SUNEUNG_PDF_PLAYBOOK_FILENAME,
+} from '../team/project-playbook';
 import { isProductionAgent } from '../production';
 import { LlmUsageTracker, ProviderEngine } from '../providers';
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
@@ -256,6 +264,7 @@ export class AgentCompanyService {
     await this.ensureDeveloperAgents();
     await this.ensureFileTransferKnowledge();
     await this.ensureOwnerPathKnowledge();
+    await this.ensureProjectPlaybookKnowledge();
     this.orgEngine.ensureAgentNodes(this.agents.getAll());
     await this.settings.ensureProactiveIdeasDefaultOff();
     await this.syncOrgOwnerLabel();
@@ -795,6 +804,77 @@ ${body}
       }
     }
   }
+  /** 모든 에이전트에 Project 5단계 플레이북 + 역할별 스니펫 주입 */
+  async ensureProjectPlaybookKnowledge() {
+    const playbookSummary = getProjectPlaybookSummary();
+    const playbookBody = playbookSummary.replace(`${PROJECT_PLAYBOOK_MARKER}\n\n`, '');
+    const suneungBody = getSuneungPdfPlaybook();
+
+    for (const agent of this.agents.getAll()) {
+      const slug = this.agentFolders.resolveSlug(agent);
+      const knowledgeDir = path.join(this.agentFolders.getAgentDir(slug), 'knowledge');
+      await fs.mkdir(knowledgeDir, { recursive: true });
+
+      const playbookPath = path.join(knowledgeDir, PROJECT_PLAYBOOK_FILENAME);
+      const roleSnippet = getRoleProjectPlaybookSnippet(agent.role, agent);
+      const combinedPlaybook = `# Project 협업 플레이북
+
+${playbookBody}
+
+${roleSnippet}
+`;
+      try {
+        const existing = await fs.readFile(playbookPath, 'utf-8');
+        if (!existing.includes(PROJECT_PLAYBOOK_MARKER)) {
+          await fs.writeFile(
+            playbookPath,
+            `${existing.trim()}\n\n${combinedPlaybook}`.trim() + '\n',
+            'utf-8'
+          );
+        } else if (!existing.includes(roleSnippet.slice(0, 40))) {
+          await fs.writeFile(playbookPath, `${combinedPlaybook}\n`, 'utf-8');
+        }
+      } catch {
+        await fs.writeFile(playbookPath, combinedPlaybook + '\n', 'utf-8');
+      }
+
+      const isResearchOrDev =
+        agent.role === 'researcher' ||
+        agent.role === 'backend' ||
+        agent.role === 'frontend' ||
+        agent.role === 'devops' ||
+        agent.role === 'pm' ||
+        /한서준|하정우|김윤하|최현석|박준호/.test(agent.name);
+
+      if (isResearchOrDev) {
+        const suneungPath = path.join(knowledgeDir, SUNEUNG_PDF_PLAYBOOK_FILENAME);
+        try {
+          const existing = await fs.readFile(suneungPath, 'utf-8');
+          if (!existing.includes('[SuneungPdfPlaybook v1]')) {
+            await fs.writeFile(
+              suneungPath,
+              `# 수능 PDF 다운로드\n\n${suneungBody}\n`,
+              'utf-8'
+            );
+          }
+        } catch {
+          await fs.writeFile(
+            suneungPath,
+            `# 수능 PDF 다운로드\n\n${suneungBody}\n`,
+            'utf-8'
+          );
+        }
+      }
+
+      this.agentFolders.invalidatePromptContext(agent.id);
+
+      const memory = this.memory.getAgentMemory(agent.id);
+      if (!memory.includes(PROJECT_PLAYBOOK_MARKER)) {
+        this.memory.appendAgentMemory(agent.id, playbookSummary.slice(0, 1200));
+      }
+    }
+  }
+
   /** 리서처 역할 에이전트에 web-crawl capability·다운로드 지식 주입 */
   async ensureResearcherAgents() {
     const researchCaps = ["web-crawl", "search", "summarize", "report", "download"];

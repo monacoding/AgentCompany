@@ -4,6 +4,11 @@ import { Agent } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
 import { formatLlmError } from '../chat/reply-format';
 import { proposeTeamMembers } from './member-picker';
+import {
+  detectProjectTemplate,
+  formatProjectTemplateHint,
+  getProjectPlaybookSummary,
+} from './project-playbook';
 
 export interface TeamPlanResult {
   pm: Agent;
@@ -59,7 +64,15 @@ PM 필수 규칙:
 - 협업·매칭·배정 시 **반드시 @에이전트명**으로 지목 (예: 1. @김윤하: 리서치)
 - 각 에이전트의 role·description·title을 근거로 업무를 매칭하세요
 - offline 에이전트는 배정하지 마세요
-- 계획 확정 후 사장님이 "진행하세요"라고 하면 Project 채팅방이 생성됩니다`;
+- 계획 확정 후 사장님이 "진행하세요"라고 하면 Project 채팅방이 생성됩니다
+
+${getProjectPlaybookSummary().replace(/\[ProjectPlaybook v1\]\n*/, '')}`;
+}
+
+export function buildPmPlanningContextBlock(command: string): string {
+  const template = detectProjectTemplate(command);
+  if (!template) return '';
+  return `\n${formatProjectTemplateHint(template)}`;
 }
 
 function parseAgentsFromPlan(plan: string, agents: Agent[]): Agent[] {
@@ -134,7 +147,7 @@ export async function planTeamWithPm(
     throw new Error('PM 에이전트를 찾을 수 없습니다.');
   }
 
-  const roster = buildAgentRoster(allAgents);
+  const roster = buildCompanyAgentRoster(allAgents);
 
   try {
     const response = await providers.chat(
@@ -143,22 +156,32 @@ export async function planTeamWithPm(
           role: 'system',
           content: `You are ${formatAgentLabel(pm)}, the PM orchestrator in AgentCompany.
 Your job:
-1. Analyze the CEO's command
-2. Select 2-${MAX_TEAM_SIZE} agents from the roster (including the requester when relevant)
-3. Write a Korean task plan
+1. Clarify goal (목표)
+2. Write phase plan (계획)
+3. Assign tasks (작업 분배: N. @에이전트명: 할 일)
+4. Select 2-${MAX_TEAM_SIZE} agents from roster (에이전트 선별)
+5. Plan ends with CEO approval cue ("진행하세요")
 
 Output format (strict):
 ---PLAN---
-(한국어 계획, 각 줄: N. @에이전트명: 할 일)
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+...
 ---AGENTS---
 (쉼표로 agent id만, 예: id1,id2,id3)
 ---END---
 
 Rules:
-- Always include requester @${requester.name} if they should lead the deliverable
-- Pick specialists by role fit
-- Keep plan under 10 lines
-- Use only agents from the roster`,
+- Use only agents from the roster (no fictional roles)
+- Pick specialists by role fit (research→researcher, automation→backend, domain→expert)
+- Keep plan under 12 lines
+${buildPmPlanningContextBlock(command)}`,
         },
         {
           role: 'user',

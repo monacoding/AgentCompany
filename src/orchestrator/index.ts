@@ -74,6 +74,7 @@ import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
   buildPmOrchestrationPromptBlock,
+  buildPmPlanningContextBlock,
   extractProjectBriefFromChat,
   hasProjectPlanningContext,
   isProjectGoAhead,
@@ -1415,7 +1416,7 @@ Complete this task. If code/files are needed, output them in the specified file 
     resolved: ResolvedCommand
   ): Promise<void> {
     const allAgents = this.agentManager.getAll();
-    const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
+    const folderContext = await this.agentFolders.buildPromptContext(agent);
     const pmBlock = buildPmOrchestrationPromptBlock(allAgents, agent);
     const memorySnippet = agent.memory?.trim().slice(0, 800);
 
@@ -1425,11 +1426,13 @@ Complete this task. If code/files are needed, output them in the specified file 
       .slice(-5)
       .map((m) => m.content)
       .join('\n');
-    const matchHint = proposeTeamMembers(agent, `${recentCeoContext}\n${command}`, allAgents);
+    const fullContext = `${recentCeoContext}\n${command}`;
+    const matchHint = proposeTeamMembers(agent, fullContext, allAgents);
     const hintBlock =
       matchHint.length > 0
         ? `\n## 참고: 업무 키워드 기반 추천 조합\n${matchHint.map((m, i) => `${i + 1}. @${m.name} (${formatAgentLabel(m)})`).join('\n')}`
         : '';
+    const templateBlock = buildPmPlanningContextBlock(fullContext);
 
     const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
       excludeLastCeo: true,
@@ -1441,8 +1444,10 @@ ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
 ${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 ${pmBlock}
 ${hintBlock}
+${templateBlock}
 
 사장님과 PM으로 대화합니다.
+- 응답에 **목표 → 계획 → 작업 분배 → 참여 에이전트** 순서로 제시
 - 팀 에이전트 매칭·협업 계획 시 **위 실제 @에이전트명만** 사용
 - 가상의 외부 전문가·일반 직함 나열 금지
 - 한국어, "사장님" 호칭, @이름: 담당업무 형식 권장

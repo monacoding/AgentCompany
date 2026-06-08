@@ -16,11 +16,21 @@ export function proposeTeamMembers(lead: Agent, command: string, agents: Agent[]
     if (found) members.set(found.id, found);
   };
 
-  if (/조사|리서치|검색|수집|크롤|기출|pdf/i.test(lower)) {
+  if (/조사|리서치|검색|수집|크롤|기출|pdf|다운|download/i.test(lower)) {
     pick((a) => a.role === 'researcher');
+    pick((a) => a.name.includes('한서준'));
   }
-  if (/코드|구현|개발|버그|api|refactor|배포/i.test(lower)) {
+  if (/코드|구현|개발|버그|api|refactor|배포|스크립트|자동화/i.test(lower)) {
     pick((a) => a.role === 'backend' || a.role === 'frontend' || a.role === 'devops');
+    pick((a) => a.name.includes('하정우'));
+  }
+  if (/수능|기출|csat/i.test(lower) && /pdf|다운|수집|받/i.test(lower)) {
+    pick((a) => a.role === 'researcher' || a.name.includes('한서준'));
+    pick((a) => a.role === 'backend' || a.name.includes('하정우'));
+    pick((a) => a.title?.includes('국어') || a.name.includes('김윤하'));
+    if (/수학/i.test(lower)) {
+      pick((a) => a.title?.includes('수리') || a.name.includes('최현석'));
+    }
   }
   if (/유튜브|youtube|영상|업로드|tts|ffmpeg|편집|제작/i.test(lower)) {
     pick((a) => a.role === 'writer' || /영상|제작|콘텐츠/i.test(a.title ?? ''));

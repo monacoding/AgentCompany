@@ -152,14 +152,21 @@ export function buildKnownSearchQueries(query: string, intent: DownloadIntent): 
 
 export function getDownloadKnowledgeSummary(): string {
   const horaeng = KNOWN_DOWNLOAD_SOURCES[0];
-  return `[DownloadKnowledge v1]
-수능 PDF 다운로드 — 검증된 방법:
-1. ${horaeng.name} (${horaeng.listPages[2024]}) 에서 PDF 직링크 수집
-2. URL 패턴: ${horaeng.directBaseUrl}/{학년도}학년도-대학수학능력시험-{과목}-{문제|정답}.pdf
-3. fetch/curl로 직접 다운로드 후 %PDF 헤더 검증
-4. research/downloads/ 에 저장
-5. 공식 suneung.re.kr 은 fileDown.do 동적 링크라 2차 fallback
+  return `[DownloadKnowledge v2]
+수능 PDF 다운로드 — 검증된 방법 (우선순위):
+
+**1순위 — 평가원 공식 (A급, 2026-06-08 검증)**
+- 목록: https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung
+- 다운로드: https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq={hex}
+- 모의평가 boardID=1500236, 로그인 불필요
+- 파일명: {학년도}학년도_{영역}영역_문제지.pdf
+
+**2순위 — ${horaeng.name} (미러 직링크)**
+- ${horaeng.listPages[2024]}
+- URL 패턴: ${horaeng.directBaseUrl}/{학년도}학년도-대학수학능력시험-{과목}-{문제|정답}.pdf
+
+공통: fetch/curl/Python urllib → %PDF 헤더 검증 → company/projects/{sessionId}/files/pdfs/ 저장
 주요 과목(기본): ${MAIN_SUNEUNG_SUBJECTS.join(', ')}`;
 }
 
-export const WONYOUNG_DOWNLOAD_KNOWLEDGE_MARKER = '[DownloadKnowledge v1]';
+export const WONYOUNG_DOWNLOAD_KNOWLEDGE_MARKER = '[DownloadKnowledge v2]';

@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:41:12.643Z_
+_마지막 동기화: 2026-06-08T11:54:59.804Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -296,15 +296,6 @@ By adhering to this roadmap, we can efficiently deliver high-quality educational
 
 현재 프로젝트의 세부 사항이나 에이전트의 프로필 등을 추가로 공유해주실 수 있나요? 그러면 보다 정확한 매칭 계획을 수립하겠습니다.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [파일전달→사장님] 인터넷에서 수능 문제 pdf 로 다운 받는 작업
 · README.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/README.md
@@ -318,3 +309,98 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/owner-data-path.md
 · role-profile.md
   /Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/outputs/downloads/from-박준호/role-profile.md
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
+
+[PM 계획] 인터넷에서 수능 문제 pdf 로 다운 받는 작업 해보자
+수능 문제 PDF를 다운로드하는 작업을 진행하기 위해, @한서준 (리서처) 에이전트를 활용하면 좋을 것 같습니다. 한서준 에이전트는 웹 크롤링과 데이터 수집에서 뛰어난 역량을 갖고 있으며, 정확하게 필요한 문서를 찾고 다운로드할 수 있도록 도와줄 수 있습니다.
+
+작업 계획은 다음과 같습니다:
+
+1. **목표 명확화**: 수능 문제 PDF 파일의 종류와 출처를 구체화하기.
+2. **리서치 및 수집**: @한서준 에이전트를 통해 인터넷에서 신뢰할 수 있는 출처 확인 및 PDF 다운로드.
+3. **파일 저장**: 확보한 PDF 파일을 우리의 워크스페이스에 안전하게 저장.
+
+사장님께서 진행 준비가 되셨으면 "진행하세요"라고 말씀해 주시면, 바로 작업을 시작하겠습니다.
+
+[KnowledgeLearned: cross-agent-file-transfer.md@c6c6f516]
+# 에이전트 간 파일 이동
+
+## 파일 이동 규칙
+
+- **완료 전 금지**
+  - 파일 복사·이동이 실제로 완료되기 전까지 "저장했어요", "옮겼어요" 등의 완료 표현 사용 금지.
+  - 대체 표현: "요청해볼게요", "진행할게요" 등 **예정**임을 나타내는 표현.
+
+- **완료 시 경로 필수**
+  - 복사 완료 후에만 완료 표현 사용 가능하며, 반드시 경로 명시.
+  - 경로 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일을 찾을 수 없거나 실패 시, 조건 및 다음 조치를 솔직하게 설명.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것 금지. 경로가 확인의 증거. 
+
+상기 규칙은 시스템과의 신뢰 구축 및 효율적인 파일 이동을 위해 철저히 지켜져야 함.
+
+[KnowledgeLearned: owner-data-path.md@3b5f7b01]
+# 사장님 데이터 경로 요약
+
+## 데이터 위치
+
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 경로**: `company/owner`
+
+## 주요 파일 설명
+
+- `profile.json`: 사장님의 프로필 정보 (이름, 성격 등)
+- `persona.md`: 사장님의 페르소나, 대화 및 보고 시 참고
+- `photo/`: 사장님의 사진이 저장된 디렉토리
+
+## 주의 사항
+
+- 에이전트는 사장님과 관련된 정보를 찾거나 저장할 때 **항상 위의 지정된 경로**를 사용해야 합니다.
+- 다른 경로를 추측하여 사용하지 않습니다.
+
+[KnowledgeLearned: project-playbook.md@778b9f31]
+# Project 협업 플레이북 — PM
+
+[ProjectPlaybook v1]
+
+사장님 지시 시 **목표 → 계획 → 작업 분배 → 에이전트 선별 → "진행하세요" 승인** 순서로 진행합니다.
+
+## PM 출력 형식
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 리서치 → P2 자동화 → P3 검증 → P4 PM 보고
+
+## 작업 분배
+1. @한서준: …
+2. @하정우: …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## 수능 PDF 업무 템플릿
+
+- @한서준: 평가원 suneung.re.kr 출처 조사
+- @하정우: download_suneung_pdfs.py 스크립트
+- @김윤하: 국어 PDF 검증
+- @최현석: 수학 PDF 검증 (2차)

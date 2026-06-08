@@ -5,6 +5,89 @@
 
 ---
 
+## [1.7.83] - 2026-06-08
+
+**파일:** `agent-company-1.7.83.vsix`
+
+### Added
+
+- Project 플레이북 5단계 워크플로 + 수능 PDF 템플릿
+- ensureProjectPlaybookKnowledge (전 에이전트 knowledge 주입)
+- download_suneung_pdfs.py 템플릿
+
+### Changed
+
+- PM/Project knowledge 프롬프트, DownloadKnowledge v2
+
+---
+
+## [1.7.82] - 2026-06-08
+
+**파일:** `agent-company-1.7.82.vsix`
+
+### Added
+
+- Phase Literal 프롬프트 (Worker / Review / PM Report)
+- carry_data — 이전 태스크 산출물을 다음 태스크에 전달
+- WareHouse: `company/projects/{sessionId}/` 산출물 저장
+- 역할별 Tooling 힌트 및 filepath 블록 자동 추출 저장
+- Project 상세 팝업 산출물 목록·열기
+
+---
+
+## [1.7.81] - 2026-06-08
+
+**파일:** `agent-company-1.7.81.vsix`
+
+### Added
+
+- ChatDev P0 SDLC: 태스크별 검토 루프 (최대 5회)
+- FINISHED 키워드 완료 판정, QA/PM 검토자 자동 배정
+
+---
+
+## [1.7.80] - 2026-06-08
+
+**파일:** `agent-company-1.7.80.vsix`
+
+### Fixed
+
+- PM 1:1 대화 시 실제 팀 에이전트 roster 주입 (가상 역할명 제거)
+
+### Added
+
+- `runPmPlanningTask`, `buildPmOrchestrationPromptBlock`
+
+---
+
+## [1.7.79] - 2026-06-08
+
+**파일:** `agent-company-1.7.79.vsix`
+
+### Changed
+
+- 「팀 협업」→「Project」, `진행하세요` 승인 후에만 Project 시작
+
+### Added
+
+- ProjectsTab 카드 UI, 더블클릭 상세 팝업
+
+### Fixed
+
+- 협업 키워드만으로 Project 강제 시작되던 문제
+
+---
+
+## [1.7.78] - 2026-06-08
+
+**파일:** `agent-company-1.7.78.vsix`
+
+### Changed
+
+- Project 순차 실행(CrewAI), phase 상태머신, 1:1 채팅 보호
+
+---
+
 ## [1.7.54] - 2026-06-07
 
 **파일:** `agent-company-1.7.54.vsix`

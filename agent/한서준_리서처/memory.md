@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T11:40:26.498Z_
+_마지막 동기화: 2026-06-08T11:55:01.764Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -1542,3 +1542,65 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1fb28a1d]
+# 에이전트 간 파일 이동 규칙
+
+## 필수 규칙
+
+- **완료 전 금지**
+  - 파일 복사 또는 이동이 실제로 완료되기 전에는 "저장했어요", "옮겼어요" 등 완료 표현 절대 금지.
+  - 대체 표현: "요청해볼게요", "진행할게요" 등 예정 표현 사용.
+
+- **완료 시 경로 필수**
+  - 파일 복사가 확인된 경우에만 완료를 언급하며, 모든 파일 경로 명시 필요.
+  - 예시 포맷:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일 찾기 실패나 복사 실패 시 "완료"라고 하지 않으며, 현 위치 및 다음 조치 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"는 표현 금지. 경로가 곧 증거.
+
+이 규칙들은 반복적으로 명시되어 중요성을 강조합니다. 파일 이동 완료 여부를 명확하고 정확하게 전달하는 것이 목적입니다.
+
+[KnowledgeLearned: owner-data-path.md@42a9c0b0]
+# 사장님 데이터 경로
+
+## 위치 정보
+
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로**: `company/owner`
+
+## 주요 파일
+
+- **프로필 파일**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 사장님의 이름, 성격 등 기본 정보를 포함
+- **페르소나 파일**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 대화 및 보고 시 필요한 사장님의 페르소나 정보
+- **사진 폴더**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 사장님의 사진이 저장된 위치
+
+## 주의사항
+
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 반드시 명시된 경로를 사용해야 함.
+- 다른 경로를 추측하여 사용하는 것은 금지됨.
+
+[KnowledgeLearned: suneung-pdf-download.md@319196e6]
+# 수능 PDF 다운로드 — 리서치
+
+[SuneungPdfPlaybook v1]
+
+## 공식 출처 (A급)
+- https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung
+- 다운로드: `boardCnts/fileDown.do?fileSeq={hex}`
+
+## 리서치 산출물
+- 출처 URL 표 (신뢰도 A/B/C)
+- fileSeq·boardSeq·학년도·영역 매핑
+- 다음 태스크(@하정우)에 carry_data로 전달
