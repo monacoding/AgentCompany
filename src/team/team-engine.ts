@@ -10,7 +10,7 @@ import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
 import { ProjectWorkerDeps } from './project-worker-engine';
 import { parseProjectTasks, runProjectSequential } from './project-runner';
-import { formatProjectDisplayTitle } from './project-title';
+import { buildProjectWarehouseFolder, formatProjectDisplayTitle } from './project-title';
 import { buildTeamThreadId } from './thread-id';
 import { TeamRunResult } from './types';
 
@@ -74,16 +74,20 @@ export class TeamEngine {
     const id = generateId();
     const timestamp = now();
     const projectTasks = parseProjectTasks(plan, members);
+    const displayTitle = formatProjectDisplayTitle(command) || `${pm.name} Project`;
+    const companyDir = this.agentFolders.getCompanyDir();
+    const warehouseFolder = buildProjectWarehouseFolder(displayTitle, companyDir, new Date(timestamp));
 
     const session: TeamSession = {
       id,
-      title: formatProjectDisplayTitle(command) || `${pm.name} Project`,
+      title: displayTitle,
       status: 'planning',
       phase: 'planning',
       projectTasks,
       leadAgentId: pm.id,
       memberAgentIds: members.map((m) => m.id),
       threadId: buildTeamThreadId(id),
+      warehouseFolder,
       ceoCommand: command,
       parentTaskId: null,
       plan,
@@ -218,6 +222,7 @@ export class TeamEngine {
         },
         {
           sessionId: session.id,
+          warehouseFolder: session.warehouseFolder,
           companyDir,
           workerDeps: this.runContext?.workerDeps,
           templateScriptPath: this.runContext?.templateScriptPath,

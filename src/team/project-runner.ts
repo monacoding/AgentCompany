@@ -27,6 +27,7 @@ export interface ProjectRunCallbacks {
 
 export interface ProjectRunOptions {
   sessionId: string;
+  warehouseFolder: string;
   companyDir: string;
   workerDeps?: ProjectWorkerDeps;
   templateScriptPath?: string;
@@ -155,6 +156,7 @@ async function executeTaskWithReviewLoop(
       {
         companyDir: runOptions.companyDir,
         sessionId: runOptions.sessionId,
+        warehouseFolder: runOptions.warehouseFolder,
         templateScriptPath: runOptions.templateScriptPath,
       },
       previousOutput && feedback ? { previousOutput, feedback } : undefined
@@ -237,7 +239,7 @@ export async function runProjectSequential(
   callbacks.onPhase('executing', `0/${tasks.length} 완료 (검토 루프 최대 ${PROJECT_REVIEW_MAX_ITERATIONS}회)`);
 
   const priorDeliverables: PriorDeliverable[] = [];
-  const { sessionId, companyDir } = options;
+  const { warehouseFolder, companyDir } = options;
 
   if (!options.workerDeps) {
     return {
@@ -277,7 +279,7 @@ export async function runProjectSequential(
       );
       const artifactPath = saveProjectTaskArtifact(
         companyDir,
-        sessionId,
+        warehouseFolder,
         i,
         agent.name,
         task.description,
@@ -354,7 +356,7 @@ export async function runProjectSequential(
     summary = `Project 완료 (PM 검토 LLM 오류: ${formatLlmError(error)})`;
   }
 
-  const summaryPath = saveProjectSummaryArtifact(companyDir, sessionId, summary);
+  const summaryPath = saveProjectSummaryArtifact(companyDir, warehouseFolder, summary);
   callbacks.onArtifactSaved?.(summaryPath);
 
   const doneCount = tasks.filter((t) => t.status === 'done').length;

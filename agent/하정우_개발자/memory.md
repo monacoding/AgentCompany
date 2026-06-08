@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-08T12:29:59.541Z_
+_마지막 동기화: 2026-06-08T12:33:42.814Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -1771,15 +1771,6 @@ P4. PM 보고
 조사된 출처를 기반으로 PDF를 일괄 다운로드하는 Python 스크립트 구현, 회사 프로젝트 경로에 저장]
 Collect and organize PDF files of Korean SAT exams from 2000 to 2010 from online sources.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [Architect: ## 사장님 지시
 
 @박준호 인터넷에서 2000~2010년도 수능 문제 pdf 로 다운 받는 작업 계획 짜줘
@@ -1830,3 +1821,12 @@ P4. 프로젝트 결과 PM 보고
 
 @한서준 출처 기반으로 PDF 일괄 다운로드 Python 스크립트 구현 및 저장]
 2000~2010년도 수능 문제 PDF 다운로드 계획
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import type { TeamSession } from '../types';
 
 export interface ProjectArtifact {
   name: string;
@@ -9,8 +10,14 @@ export interface ProjectArtifact {
   kind: 'task' | 'summary' | 'file';
 }
 
-export function getProjectWarehouseDir(companyDir: string, sessionId: string): string {
-  return path.join(companyDir, 'projects', sessionId);
+export function resolveSessionWarehouseFolder(
+  session: Pick<TeamSession, 'id' | 'warehouseFolder'>
+): string {
+  return session.warehouseFolder?.trim() || session.id;
+}
+
+export function getProjectWarehouseDir(companyDir: string, warehouseFolder: string): string {
+  return path.join(companyDir, 'projects', warehouseFolder);
 }
 
 function ensureDir(dir: string): void {

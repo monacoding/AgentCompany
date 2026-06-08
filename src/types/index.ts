@@ -234,6 +234,8 @@ export interface TeamSession {
   leadAgentId: string;
   memberAgentIds: string[];
   threadId: string;
+  /** company/projects/ 하위 폴더명 (프로젝트명_YYYYMMDD) */
+  warehouseFolder: string;
   ceoCommand: string;
   parentTaskId: string | null;
   plan: string;

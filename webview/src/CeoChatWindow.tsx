@@ -67,27 +67,43 @@ function collabTitle(config: AgentChatThreadConfig): string {
   return `${peer} ↔ ${target}`;
 }
 
-function projectSubtitle(config: AgentChatThreadConfig): string {
-  const participants = config.collabParticipants ?? [];
-  const leadId = config.projectLeadAgentId;
-  const lead = participants.find((p) => p.agentId === leadId) ?? participants[0];
-  const members = participants
-    .filter((p) => p.agentId !== lead?.agentId)
-    .map((p) => p.displayName);
-
-  const leadLabel = lead?.displayName ?? 'PM';
-  const memberText = members.length > 0 ? members.join(', ') : '—';
-  return `PM: ${leadLabel} · 팀원: ${memberText}`;
-}
-
 function collabSubtitle(config: AgentChatThreadConfig, ownerDisplay: string, displayName: string): string {
   if (config.projectMode) {
-    return projectSubtitle(config);
+    return 'Project 협업 · 순차 실행 + 검토 루프';
   }
   if (config.collabMode) {
     return '에이전트 협업 대화 · 관전 모드';
   }
   return `${ownerDisplay} ↔ ${displayName}`;
+}
+
+function ProjectParticipantStrip({
+  participants,
+  leadAgentId,
+}: {
+  participants: CollabParticipant[];
+  leadAgentId?: string;
+}) {
+  if (participants.length === 0) return null;
+
+  return (
+    <div className="project-participant-strip">
+      {participants.map((p) => {
+        const isLead = p.agentId === leadAgentId;
+        return (
+          <div
+            key={p.agentId}
+            className={`project-participant-chip${isLead ? ' is-lead' : ''}`}
+            title={p.displayName}
+          >
+            <AgentAvatar name={p.displayName} photoUrl={p.profilePhotoUrl} size="header" />
+            <span className="project-participant-name">{p.displayName}</span>
+            {isLead && <span className="project-participant-role">PM</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function AgentAvatar({
@@ -511,20 +527,41 @@ export function CeoChatWindow({ threadConfig }: { threadConfig: AgentChatThreadC
 
   return (
     <div className={`ceo-chat-window ${isCollab ? 'collab-mode' : ''}`}>
-      <header className="ceo-chat-window-header">
-        {isCollab && config.collabParticipants && config.collabParticipants.length > 0 ? (
-          <CollabAvatarGroup participants={config.collabParticipants} />
-        ) : (
-          <AgentAvatar name={displayName} photoUrl={config.profilePhotoUrl} />
-        )}
-        <div className="ceo-chat-window-header-text">
-          <div className="ceo-chat-window-title-row">
-            <h1>{isCollab ? collabTitle(config) : displayName}</h1>
-            <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
+      <header
+        className={`ceo-chat-window-header${config.projectMode ? ' project-chat-header' : ''}`}
+      >
+        {config.projectMode ? (
+          <div className="project-chat-header-stack">
+            <div className="ceo-chat-window-title-row">
+              <h1 className="project-chat-title">{collabTitle(config)}</h1>
+              <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
+            </div>
+            {config.collabParticipants && config.collabParticipants.length > 0 && (
+              <ProjectParticipantStrip
+                participants={config.collabParticipants}
+                leadAgentId={config.projectLeadAgentId}
+              />
+            )}
+            <p className="project-chat-subline">{collabSubtitle(config, ownerDisplay, displayName)}</p>
+            {working && <p className="ceo-chat-working-detail">{working.content}</p>}
           </div>
-          <p>{collabSubtitle(config, ownerDisplay, displayName)}</p>
-          {working && <p className="ceo-chat-working-detail">{working.content}</p>}
-        </div>
+        ) : (
+          <>
+            {isCollab && config.collabParticipants && config.collabParticipants.length > 0 ? (
+              <CollabAvatarGroup participants={config.collabParticipants} />
+            ) : (
+              <AgentAvatar name={displayName} photoUrl={config.profilePhotoUrl} />
+            )}
+            <div className="ceo-chat-window-header-text">
+              <div className="ceo-chat-window-title-row">
+                <h1>{isCollab ? collabTitle(config) : displayName}</h1>
+                <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
+              </div>
+              <p>{collabSubtitle(config, ownerDisplay, displayName)}</p>
+              {working && <p className="ceo-chat-working-detail">{working.content}</p>}
+            </div>
+          </>
+        )}
       </header>
 
       <div className="ceo-chat-window-messages">

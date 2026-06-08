@@ -31,7 +31,7 @@ function buildRunCommand(absPath: string, workspaceRoot: string): string {
   return quoted;
 }
 
-function inferScriptArgs(command: string, sessionId: string): string {
+function inferScriptArgs(command: string, warehouseFolder: string): string {
   const lower = command.toLowerCase();
   const args: string[] = [];
 
@@ -47,8 +47,12 @@ function inferScriptArgs(command: string, sessionId: string): string {
       years = Array.from({ length: end - start + 1 }, (_, i) => String(start + i)).join(',');
     } else if (singleYear) {
       years = singleYear[1];
+    } else if (/2000/.test(command) && /2010/.test(command)) {
+      years = Array.from({ length: 11 }, (_, i) => String(2000 + i)).join(',');
     } else if (/2010/.test(command) && /2020/.test(command)) {
       years = Array.from({ length: 11 }, (_, i) => String(2010 + i)).join(',');
+    } else if (/2014/.test(command) && /2020/.test(command)) {
+      years = Array.from({ length: 7 }, (_, i) => String(2014 + i)).join(',');
     }
 
     const subjects =
@@ -59,7 +63,7 @@ function inferScriptArgs(command: string, sessionId: string): string {
           : /수학/.test(command)
             ? '수학'
             : '국어,수학,영어';
-    const outDir = path.posix.join('company', 'projects', sessionId, 'files', 'pdfs');
+    const outDir = path.posix.join('company', 'projects', warehouseFolder, 'files', 'pdfs');
     args.push('--out', outDir, '--subjects', subjects, '--years', years);
   }
 
@@ -89,11 +93,11 @@ export async function runScriptFile(
 export async function runProjectScripts(
   workspace: WorkspaceEngine,
   companyDir: string,
-  sessionId: string,
+  warehouseFolder: string,
   extractedRelativePaths: string[],
   ceoCommand: string
 ): Promise<{ results: ScriptRunResult[]; producedFiles: string[] }> {
-  const warehouse = getProjectWarehouseDir(companyDir, sessionId);
+  const warehouse = getProjectWarehouseDir(companyDir, warehouseFolder);
   const workspaceRoot = workspace.getWorkspaceRoot();
   if (!workspaceRoot) {
     return { results: [], producedFiles: [] };
@@ -107,7 +111,7 @@ export async function runProjectScripts(
     const abs = path.join(companyDir, rel);
     if (!fs.existsSync(abs)) continue;
 
-    const args = inferScriptArgs(ceoCommand, sessionId);
+    const args = inferScriptArgs(ceoCommand, warehouseFolder);
     const run = await runScriptFile(workspace, abs, args);
     results.push(run);
 
@@ -128,11 +132,11 @@ export async function runProjectScripts(
 export async function runBundledSuneungDownload(
   workspace: WorkspaceEngine,
   companyDir: string,
-  sessionId: string,
+  warehouseFolder: string,
   ceoCommand: string,
   templateAbsPath: string
 ): Promise<{ results: ScriptRunResult[]; producedFiles: string[] }> {
-  const warehouseFiles = path.join(getProjectWarehouseDir(companyDir, sessionId), 'files');
+  const warehouseFiles = path.join(getProjectWarehouseDir(companyDir, warehouseFolder), 'files');
   const scriptsDir = path.join(warehouseFiles, 'scripts');
   const pdfsDir = path.join(warehouseFiles, 'pdfs');
   fs.mkdirSync(scriptsDir, { recursive: true });
@@ -144,7 +148,7 @@ export async function runBundledSuneungDownload(
   }
 
   const rel = path.relative(companyDir, dest).replace(/\\/g, '/');
-  return runProjectScripts(workspace, companyDir, sessionId, [rel], ceoCommand);
+  return runProjectScripts(workspace, companyDir, warehouseFolder, [rel], ceoCommand);
 }
 
 function collectFilesRecursive(dir: string): string[] {

@@ -154,19 +154,56 @@ export async function executeProjectWorkerTask(
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
   deps: ProjectWorkerDeps,
-  options: { companyDir: string; sessionId: string; templateScriptPath?: string },
+  options: {
+    companyDir: string;
+    sessionId: string;
+    warehouseFolder: string;
+    templateScriptPath?: string;
+  },
   revision?: { previousOutput: string; feedback: string }
 ): Promise<WorkerExecutionResult> {
+  const folder = options.warehouseFolder || options.sessionId;
+
+  if (
+    isSuneungPdfTask(command, task.description) &&
+    options.templateScriptPath &&
+    deps.workspace.getWorkspaceRoot()
+  ) {
+    const bundled = await runBundledSuneungDownload(
+      deps.workspace,
+      options.companyDir,
+      folder,
+      command,
+      options.templateScriptPath
+    );
+    if (bundled.producedFiles.length > 0) {
+      const scriptRel = `projects/${folder}/files/scripts/download_suneung_pdfs.py`;
+      const runSummary = formatScriptRunSummary(bundled.results);
+      const output = [
+        `평가원 공식 사이트(suneung.re.kr)에서 PDF ${bundled.producedFiles.length}개 다운로드 완료.`,
+        '※ 2014년 이전 기출은 평가원 공식 게시판에 없을 수 있습니다.',
+        runSummary,
+        '',
+        'FINISHED',
+      ].join('\n');
+      return {
+        output: output.slice(0, 6000),
+        extractedFiles: [scriptRel, ...bundled.producedFiles],
+        executedArtifacts: bundled.producedFiles,
+      };
+    }
+  }
+
   let output =
     (await executeViaResearch(agent, command, task, deps)) ??
     (await executeViaKilo(agent, command, task, priorContext, deps)) ??
     (await executeViaLlm(agent, command, plan, task, priorContext, providers, agentFolders, revision));
 
-  let extractedFiles = extractAndSaveProjectFiles(options.companyDir, options.sessionId, output);
+  let extractedFiles = extractAndSaveProjectFiles(options.companyDir, folder, output);
   let scriptResults = await runProjectScripts(
     deps.workspace,
     options.companyDir,
-    options.sessionId,
+    folder,
     extractedFiles,
     command
   );
@@ -174,17 +211,16 @@ export async function executeProjectWorkerTask(
   if (
     scriptResults.results.length === 0 &&
     isSuneungPdfTask(command, task.description) &&
-    options.templateScriptPath &&
-    isKiloAgent(agent)
+    options.templateScriptPath
   ) {
     scriptResults = await runBundledSuneungDownload(
       deps.workspace,
       options.companyDir,
-      options.sessionId,
+      folder,
       command,
       options.templateScriptPath
     );
-    const scriptRel = `projects/${options.sessionId}/files/scripts/download_suneung_pdfs.py`;
+    const scriptRel = `projects/${folder}/files/scripts/download_suneung_pdfs.py`;
     if (!extractedFiles.includes(scriptRel)) {
       extractedFiles = [...extractedFiles, scriptRel];
     }

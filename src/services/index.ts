@@ -31,7 +31,7 @@ import { NotificationEngine } from '../notifications';
 import { TelegramInboundPoller } from '../notifications/telegram-inbound';
 import { CEO_NODE_ID, OrgEngine } from '../org';
 import { Orchestrator } from '../orchestrator';
-import { TeamEngine, formatProjectDisplayTitle } from '../team';
+import { TeamEngine, formatProjectDisplayTitle, resolveSessionWarehouseFolder } from '../team';
 import { listProjectArtifacts } from '../team/project-artifacts';
 import {
   getProjectPlaybookSummary,
@@ -982,7 +982,10 @@ ${roleSnippet}
     const session = this.teams.getSession(sessionId);
     if (!session) return null;
 
-    const artifacts = listProjectArtifacts(this.agentFolders.getCompanyDir(), sessionId);
+    const artifacts = listProjectArtifacts(
+      this.agentFolders.getCompanyDir(),
+      resolveSessionWarehouseFolder(session)
+    );
 
     const messages = this.chat
       .getMessages(session.threadId)

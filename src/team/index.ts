@@ -13,14 +13,18 @@ export {
 } from './trigger';
 export { hasProjectPlanningContext, extractProjectBriefFromChat } from './project-brief';
 export { looksLikePmPlan, buildPmApprovalConfirmationText } from './pm-approval';
-export { formatProjectDisplayTitle } from './project-title';
+export { formatProjectDisplayTitle, buildProjectWarehouseFolder } from './project-title';
 export {
   PROJECT_REVIEW_MAX_ITERATIONS,
   PROJECT_TEST_MAX_ITERATIONS,
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
-export { listProjectArtifacts, getProjectWarehouseDir } from './project-artifacts';
+export {
+  listProjectArtifacts,
+  getProjectWarehouseDir,
+  resolveSessionWarehouseFolder,
+} from './project-artifacts';
 export type { ProjectWorkerDeps } from './project-worker-engine';
 export { needsProgramExecution, executeProjectWorkerTask } from './project-worker-engine';
 export type { TeamRunContext } from './team-engine';

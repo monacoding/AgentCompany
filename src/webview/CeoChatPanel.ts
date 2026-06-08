@@ -342,17 +342,23 @@ export class CeoChatPanel {
   private async buildThreadConfig(): Promise<AgentChatThreadConfig> {
     const version = Date.now();
     const owner = await this.buildOwnerUrls(version);
-    const agentLookupId = this.thread.collabMode
-      ? this.thread.targetAgentId ?? this.thread.threadId
-      : this.thread.threadId;
-    const agent = this.service.agents.get(agentLookupId);
-    if (!agent) return { ...this.thread, ...owner };
+    const agentLookupId = this.thread.projectMode
+      ? this.thread.projectLeadAgentId ?? this.thread.targetAgentId
+      : this.thread.collabMode
+        ? this.thread.targetAgentId ?? this.thread.threadId
+        : this.thread.threadId;
 
-    const slug = this.service.agentFolders.resolveSlug(agent);
-    const photoPath = await this.service.agentFolders.resolveProfilePhotoPath(slug);
     const collabParticipants = this.thread.collabMode
       ? await this.buildCollabParticipants(version)
       : undefined;
+
+    const agent = agentLookupId ? this.service.agents.get(agentLookupId) : null;
+    if (!agent) {
+      return { ...this.thread, ...owner, collabParticipants };
+    }
+
+    const slug = this.service.agentFolders.resolveSlug(agent);
+    const photoPath = await this.service.agentFolders.resolveProfilePhotoPath(slug);
 
     const base = {
       ...this.thread,

@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 /** Project 채팅·탭에 표시할 짧은 제목 */
 export function formatProjectDisplayTitle(raw: string): string {
   const text = raw.trim();
@@ -35,4 +38,34 @@ export function formatProjectDisplayTitle(raw: string): string {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 80) || 'Project';
+}
+
+/** company/projects/{폴더명} — 프로젝트명_YYYYMMDD */
+export function buildProjectWarehouseFolder(
+  title: string,
+  companyDir: string,
+  date = new Date()
+): string {
+  const display = formatProjectDisplayTitle(title);
+  const slug =
+    display
+      .replace(/[^\w가-힣]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 40) || 'project';
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${y}${m}${d}`;
+  const base = `${slug}_${dateStr}`;
+
+  const projectsRoot = path.join(companyDir, 'projects');
+  let folder = base;
+  let suffix = 2;
+  while (fs.existsSync(path.join(projectsRoot, folder))) {
+    folder = `${base}_${suffix}`;
+    suffix++;
+  }
+  return folder;
 }

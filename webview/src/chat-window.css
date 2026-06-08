@@ -22,6 +22,79 @@ body {
   flex-shrink: 0;
 }
 
+.ceo-chat-window-header.project-chat-header {
+  align-items: flex-start;
+}
+
+.project-chat-header-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.project-chat-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.project-chat-subline {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.project-participant-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: flex-start;
+}
+
+.project-participant-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 72px;
+}
+
+.project-participant-chip .ceo-chat-window-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.project-participant-name {
+  font-size: 9px;
+  color: var(--vscode-descriptionForeground);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.project-participant-role {
+  font-size: 8px;
+  font-weight: 700;
+  color: #93c5fd;
+  background: #1e3a5f;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  padding: 1px 5px;
+  line-height: 1.3;
+}
+
+.project-participant-chip.is-lead .project-participant-name {
+  color: var(--vscode-foreground);
+  font-weight: 600;
+}
+
 .ceo-chat-window-logo {
   font-size: 28px;
   flex-shrink: 0;

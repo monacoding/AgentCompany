@@ -154,6 +154,11 @@ export class Database {
     } catch {
       // column already exists
     }
+    try {
+      this.db!.run("ALTER TABLE team_sessions ADD COLUMN warehouse_folder TEXT DEFAULT ''");
+    } catch {
+      // column already exists
+    }
   }
 
   private persist(): void {
@@ -502,9 +507,9 @@ export class Database {
     this.db!.run(
       `INSERT INTO team_sessions (
         id, title, status, phase, project_tasks, lead_agent_id, member_agent_ids, thread_id,
-        ceo_command, parent_task_id, plan, summary, max_turns, requester_agent_id,
+        warehouse_folder, ceo_command, parent_task_id, plan, summary, max_turns, requester_agent_id,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         session.id,
         session.title,
@@ -514,6 +519,7 @@ export class Database {
         session.leadAgentId,
         JSON.stringify(session.memberAgentIds),
         session.threadId,
+        session.warehouseFolder ?? '',
         session.ceoCommand,
         session.parentTaskId,
         session.plan,
@@ -540,7 +546,7 @@ export class Database {
     this.db!.run(
       `UPDATE team_sessions SET
         title=?, status=?, phase=?, project_tasks=?, lead_agent_id=?, member_agent_ids=?, thread_id=?,
-        ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?,
+        warehouse_folder=?, ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?,
         requester_agent_id=?, updated_at=?
        WHERE id=?`,
       [
@@ -551,6 +557,7 @@ export class Database {
         updated.leadAgentId,
         JSON.stringify(updated.memberAgentIds),
         updated.threadId,
+        updated.warehouseFolder ?? '',
         updated.ceoCommand,
         updated.parentTaskId,
         updated.plan,
@@ -593,6 +600,7 @@ export class Database {
     leadAgentId: obj.lead_agent_id as string,
     memberAgentIds: parseJson<string[]>(obj.member_agent_ids as string, []),
     threadId: obj.thread_id as string,
+    warehouseFolder: ((obj.warehouse_folder as string) ?? '').trim() || (obj.id as string),
     ceoCommand: (obj.ceo_command as string) ?? '',
     parentTaskId: (obj.parent_task_id as string | null) ?? null,
     plan: (obj.plan as string) ?? '',
