@@ -2,7 +2,7 @@
   "name": "agent-company",
   "displayName": "AgentCompany",
   "description": "AI 회사 운영 플랫폼 — Cursor/VS Code 내부에서 AI 직원을 관리하고 업무를 수행합니다.",
-  "version": "1.7.77",
+  "version": "1.7.78",
   "publisher": "agentcompany",
   "license": "MIT",
   "repository": {

@@ -1,23 +1,28 @@
 import { AgentFolderEngine } from '../agent-folders';
 import { ChatService } from '../chat';
-import { formatChatReply, formatLlmError } from '../chat/reply-format';
 import { Database } from '../database';
 import { AgentManager } from '../agents';
 import { ProviderEngine } from '../providers';
-import { Agent, TeamSession } from '../types';
+import { Agent, ProjectPhase, TeamSession } from '../types';
 import { generateId, now } from '../utils';
 import { formatAgentLabel } from '../utils/agent-display';
 import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
-import {
-  buildSpeakerSystemPrompt,
-  isTeamTermination,
-  selectNextSpeaker,
-} from './selector';
+import { parseProjectTasks, runProjectSequential } from './project-runner';
 import { buildTeamThreadId } from './thread-id';
-import { TeamRunResult, TeamTurnMessage } from './types';
+import { TeamRunResult } from './types';
+
+const PHASE_LABEL: Record<ProjectPhase, string> = {
+  planning: '📋 Planning',
+  executing: '⚙️ Executing',
+  reviewing: '🔍 Reviewing',
+  done: '✅ Done',
+  failed: '❌ Failed',
+};
 
 export class TeamEngine {
+  private runningSessionId: string | null = null;
+
   constructor(
     private db: Database,
     private agents: AgentManager,
@@ -26,10 +31,11 @@ export class TeamEngine {
     private agentFolders: AgentFolderEngine
   ) {}
 
-  async prepareTeam(
-    requester: Agent,
-    command: string
-  ): Promise<TeamPlanResult> {
+  isRunning(): boolean {
+    return this.runningSessionId !== null;
+  }
+
+  async prepareTeam(requester: Agent, command: string): Promise<TeamPlanResult> {
     return planTeamWithPm(this.providers, this.agents.getAll(), requester, command);
   }
 
@@ -40,12 +46,25 @@ export class TeamEngine {
     plan: string,
     requesterId?: string
   ): TeamSession {
+    if (this.runningSessionId) {
+      this.db.updateTeamSession(this.runningSessionId, {
+        status: 'done',
+        phase: 'done',
+        summary: '새 Project 시작으로 이전 세션이 종료되었습니다.',
+      });
+      this.runningSessionId = null;
+    }
+
     const id = generateId();
     const timestamp = now();
+    const projectTasks = parseProjectTasks(plan, members);
+
     const session: TeamSession = {
       id,
-      title: command.slice(0, 60) || `${pm.name} 팀 협업`,
+      title: command.slice(0, 60) || `${pm.name} Project`,
       status: 'planning',
+      phase: 'planning',
+      projectTasks,
       leadAgentId: pm.id,
       memberAgentIds: members.map((m) => m.id),
       threadId: buildTeamThreadId(id),
@@ -85,194 +104,120 @@ export class TeamEngine {
       .filter((a): a is Agent => a !== null);
 
     if (participants.length < 2) {
-      return { success: false, summary: '팀 참가자가 부족합니다.', turns: 0 };
+      return { success: false, summary: 'Project 참가자가 부족합니다.', turns: 0 };
     }
 
-    this.updateSession(session.id, { status: 'running' });
+    this.runningSessionId = session.id;
+    this.updateSession(session.id, { status: 'running', phase: 'planning' });
 
     const threadId = session.threadId;
     const requester = session.requesterAgentId
       ? this.agents.get(session.requesterAgentId)
       : null;
 
-    this.pushTeamMessage(
-      threadId,
-      null,
-      '시스템',
-      'system',
-      `👥 팀 협업 시작 (PM: ${formatAgentLabel(pm)})${requester ? `\n요청: ${formatAgentLabel(requester)}` : ''}\n${formatTeamMemberLabels(participants)}`
-    );
-
-    const plan = session.plan.trim() || (await this.safeGeneratePlan(pm, command, participants));
-    if (!session.plan.trim()) {
-      this.updateSession(session.id, { plan });
-    }
-
-    this.pushTeamMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `📋 **PM 팀 계획**\n${plan}`);
-
-    const history: TeamTurnMessage[] = [{ agentId: pm.id, agentName: pm.name, content: plan }];
-    let lastSpeakerId: string | null = pm.id;
-    let turns = 0;
-    let terminated = false;
-
-    while (turns < session.maxTurns && !terminated) {
-      const nextId = await selectNextSpeaker(
-        this.providers,
-        pm,
-        participants,
-        history,
-        lastSpeakerId
-      );
-      if (!nextId) break;
-
-      const speaker = this.agents.get(nextId);
-      if (!speaker) break;
-
-      this.setTeamWorking(threadId, speaker, '팀 논의 중…');
-
-      const content = await this.safeGenerateTurn(speaker, command, plan, history, participants);
-      this.clearTeamWorking(threadId, speaker);
-
-      const reply = formatChatReply(content) || content.trim() || '…';
-      this.pushTeamMessage(threadId, speaker.id, formatAgentLabel(speaker), 'agent', reply);
-      history.push({ agentId: speaker.id, agentName: speaker.name, content: reply });
-      lastSpeakerId = speaker.id;
-      turns++;
-
-      if (isTeamTermination(reply)) {
-        terminated = true;
-      }
-    }
-
-    const summary = await this.safeGenerateSummary(pm, command, history);
-    this.pushTeamMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `✅ **PM 완료 보고**\n${summary}`);
-    this.pushTeamMessage(threadId, null, '시스템', 'system', `팀 협업 종료 (${turns}턴)`);
-
-    this.updateSession(session.id, {
-      status: 'done',
-      summary,
-    });
-
-    return { success: true, summary, turns };
-  }
-
-  private async safeGeneratePlan(
-    pm: Agent,
-    command: string,
-    participants: Agent[]
-  ): Promise<string> {
     try {
-      const roster = participants
-        .map((a) => `- ${formatAgentLabel(a)} (${a.role}): ${a.description.slice(0, 100)}`)
+      this.pushMessage(
+        threadId,
+        null,
+        '시스템',
+        'system',
+        `🚀 **Project 시작** (PM: ${formatAgentLabel(pm)})${requester ? `\n요청: ${formatAgentLabel(requester)}` : ''}\n${formatTeamMemberLabels(participants)}`
+      );
+
+      const plan = session.plan.trim();
+      this.pushMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `📋 **PM 계획**\n${plan}`);
+
+      const taskPreview = (session.projectTasks.length ? session.projectTasks : parseProjectTasks(plan, participants))
+        .map((t, i) => `${i + 1}. @${t.agentName}: ${t.description}`)
         .join('\n');
 
-      const response = await this.providers.chat(
-        [
-          {
-            role: 'system',
-            content: `You are ${pm.name}, PM. Write a concise Korean task plan. Format: N. @에이전트명: 할 일`,
+      if (taskPreview) {
+        this.pushMessage(threadId, null, '시스템', 'system', `📌 **Tasks (Sequential)**\n${taskPreview}`);
+      }
+
+      let liveTasks = session.projectTasks.length
+        ? session.projectTasks.map((t) => ({ ...t }))
+        : parseProjectTasks(plan, participants);
+
+      const { tasks, summary } = await runProjectSequential(
+        pm,
+        command,
+        plan,
+        participants,
+        this.providers,
+        this.agentFolders,
+        {
+          onPhase: (phase, detail) => {
+            this.updateSession(session.id, { phase });
+            this.pushMessage(
+              threadId,
+              null,
+              '시스템',
+              'system',
+              `${PHASE_LABEL[phase]} — ${detail}`
+            );
           },
-          {
-            role: 'user',
-            content: `## 사장님 지시\n${command}\n\n## 팀원\n${roster}`,
+          onTaskStart: (task, index, total) => {
+            const agent = this.agents.get(task.agentId);
+            if (agent) {
+              this.setWorking(threadId, agent, `태스크 ${index + 1}/${total}: ${task.description}`);
+            }
           },
-        ],
-        { type: pm.provider, model: pm.model }
+          onTaskDone: (task) => {
+            const agent = this.agents.get(task.agentId);
+            if (agent) this.clearWorking(threadId);
+            liveTasks = liveTasks.map((t) => (t.agentId === task.agentId ? { ...task } : t));
+            this.updateSession(session.id, { projectTasks: liveTasks });
+          },
+          onMessage: (agent, content) => {
+            this.pushMessage(threadId, agent.id, formatAgentLabel(agent), 'agent', content);
+          },
+        }
       );
 
-      return (response.content || '팀 계획을 수립했습니다.').trim();
+      const doneCount = tasks.filter((t) => t.status === 'done').length;
+
+      this.pushMessage(threadId, pm.id, formatAgentLabel(pm), 'agent', `✅ **Project 완료 보고**\n${summary}`);
+      this.pushMessage(
+        threadId,
+        null,
+        '시스템',
+        'system',
+        `Project 종료 — ${doneCount}/${tasks.length} 태스크 완료`
+      );
+
+      this.updateSession(session.id, {
+        status: 'done',
+        phase: 'done',
+        summary,
+        projectTasks: tasks,
+      });
+
+      return { success: true, summary, turns: doneCount };
     } catch (error) {
-      return `팀 계획 (오프라인 초안): ${command}\n\n${formatLlmError(error)}`;
+      const message = error instanceof Error ? error.message : String(error);
+      this.updateSession(session.id, { status: 'failed', phase: 'failed', summary: message });
+      this.pushMessage(threadId, null, '시스템', 'system', `❌ Project 오류: ${message}`);
+      return { success: false, summary: message, turns: 0 };
+    } finally {
+      if (this.runningSessionId === session.id) {
+        this.runningSessionId = null;
+      }
     }
   }
 
-  private async safeGenerateTurn(
-    speaker: Agent,
-    command: string,
-    plan: string,
-    history: TeamTurnMessage[],
-    participants: Agent[]
-  ): Promise<string> {
-    try {
-      return await this.generateTeamTurn(speaker, command, plan, history, participants);
-    } catch (error) {
-      return `죄송해요, 응답 생성 중 문제가 생겼어요.\n\n${formatLlmError(error)}`;
+  failSession(id: string, summary?: string): void {
+    this.db.updateTeamSession(id, {
+      status: 'failed',
+      phase: 'failed',
+      ...(summary ? { summary } : {}),
+    });
+    if (this.runningSessionId === id) {
+      this.runningSessionId = null;
     }
   }
 
-  private async safeGenerateSummary(
-    pm: Agent,
-    command: string,
-    history: TeamTurnMessage[]
-  ): Promise<string> {
-    try {
-      return await this.generateTeamSummary(pm, command, history);
-    } catch (error) {
-      const last = history.slice(-3).map((m) => `${m.agentName}: ${m.content.slice(0, 120)}`).join('\n');
-      return `팀 협업을 마쳤습니다. (요약 LLM 오류: ${formatLlmError(error)})\n\n최근 논의:\n${last}`;
-    }
-  }
-
-  private async generateTeamTurn(
-    speaker: Agent,
-    command: string,
-    plan: string,
-    history: TeamTurnMessage[],
-    participants: Agent[]
-  ): Promise<string> {
-    const folderContext = await this.agentFolders.buildConversationalPromptContext(speaker);
-    const transcript = history
-      .slice(-10)
-      .map((m) => `${m.agentName}: ${m.content}`)
-      .join('\n\n');
-
-    const others = participants
-      .filter((p) => p.id !== speaker.id)
-      .map((p) => formatAgentLabel(p))
-      .join(', ');
-
-    const response = await this.providers.chat(
-      [
-        {
-          role: 'system',
-          content: `${buildSpeakerSystemPrompt(speaker, plan, command)}\n${folderContext}`,
-        },
-        {
-          role: 'user',
-          content: `## 팀 대화 기록\n${transcript}\n\n## 팀원\n${others}\n\n이제 당신(${speaker.name}) 차례입니다. 팀 맥락에 맞게 발언하세요.`,
-        },
-      ],
-      { type: speaker.provider, model: speaker.model }
-    );
-
-    return (response.content || '').trim();
-  }
-
-  private async generateTeamSummary(
-    pm: Agent,
-    command: string,
-    history: TeamTurnMessage[]
-  ): Promise<string> {
-    const transcript = history.map((m) => `${m.agentName}: ${m.content}`).join('\n\n');
-
-    const response = await this.providers.chat(
-      [
-        {
-          role: 'system',
-          content: `You are ${pm.name}, PM. Summarize the team discussion for the CEO in Korean. Be concise (under 500 chars).`,
-        },
-        {
-          role: 'user',
-          content: `## 사장님 지시\n${command}\n\n## 팀 대화\n${transcript}\n\n사장님께 보고하세요.`,
-        },
-      ],
-      { type: pm.provider, model: pm.model }
-    );
-
-    return (response.content || '팀 협업이 완료되었습니다.').trim();
-  }
-
-  private pushTeamMessage(
+  private pushMessage(
     threadId: string,
     senderId: string | null,
     senderName: string,
@@ -289,7 +234,7 @@ export class TeamEngine {
     });
   }
 
-  private setTeamWorking(threadId: string, agent: Agent, content: string): void {
+  private setWorking(threadId: string, agent: Agent, content: string): void {
     this.chat.updateWorking({
       threadId,
       senderId: agent.id,
@@ -300,15 +245,8 @@ export class TeamEngine {
     });
   }
 
-  private clearTeamWorking(threadId: string, _agent: Agent): void {
+  private clearWorking(threadId: string): void {
     this.chat.clearWorking(threadId);
-  }
-
-  failSession(id: string, summary?: string): void {
-    this.db.updateTeamSession(id, {
-      status: 'failed',
-      ...(summary ? { summary } : {}),
-    });
   }
 
   private updateSession(id: string, fields: Partial<TeamSession>): void {

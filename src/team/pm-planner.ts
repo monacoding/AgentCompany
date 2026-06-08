@@ -186,25 +186,3 @@ Rules:
   }
 }
 
-/** 업무 지시 시 PM 팀 오케스트레이션 여부 */
-export function shouldOrchestrateWithPm(
-  command: string,
-  options?: { suggestedAction?: string }
-): boolean {
-  const text = command.trim();
-  if (!text) return false;
-
-  if (/^\/팀|협업|함께|팀으로|연계|공동|멀티\s*에이전트|에이전트\s*팀/i.test(text)) {
-    return true;
-  }
-
-  if (options?.suggestedAction === 'conversation_complete' || options?.suggestedAction === 'needs_clarification') {
-    return false;
-  }
-
-  if (text.length >= 12 && /분석|조사|구현|작성|기획|제작|만들|수집|정리|개발|리서치|대본|쇼츠|기출|수능/i.test(text)) {
-    return true;
-  }
-
-  return false;
-}

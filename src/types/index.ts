@@ -203,11 +203,23 @@ export interface AppSettings {
 }
 
 export type TeamSessionStatus = 'planning' | 'running' | 'done' | 'failed';
+export type ProjectPhase = 'planning' | 'executing' | 'reviewing' | 'done' | 'failed';
 
+export interface ProjectTask {
+  agentId: string;
+  agentName: string;
+  description: string;
+  status: 'pending' | 'running' | 'done' | 'failed';
+  output?: string;
+}
+
+/** DB/API: Project 세션 (legacy table name team_sessions) */
 export interface TeamSession {
   id: string;
   title: string;
   status: TeamSessionStatus;
+  phase: ProjectPhase;
+  projectTasks: ProjectTask[];
   /** PM 오케스트레이터 */
   leadAgentId: string;
   memberAgentIds: string[];

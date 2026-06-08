@@ -15,7 +15,15 @@ const STATUS_COLOR: Record<TeamSession['status'], string> = {
   failed: '#ef4444',
 };
 
-export function TeamsTab({
+const PHASE_LABEL: Record<string, string> = {
+  planning: 'Planning',
+  executing: 'Executing',
+  reviewing: 'Reviewing',
+  done: 'Done',
+  failed: 'Failed',
+};
+
+export function ProjectsTab({
   sessions,
   agents,
 }: {
@@ -27,13 +35,13 @@ export function TeamsTab({
   if (sessions.length === 0) {
     return (
       <section className="card">
-        <h3>팀 협업</h3>
+        <h3>Project</h3>
         <p className="muted">
-          아직 팀 세션이 없습니다. CEO 명령에 <code>/팀</code> 또는 &quot;협업&quot;, &quot;함께&quot; 같은
-          키워드를 넣으면 에이전트들이 자동으로 팀을 구성합니다.
+          아직 Project 세션이 없습니다. CEO 명령에 <code>/project</code> 또는 &quot;협업&quot;, &quot;함께&quot; 같은
+          키워드를 넣으면 PM이 계획을 세우고 에이전트가 순차 실행합니다.
         </p>
         <p className="muted" style={{ marginTop: 8 }}>
-          예: <code>@김윤하 /팀 수능 기출 분석하고 쇼츠 대본까지 협업해줘</code>
+          예: <code>@김윤하 /project 수능 기출 분석하고 쇼츠 대본까지 협업해줘</code>
         </p>
       </section>
     );
@@ -41,9 +49,9 @@ export function TeamsTab({
 
   return (
     <section className="card">
-      <h3>팀 협업 ({sessions.length})</h3>
+      <h3>Project ({sessions.length})</h3>
       <p className="muted" style={{ marginBottom: 12 }}>
-        에이전트들이 자율적으로 논의·계획·분업한 세션입니다. 항목을 클릭하면 팀 대화방을 엽니다.
+        PM 계획 → 순차 태스크 실행(CrewAI 스타일) 세션입니다. 항목을 클릭하면 Project 대화방을 엽니다.
       </p>
       <ul className="task-list">
         {sessions.map((session) => {
@@ -51,22 +59,24 @@ export function TeamsTab({
           const members = session.memberAgentIds
             .map((id) => agentMap.get(id))
             .filter(Boolean) as Agent[];
+          const phase = session.phase ? PHASE_LABEL[session.phase] ?? session.phase : null;
 
           return (
             <li
               key={session.id}
               className="task-item"
               style={{ cursor: 'pointer' }}
-              onClick={() => postMessage('openTeamChat', { sessionId: session.id })}
+              onClick={() => postMessage('openProjectChat', { sessionId: session.id })}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <strong>{session.title}</strong>
                 <span style={{ color: STATUS_COLOR[session.status], fontSize: 12 }}>
                   {STATUS_LABEL[session.status]}
+                  {phase && session.status === 'running' ? ` · ${phase}` : ''}
                 </span>
               </div>
               <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                리드: {lead ? formatAgentLabel(lead) : '—'} · {members.length}명 ·{' '}
+                PM: {lead ? formatAgentLabel(lead) : '—'} · {members.length}명 ·{' '}
                 {new Date(session.createdAt).toLocaleString('ko-KR')}
               </div>
               {session.plan && (

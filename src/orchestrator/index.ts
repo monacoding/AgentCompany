@@ -73,9 +73,8 @@ import { collectAgentMentionNames, formatAgentLabel } from '../utils/agent-displ
 import { CeoChatPanel } from '../webview/CeoChatPanel';
 import {
   TeamEngine,
-  normalizeTeamCommand,
-  shouldOrchestrateWithPm,
-  shouldUseTeamCollaboration,
+  normalizeProjectCommand,
+  shouldStartProject,
 } from '../team';
 
 const MAX_ORG_REVISIONS = 5;
@@ -441,12 +440,9 @@ export class Orchestrator {
       this.chat.requestOpenPanel(agent.id, agent.name);
     }
 
-    const teamTask = normalizeTeamCommand(command);
-    if (shouldUseTeamCollaboration(command) && teamTask) {
-      return this.executeTeamCommand(agent, teamTask, fullCommand);
-    }
-    if (shouldOrchestrateWithPm(teamTask || command)) {
-      return this.executeTeamCommand(agent, teamTask || command, fullCommand);
+    const projectTask = normalizeProjectCommand(command);
+    if (shouldStartProject(command) && projectTask) {
+      return this.executeTeamCommand(agent, projectTask, fullCommand);
     }
 
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
@@ -514,11 +510,7 @@ export class Orchestrator {
     }
 
     const effectiveTask = fileResolved.effective.trim() || command;
-    if (
-      shouldOrchestrateWithPm(effectiveTask, {
-        suggestedAction: interpretation.suggestedAction,
-      })
-    ) {
+    if (shouldStartProject(effectiveTask)) {
       return this.executeTeamCommand(agent, effectiveTask, fullCommand);
     }
 
@@ -591,7 +583,7 @@ export class Orchestrator {
       const message = error instanceof Error ? error.message : String(error);
       this.agentSay(
         requester,
-        `사장님, PM 팀 구성 중 문제가 생겼어요.\n\n${message}`,
+        `사장님, PM Project 구성 중 문제가 생겼어요.\n\n${message}`,
         'agent',
         'failed',
         { ceoMessage: command },
@@ -605,7 +597,7 @@ export class Orchestrator {
     if (members.length < 2) {
       this.agentSay(
         requester,
-        '사장님, 팀 협업을 하려면 활성 에이전트가 2명 이상 필요해요. Agents 탭에서 에이전트를 추가해 주세요.',
+        '사장님, Project를 하려면 활성 에이전트가 2명 이상 필요해요. Agents 탭에서 에이전트를 추가해 주세요.',
         'agent',
         'failed',
         { ceoMessage: command },
@@ -619,25 +611,23 @@ export class Orchestrator {
     this.chat.requestOpenTeamPanel(session.threadId, session.memberAgentIds, session.title);
     CeoChatPanel.refreshThread(session.threadId);
     this.dashboardRefresh?.();
-    this.dashboardNavigate?.('teams');
 
     const memberLabels = members.map((m) => formatAgentLabel(m)).join(', ');
     this.agentSay(
       requester,
-      `사장님, ${formatAgentLabel(pm)} PM이 팀 계획을 세우고 협업을 시작할게요.\n참여: ${memberLabels}\n팀 협업방에서 진행 상황을 보실 수 있어요.`,
+      `사장님, ${formatAgentLabel(pm)} PM이 Project 계획을 세우고 순차 실행을 시작할게요.\n참여: ${memberLabels}\nProject 탭에서 진행 상황을 보실 수 있어요.`,
       'agent',
       'done',
       { ceoMessage: command },
       true
     );
 
-    this.collabMirrorThreadId = session.threadId;
     try {
       const result = await this.teamEngine.runSession(session, command);
       this.memory.logActivity(
         pm.id,
         null,
-        `PM 팀 협업 완료 (${result.turns}턴): ${command.slice(0, 80)}`
+        `PM Project 완료 (${result.turns}태스크): ${command.slice(0, 80)}`
       );
       this.agentSay(
         requester,
@@ -647,7 +637,7 @@ export class Orchestrator {
         { ceoMessage: command },
         true
       );
-      this.notifications.showInfo(`팀 협업 완료 — PM ${pm.name}`);
+      this.notifications.showInfo(`Project 완료 — PM ${pm.name}`);
       this.dashboardRefresh?.();
       return {
         taskId: session.id,
@@ -657,10 +647,9 @@ export class Orchestrator {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.teamEngine.failSession(session.id, message);
-      this.agentSay(requester, `팀 협업 중 오류가 발생했어요.\n\n${message}`, 'agent', 'failed');
+      this.agentSay(requester, `Project 중 오류가 발생했어요.\n\n${message}`, 'agent', 'failed');
       return { taskId: session.id, success: false, message };
     } finally {
-      this.collabMirrorThreadId = null;
       CeoChatPanel.refreshThread(session.threadId);
       void fullCommand;
     }

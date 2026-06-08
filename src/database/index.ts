@@ -9,6 +9,7 @@ import {
   AgentIdeaStatus,
   AgentOrganization,
   TeamSession,
+  ProjectTask,
 } from '../types';
 import { parseJson } from '../utils';
 
@@ -140,6 +141,16 @@ export class Database {
     }
     try {
       this.db!.run('ALTER TABLE team_sessions ADD COLUMN requester_agent_id TEXT');
+    } catch {
+      // column already exists
+    }
+    try {
+      this.db!.run("ALTER TABLE team_sessions ADD COLUMN phase TEXT DEFAULT 'planning'");
+    } catch {
+      // column already exists
+    }
+    try {
+      this.db!.run("ALTER TABLE team_sessions ADD COLUMN project_tasks TEXT DEFAULT '[]'");
     } catch {
       // column already exists
     }
@@ -490,14 +501,16 @@ export class Database {
   insertTeamSession(session: TeamSession): void {
     this.db!.run(
       `INSERT INTO team_sessions (
-        id, title, status, lead_agent_id, member_agent_ids, thread_id,
+        id, title, status, phase, project_tasks, lead_agent_id, member_agent_ids, thread_id,
         ceo_command, parent_task_id, plan, summary, max_turns, requester_agent_id,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         session.id,
         session.title,
         session.status,
+        session.phase,
+        JSON.stringify(session.projectTasks),
         session.leadAgentId,
         JSON.stringify(session.memberAgentIds),
         session.threadId,
@@ -526,13 +539,15 @@ export class Database {
 
     this.db!.run(
       `UPDATE team_sessions SET
-        title=?, status=?, lead_agent_id=?, member_agent_ids=?, thread_id=?,
+        title=?, status=?, phase=?, project_tasks=?, lead_agent_id=?, member_agent_ids=?, thread_id=?,
         ceo_command=?, parent_task_id=?, plan=?, summary=?, max_turns=?,
         requester_agent_id=?, updated_at=?
        WHERE id=?`,
       [
         updated.title,
         updated.status,
+        updated.phase,
+        JSON.stringify(updated.projectTasks),
         updated.leadAgentId,
         JSON.stringify(updated.memberAgentIds),
         updated.threadId,
@@ -573,6 +588,8 @@ export class Database {
     id: obj.id as string,
     title: obj.title as string,
     status: obj.status as TeamSession['status'],
+    phase: (obj.phase as TeamSession['phase']) ?? 'planning',
+    projectTasks: parseJson<ProjectTask[]>(obj.project_tasks as string, []),
     leadAgentId: obj.lead_agent_id as string,
     memberAgentIds: parseJson<string[]>(obj.member_agent_ids as string, []),
     threadId: obj.thread_id as string,

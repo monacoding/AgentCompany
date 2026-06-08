@@ -6,7 +6,7 @@ import { OwnerInfoModal } from './OwnerInfoPanel';
 import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
-import { TeamsTab } from './TeamsTab';
+import { ProjectsTab } from './ProjectsTab';
 import { SettingsTab } from './SettingsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task } from './vscode';
 import {
@@ -140,8 +140,8 @@ export default function App() {
         }
       }
       if (event.data.type === 'navigate') {
-        const tab = (event.data.payload as { tab: TabId }).tab;
-        setActiveTab(tab);
+        const raw = (event.data.payload as { tab: string }).tab;
+        setActiveTab(raw === 'teams' ? 'projects' : (raw as TabId));
       }
       if (event.data.type === 'llmStatusUpdate') {
         setLlmChecking(false);
@@ -319,8 +319,8 @@ export default function App() {
 
       {activeTeamSessions.length > 0 && (
         <section className="review-banner" style={{ borderColor: '#3b82f6' }}>
-          <span>👥 팀 협업 진행 중: {activeTeamSessions.length}건</span>
-          <button className="btn-sm" onClick={() => setActiveTab('teams')}>
+          <span>📁 Project 진행 중: {activeTeamSessions.length}건</span>
+          <button className="btn-sm" onClick={() => setActiveTab('projects')}>
             보기
           </button>
         </section>
@@ -335,7 +335,7 @@ export default function App() {
       <CeoCommandInput agents={data.agents} />
 
       <nav className="tabs">
-        {(['overview', 'agents', 'org', 'teams', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
+        {(['overview', 'agents', 'org', 'projects', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -344,7 +344,7 @@ export default function App() {
             {tab === 'overview' && 'Overview'}
             {tab === 'agents' && `Agents (${data.agents.length})`}
             {tab === 'org' && 'Organization'}
-            {tab === 'teams' && `팀 협업 (${data.teamSessions?.length ?? 0})`}
+            {tab === 'projects' && `Project (${data.teamSessions?.length ?? 0})`}
             {tab === 'tasks' && `Tasks (${data.tasks.length})`}
             {tab === 'activity' && 'Activity'}
             {tab === 'api' && `API (${data.externalApis?.length ?? 0})`}
@@ -362,7 +362,7 @@ export default function App() {
             ideas={pendingIdeas}
             reviewTasks={reviewTasks}
             teamSessionCount={teamSessions.length}
-            onOpenTeams={() => setActiveTab('teams')}
+            onOpenProjects={() => setActiveTab('projects')}
             onAgentDoubleClick={(id) => postMessage('getAgentWorkLog', { agentId: id })}
           />
         )}
@@ -395,8 +395,8 @@ export default function App() {
             ownerPhotoUrl={data.ownerProfilePhotoUrl}
           />
         )}
-        {activeTab === 'teams' && (
-          <TeamsTab sessions={data.teamSessions ?? []} agents={data.agents} />
+        {activeTab === 'projects' && (
+          <ProjectsTab sessions={data.teamSessions ?? []} agents={data.agents} />
         )}
         {activeTab === 'tasks' && (
           <TasksTab
@@ -533,7 +533,7 @@ function OverviewTab({
   ideas,
   reviewTasks,
   teamSessionCount,
-  onOpenTeams,
+  onOpenProjects,
   onAgentDoubleClick,
 }: {
   stats: Record<string, number>;
@@ -542,7 +542,7 @@ function OverviewTab({
   ideas: AgentIdea[];
   reviewTasks: Task[];
   teamSessionCount: number;
-  onOpenTeams: () => void;
+  onOpenProjects: () => void;
   onAgentDoubleClick: (agentId: string) => void;
 }) {
   return (
@@ -553,8 +553,8 @@ function OverviewTab({
         <StatCard label="Progress" value={stats.progress} />
         <StatCard label="Review" value={stats.review} />
         <StatCard label="Completed" value={stats.completed} success />
-        <button type="button" className="stat-card stat-card-button" onClick={onOpenTeams}>
-          <span className="stat-label">팀 협업</span>
+        <button type="button" className="stat-card stat-card-button" onClick={onOpenProjects}>
+          <span className="stat-label">Project</span>
           <span className="stat-value">{teamSessionCount}</span>
         </button>
       </div>

@@ -23,8 +23,10 @@ export interface AgentChatThreadConfig {
   targetAgentId?: string;
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
-  teamMode?: boolean;
-  teamParticipantIds?: string[];
+  projectMode?: boolean;
+  projectParticipantIds?: string[];
+  preserveFocus?: boolean;
+  viewColumn?: vscode.ViewColumn;
 }
 
 export interface CollabParticipant {
@@ -55,11 +57,11 @@ export class CeoChatPanel {
     });
 
     service.chat.setTeamPanelOpenRequest((threadId, participantIds, title) => {
-      CeoChatPanel.openTeamChat(extensionUri, service, threadId, participantIds, title);
+      CeoChatPanel.openProjectChat(extensionUri, service, threadId, participantIds, title);
     });
   }
 
-  static openTeamChat(
+  static openProjectChat(
     extensionUri: vscode.Uri,
     service: AgentCompanyService,
     threadId: string,
@@ -71,15 +73,28 @@ export class CeoChatPanel {
 
     return CeoChatPanel.createOrShow(extensionUri, service, {
       threadId,
-      agentName: lead?.name ?? '팀',
+      agentName: lead?.name ?? 'Project',
       agentTitle: lead?.title,
-      agentDisplayName: lead ? formatAgentLabel(lead) : '팀 협업',
+      agentDisplayName: lead ? formatAgentLabel(lead) : 'Project',
       agentRole: lead?.title?.trim() || lead?.role,
       collabMode: true,
-      teamMode: true,
-      teamParticipantIds: participantIds,
-      panelTitle: `팀: ${title}`,
+      projectMode: true,
+      projectParticipantIds: participantIds,
+      panelTitle: `Project: ${title}`,
+      preserveFocus: true,
+      viewColumn: vscode.ViewColumn.Two,
     });
+  }
+
+  /** @deprecated use openProjectChat */
+  static openTeamChat(
+    extensionUri: vscode.Uri,
+    service: AgentCompanyService,
+    threadId: string,
+    participantIds: string[],
+    title: string
+  ): CeoChatPanel {
+    return CeoChatPanel.openProjectChat(extensionUri, service, threadId, participantIds, title);
   }
 
   static openCollabChat(
@@ -113,9 +128,12 @@ export class CeoChatPanel {
     service: AgentCompanyService,
     thread: AgentChatThreadConfig
   ): CeoChatPanel {
+    const column = thread.viewColumn ?? vscode.ViewColumn.One;
+    const preserveFocus = thread.preserveFocus ?? false;
+
     const existing = CeoChatPanel.panels.get(thread.threadId);
     if (existing) {
-      existing.panel.reveal(vscode.ViewColumn.One);
+      existing.panel.reveal(column, preserveFocus);
       existing.syncToWebview();
       return existing;
     }
@@ -124,7 +142,7 @@ export class CeoChatPanel {
     const panel = vscode.window.createWebviewPanel(
       `agentCompany.agentChat.${thread.threadId}`,
       panelTitle,
-      vscode.ViewColumn.One,
+      { viewColumn: column, preserveFocus },
       {
         enableScripts: true,
         retainContextWhenHidden: true,
@@ -272,8 +290,8 @@ export class CeoChatPanel {
 
   private async buildCollabParticipants(version: number): Promise<CollabParticipant[]> {
     const ids = (
-      this.thread.teamParticipantIds?.length
-        ? this.thread.teamParticipantIds
+      this.thread.projectParticipantIds?.length
+        ? this.thread.projectParticipantIds
         : [this.thread.collabPeerId, this.thread.targetAgentId]
     ).filter((id): id is string => !!id);
     const participants: CollabParticipant[] = [];

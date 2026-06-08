@@ -249,8 +249,8 @@ export interface AgentChatThreadConfig {
   targetAgentId?: string;
   panelTitle?: string;
   collabParticipants?: CollabParticipant[];
-  teamMode?: boolean;
-  teamParticipantIds?: string[];
+  projectMode?: boolean;
+  projectParticipantIds?: string[];
 }
 
 export interface CollabParticipant {
@@ -277,12 +277,13 @@ export function postMessage(type: string, payload?: unknown): void {
   vscode.postMessage({ type, payload });
 }
 
-export type TabId = 'overview' | 'agents' | 'org' | 'teams' | 'tasks' | 'activity' | 'api' | 'settings';
+export type TabId = 'overview' | 'agents' | 'org' | 'projects' | 'tasks' | 'activity' | 'api' | 'settings';
 
 export interface TeamSession {
   id: string;
   title: string;
   status: 'planning' | 'running' | 'done' | 'failed';
+  phase?: 'planning' | 'executing' | 'reviewing' | 'done' | 'failed';
   leadAgentId: string;
   memberAgentIds: string[];
   threadId: string;
