@@ -37,10 +37,16 @@ export const KNOWN_DOWNLOAD_SOURCES: KnownSource[] = [
 
 const MAIN_SUNEUNG_SUBJECTS = ['국어', '수학', '영어', '한국사'];
 
+/** 구 수능 영역명 (2006학년도 이전 게시판 표기) */
+const LEGACY_BOARD_SUBJECTS = ['언어', '수리', '외국어'];
+
 const SUBJECT_ALIASES: Record<string, string> = {
   국어: '국어',
+  언어: '국어',
   수학: '수학',
+  수리: '수학',
   영어: '영어',
+  외국어: '영어',
   한국사: '한국사',
   사탐: '사회탐구',
   과탐: '과학탐구',
@@ -80,8 +86,13 @@ export function parseDownloadIntent(query: string): DownloadIntent {
     };
   }
 
+  const rangeMatch = query.match(/(20\d{2})\s*(?:~|부터|-|–)\s*(20\d{2})/);
   const yearMatch = query.match(/(20\d{2})\s*(?:학년도|년)?/);
-  const academicYear = yearMatch ? Number(yearMatch[1]) : 2024;
+  const academicYear = rangeMatch
+    ? Number(rangeMatch[2])
+    : yearMatch
+      ? Number(yearMatch[1])
+      : 2024;
 
   const subjects: string[] = [];
   for (const [alias, canonical] of Object.entries(SUBJECT_ALIASES)) {
@@ -144,29 +155,31 @@ export function buildKnownSearchQueries(query: string, intent: DownloadIntent): 
 
   const year = intent.academicYear ?? 2024;
   return [
+    `site:suneung.re.kr ${year}학년도 수능 기출 PDF`,
+    `site:suneung.re.kr boardID=1500234 ${year} 수능`,
+    `한국교육과정평가원 ${year}학년도 수능 문제 PDF fileDown`,
     `site:horaeng.com ${year}학년도 수능 PDF`,
-    `site:horaeng.com ${year} 수능 문제 pdf`,
-    `호랭이닷컴 ${year}학년도 수능 PDF`,
   ];
 }
 
 export function getDownloadKnowledgeSummary(): string {
   const horaeng = KNOWN_DOWNLOAD_SOURCES[0];
-  return `[DownloadKnowledge v2]
+  return `[DownloadKnowledge v3]
 수능 PDF 다운로드 — 검증된 방법 (우선순위):
 
-**1순위 — 평가원 공식 (A급, 2026-06-08 검증)**
+**1순위 — 평가원 공식 기출문제 (A급)**
 - 목록: https://www.suneung.re.kr/boardCnts/list.do?boardID=1500234&m=0403&s=suneung
+- 전체 약 180건 · page 1(최신)~page 18(2005~2006) — **MAX 20페이지 크롤**
 - 다운로드: https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq={hex}
-- 모의평가 boardID=1500236, 로그인 불필요
-- 파일명: {학년도}학년도_{영역}영역_문제지.pdf
+- 구 영역명: ${LEGACY_BOARD_SUBJECTS.join('/')} → 국어/수학/영어로 매핑
+- 2006 이전: 언어=국어, 수리=수학, 외국어=영어
+- 스크립트: templates/download_suneung_pdfs.py (--years 2005,2006 --subjects 국어,수학)
 
-**2순위 — ${horaeng.name} (미러 직링크)**
+**2순위 — ${horaeng.name} (최근 연도 미러, 구형 연도는 실패 가능)**
 - ${horaeng.listPages[2024]}
-- URL 패턴: ${horaeng.directBaseUrl}/{학년도}학년도-대학수학능력시험-{과목}-{문제|정답}.pdf
 
-공통: fetch/curl/Python urllib → %PDF 헤더 검증 → company/projects/{sessionId}/files/pdfs/ 저장
+공통: %PDF 헤더 검증 → company/projects/{폴더}/files/pdfs/ 저장
 주요 과목(기본): ${MAIN_SUNEUNG_SUBJECTS.join(', ')}`;
 }
 
-export const WONYOUNG_DOWNLOAD_KNOWLEDGE_MARKER = '[DownloadKnowledge v2]';
+export const WONYOUNG_DOWNLOAD_KNOWLEDGE_MARKER = '[DownloadKnowledge v3]';

@@ -38,9 +38,9 @@ export const WONYOUNG_AGENT = {
   name: '원영',
   title: '리서처',
   role: 'researcher' as const,
-  description: `Research Agent — Crawl4AI 기반 WebCrawler + File Download
-아키텍처: Search → Download Knowledge → Browser → Extract → Summarize → Report
-수능 PDF: 호랭이닷컴(horaeng.com) wp-content/uploads 직링크 우선, agent/wonyoung/outputs/downloads/ 저장`,
+  description: `Research Agent — OSINT 파이프라인
+아키텍처: Planner(LLM+Knowledge) → Multi-Search → Known Sources → Crawl4AI → Cross-Verify → Report
+수능 PDF: 평가원 공식(suneung.re.kr) 1순위, outputs/downloads/ 저장`,
   capabilities: ['web-crawl', 'search', 'summarize', 'report', 'download'],
 };
 

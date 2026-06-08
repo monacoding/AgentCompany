@@ -14,7 +14,8 @@ export class ReportGenerator {
     query: string,
     summary: string,
     contents: ExtractedContent[],
-    downloadedFiles?: ResearchReport['downloadedFiles']
+    downloadedFiles?: ResearchReport['downloadedFiles'],
+    agentName = 'Research Agent'
   ): string {
     const date = new Date().toISOString().slice(0, 10);
     const sources = contents
@@ -38,8 +39,8 @@ export class ReportGenerator {
 
 **Query:** ${query}  
 **Date:** ${date}  
-**Agent:** 원영 (Research / WebCrawler)  
-**Engine:** Crawl4AI-inspired pipeline
+**Agent:** ${agentName}  
+**Engine:** Crawl4AI + multi-query OSINT pipeline
 
 ---
 
@@ -69,11 +70,11 @@ Research Agent
       ▼
 WebCrawler Agent
       │
-      ├── Search Engine
-      ├── File Downloader (PDF)
-      ├── Browser Engine (Crawl4AI Docker → Jina → Fetch)
-      ├── Extractor
-      ├── Summarizer
+      ├── Research Planner (LLM + Knowledge)
+      ├── Search Engine (multi-query + fallback)
+      ├── Known Sources Registry
+      ├── Browser Engine (Crawl4AI → Jina → Fetch)
+      ├── Extractor + Summarizer (cross-verify)
       └── Report Generator
 \`\`\`
 
@@ -89,7 +90,7 @@ _Powered by [Crawl4AI](https://github.com/unclecode/crawl4ai) architecture_
     agent: Agent,
     downloadedFiles?: ResearchReport['downloadedFiles']
   ): Promise<ResearchReport> {
-    const markdown = this.buildMarkdown(query, summary, contents, downloadedFiles);
+    const markdown = this.buildMarkdown(query, summary, contents, downloadedFiles, agent.name);
     const slug = query
       .slice(0, 40)
       .replace(/[^\w가-힣]+/g, '-')

@@ -54,7 +54,7 @@ export class ResearchAgent {
       const paths = report.downloadedFiles.map((f) => f.path).join(', ');
       this.memory.appendAgentMemory(
         agent.id,
-        `[Download success: ${query}]\nSaved: ${paths}\nSource: horaeng.com direct PDF`
+        `[Download success: ${query}]\nSaved: ${paths}`
       );
     }
 

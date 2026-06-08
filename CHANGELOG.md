@@ -7,6 +7,23 @@
 
 ---
 
+## [1.7.89] - 2026-06-08
+
+### Added
+
+- **Research Planner** — LLM + agent knowledge로 검색어·공식 URL·전략 자동 생성
+- **Multi-Search** — 다중 쿼리 병렬 검색, 공식 도메인 우선 정렬, 쿼리 변형 폴백
+- **Known Source Registry** — 수능(평가원 공식 → 호랭이 미러) 등 도메인 커넥터 패턴
+- **교차검증 요약** — A/B/C 신뢰도·출처 대조·불확실 표시 리포트
+
+### Changed
+
+- 리서치 파이프라인: Planner → Search → Known Sources → Crawl(8페이지) → Verify → Report
+- 다운로드 연도 범위 시 `getMaxDownloads` 자동 확대
+- 한서준 knowledge: `research-pipeline.md` 추가
+
+---
+
 ## [1.7.88] - 2026-06-08
 
 ### Changed

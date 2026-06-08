@@ -15,7 +15,7 @@ LIST_BASE = (
     f"{BASE_URL}/boardCnts/list.do"
     "?boardID=1500234&m=0403&s=suneung"
 )
-MAX_LIST_PAGES = 12
+MAX_LIST_PAGES = 20
 MOCK_LIST_URL = (
     f"{BASE_URL}/boardCnts/list.do"
     "?boardID=1500236&m=0403&s=suneung"
@@ -47,6 +47,33 @@ def parse_filename(content_disposition: str | None, fallback: str) -> str:
     return fallback
 
 
+# 구 수능 영역명 (2006학년도 이전) → 현재 과목명
+LEGACY_SUBJECT_MAP = {
+    "언어": "국어",
+    "수리": "수학",
+    "외국어": "영어",
+    "국어": "국어",
+    "수학": "수학",
+    "영어": "영어",
+    "한국사": "한국사",
+}
+
+REQUESTED_TO_BOARD = {
+    "국어": {"국어", "언어"},
+    "수학": {"수학", "수리"},
+    "영어": {"영어", "외국어"},
+    "한국사": {"한국사"},
+}
+
+
+def board_subject_matches(requested: set[str], board_subject: str) -> bool:
+    for req in requested:
+        aliases = REQUESTED_TO_BOARD.get(req, {req})
+        if board_subject in aliases:
+            return True
+    return False
+
+
 def parse_entries(html: str, subjects: set[str]) -> list[dict]:
     entries: list[dict] = []
     for row in re.findall(r"<tr[^>]*>.*?</tr>", html, re.DOTALL):
@@ -54,17 +81,42 @@ def parse_entries(html: str, subjects: set[str]) -> list[dict]:
             continue
         file_m = re.search(r"fileDown\('([a-f0-9]+)'\)", row)
         year_m = re.search(r"<td[^>]*>\s*(\d{4})\s*</td>", row)
-        subj_m = re.search(r"<td[^>]*>\s*(국어|수학|영어|한국사)\s*</td>", row)
+        subj_m = re.search(
+            r"<td[^>]*>\s*(국어|수학|영어|한국사|언어|수리|외국어)\s*</td>",
+            row,
+        )
+        link_m = re.search(
+            r"([12]\d{3}(?:언어|수리|외국어|국어|수학)영역?\.pdf)",
+            row,
+            re.I,
+        )
         seq_m = re.search(r"boardSeq=(\d+)", row)
-        if not (file_m and subj_m):
+        if not file_m:
             continue
-        subject = subj_m.group(1)
-        if subject not in subjects:
+
+        board_subject = subj_m.group(1) if subj_m else ""
+        if not board_subject and link_m:
+            name = link_m.group(1)
+            if "언어" in name:
+                board_subject = "언어"
+            elif "수리" in name:
+                board_subject = "수리"
+            elif "외국어" in name:
+                board_subject = "외국어"
+            elif "국어" in name:
+                board_subject = "국어"
+            elif "수학" in name:
+                board_subject = "수학"
+
+        if not board_subject or not board_subject_matches(subjects, board_subject):
             continue
+
+        canonical = LEGACY_SUBJECT_MAP.get(board_subject, board_subject)
         entries.append(
             {
                 "exam_year": year_m.group(1) if year_m else "unknown",
-                "subject": subject,
+                "subject": canonical,
+                "board_subject": board_subject,
                 "board_seq": seq_m.group(1) if seq_m else "",
                 "file_seq": file_m.group(1),
             }
@@ -139,7 +191,7 @@ def main() -> int:
             print(f"WARN page {page}: {exc}", file=sys.stderr)
             continue
         entries = parse_entries(html, subjects)
-        if not entries:
+        if not entries and page > 1:
             break
         for entry in entries:
             if entry["exam_year"] not in years:
@@ -171,7 +223,7 @@ def main() -> int:
             except Exception:
                 break
             entries = parse_entries(html, subjects)
-            if not entries:
+            if not entries and page > 1:
                 break
             for entry in entries:
                 if entry["exam_year"] not in years:

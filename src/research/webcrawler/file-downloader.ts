@@ -5,12 +5,12 @@ import { WorkspaceEngine } from '../../workspace';
 import { SearchResult } from '../types';
 import { BrowserEngine } from './browser-engine';
 import {
-  buildHoraengDirectUrls,
   buildKnownSearchQueries,
   DownloadIntent,
-  getKnownListPageUrls,
   parseDownloadIntent,
 } from './download-knowledge';
+import { flattenKnownSourceUrls, resolveKnownSources } from './known-sources';
+import { parseYearRangeFromQuery } from './suneung-official';
 
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -138,31 +138,13 @@ export class FileDownloader {
     return candidates.slice(0, 24);
   }
 
-  /** 학습된 소스(호랭이닷컴 등)에서 PDF URL 우선 수집 */
+  /** Known Source Registry — 평가원 공식 우선, 미러 보조 */
   async resolveKnownSourceCandidates(
     query: string,
     browserEngine: BrowserEngine
   ): Promise<string[]> {
-    const intent = parseDownloadIntent(query);
-    const candidates: string[] = [];
-
-    candidates.push(...buildHoraengDirectUrls(intent));
-
-    for (const listUrl of getKnownListPageUrls(intent)) {
-      try {
-        const crawl = await browserEngine.fetchPage(listUrl);
-        const html = crawl.rawHtml ?? crawl.markdown;
-        for (const link of this.extractPdfUrls(html, listUrl)) {
-          if (this.matchesIntent(link, intent)) {
-            candidates.push(link);
-          }
-        }
-      } catch {
-        // list page crawl failed — direct URLs still available
-      }
-    }
-
-    return [...new Set(candidates)];
+    const matches = await resolveKnownSources(query, browserEngine, this);
+    return flattenKnownSourceUrls(matches);
   }
 
   private matchesIntent(url: string, intent: DownloadIntent): boolean {
@@ -178,14 +160,19 @@ export class FileDownloader {
 
   getMaxDownloads(query: string): number {
     const intent = parseDownloadIntent(query);
+    const yearCount = parseYearRangeFromQuery(query).size;
+
     if (intent.kind === 'suneung' && intent.downloadAll) {
       const types = (intent.includeQuestions ? 1 : 0) + (intent.includeAnswers ? 1 : 0);
-      return Math.max(intent.subjects.length * Math.max(types, 1), 4);
+      return Math.max(intent.subjects.length * Math.max(types, 1) * Math.max(yearCount, 1), 4);
+    }
+    if (intent.kind === 'suneung' && yearCount > 1) {
+      return Math.max(intent.subjects.length * yearCount, 4);
     }
     if (intent.subjects.length > 1) {
       return intent.subjects.length * 2;
     }
-    return 1;
+    return yearCount > 1 ? yearCount * 2 : 1;
   }
 
   async downloadPdf(url: string, query: string, agent: Agent): Promise<DownloadResult> {
