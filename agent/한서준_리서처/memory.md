@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T03:31:23.837Z_
+_마지막 동기화: 2026-06-09T03:40:11.883Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -2881,15 +2881,6 @@ Saved: agent/한서준_리서처/outputs/downloads/2026-06-08-2007-년도-수능
 - 국토교통부 실거래가 공개시스템은 **아파트 실거래가 조회·자료제공 기능**을 제공하므로, 강남구 대표 단지 거래 사례 검증에 활용할 수 있습니다. 출처: https://rt.molit.go.kr/  
 - 따라서 현재
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [Research: ## 사장님 지시
 
 @박준호 삼성전자 제품에서 블로그 홍보 했을 때 가장 많이 팔릴 제품 조사하고 블로그 홍보글 작성 요청
@@ -2963,3 +2954,12 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 - 현재 수집된 자료만 기준으로 보면, **블로그 홍보 시 1순위 후보는 삼성전자 갤럭시 핏3**입니다. 쿠팡 삼성전자 브랜드 페이지에서 **가격 83,560원, 리뷰 11,945개**로 확인되어, 저가·웨어러블·후기형 콘텐츠 전환 측면에서 유리합니다. 출처: https://www.coupang.com/np/products/brand-shop?brandName=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90  
 - 대안 후보는 **삼성 25W C타입 초고속 충전기**, **갤럭시 버즈 계열**, **BESPOKE 무풍 윈도우핏 에어컨**입니다. 각각 저가 액세서리, 비교형 무선이어폰, 계절성 가전이라는 장점이 있으나 구매 장벽과 콘텐츠 적합성이 다릅니다. 출처: https://www.coupang.com/np/products/brand-shop?brandName=%EC%82%BC%EC%84%B1%EC%A0%84%EC%9E%90  
 - 다만 이번 수집
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
