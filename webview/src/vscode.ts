@@ -279,7 +279,16 @@ export function postMessage(type: string, payload?: unknown): void {
   vscode.postMessage({ type, payload });
 }
 
-export type TabId = 'overview' | 'agents' | 'org' | 'projects' | 'tasks' | 'activity' | 'api' | 'settings';
+export type TabId =
+  | 'overview'
+  | 'agents'
+  | 'org'
+  | 'projects'
+  | 'tasks'
+  | 'activity'
+  | 'sns'
+  | 'api'
+  | 'settings';
 
 export interface ProjectArtifact {
   name: string;
