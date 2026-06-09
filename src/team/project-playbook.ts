@@ -30,7 +30,7 @@ export function getProjectPlaybookSummary(): string {
 ### 5. 승인 후 Project 실행
 - PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
 - 승인 시: Project 채팅방 생성 → Projects 탭 등록 → 에이전트 순차 협업.
-- 산출물: \`company/projects/{sessionId}/\` (tasks/, files/, PM_REPORT.md)
+- 산출물: \`company/projects/{프로젝트폴더}/\` (tasks/, files/, \`{프로젝트명}_{날짜}_{작성자}.md\` 최종 보고)
 - 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
 
 ## PM 1:1 대화 출력 형식 (권장)
@@ -122,7 +122,7 @@ const SUNEUNG_PDF_TEMPLATE: ProjectTemplateHint = {
   suggestedPlan: `1. @한서준: 평가원 suneung.re.kr 기출 게시판 URL·fileSeq 조사, 출처 신뢰도 표 작성
 2. @하정우: 조사 결과 기반 PDF 일괄 다운로드 Python 스크립트 구현, company/projects/{sessionId}/files/pdfs/ 저장
 3. @김윤하: 국어 PDF 메타(학년도·영역) 검증, 누락·중복 체크
-4. @박준호: PM_REPORT.md 작성 및 사장님 보고`,
+4. @박준호: 최종 보고서(\`{프로젝트명}_{날짜}_박준호.md\`) 작성 및 사장님 보고`,
 };
 
 /** 업무 키워드 → 검증된 Project 템플릿 */

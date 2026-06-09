@@ -223,6 +223,7 @@ export class TeamEngine {
         {
           sessionId: session.id,
           warehouseFolder: session.warehouseFolder,
+          projectTitle: session.title,
           companyDir,
           workerDeps: this.runContext?.workerDeps,
           templateScriptPath: this.runContext?.templateScriptPath,

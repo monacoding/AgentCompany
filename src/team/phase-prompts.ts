@@ -59,6 +59,7 @@ ${output}
 export function buildPmReportPhasePrompt(command: string, deliverables: string): string {
   return `Modality: CEO Report.
 Task: Project 완료 보고 (600자 이내, 한국어).
+산출물은 프로젝트 폴더에 \`{프로젝트명}_{날짜}_{작성자}.md\` 형식으로 자동 저장됩니다.
 
 ## 사장님 지시
 ${command}

@@ -114,3 +114,9 @@ export function buildProjectWarehouseFolder(
   }
   return folder;
 }
+
+/** 최종 보고서 파일명 — {프로젝트폴더명}_{작성자}.md (폴더명 = 프로젝트명_YYYYMMDD) */
+export function buildFinalReportFilename(warehouseFolder: string, authorName: string): string {
+  const safeAuthor = authorName.replace(/[^\w가-힣.-]/g, '_');
+  return `${warehouseFolder}_${safeAuthor}.md`;
+}

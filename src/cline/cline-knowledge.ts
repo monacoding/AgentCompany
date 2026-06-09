@@ -22,7 +22,7 @@ export function getClineKnowledgeBody(agentSlug: string): string {
 | P1 출처조사 | @한서준 | URL·fileSeq·출처 표 |
 | P2 자동화 | **@하정우** | Python 스크립트·다운로드 코드 |
 | P3 검증 | @김윤하/최현석 | PDF 메타 검증 |
-| P4 보고 | @박준호 | PM_REPORT.md |
+| P4 보고 | @박준호 | \`{프로젝트명}_{날짜}_박준호.md\` |
 
 **규칙:** 한서준의 carry_data(URL·fileSeq)를 반드시 스크립트에 반영. 산출물은 \`company/projects/{세션}/files/\` 또는 \`agent/${agentSlug}/outputs/scripts/\`
 

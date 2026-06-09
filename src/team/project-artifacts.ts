@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { TeamSession } from '../types';
+import { buildFinalReportFilename, formatProjectDisplayTitle } from './project-title';
 
 export interface ProjectArtifact {
   name: string;
@@ -52,18 +53,32 @@ export function saveProjectTaskArtifact(
 
 export function saveProjectSummaryArtifact(
   companyDir: string,
-  sessionId: string,
-  summary: string
+  warehouseFolder: string,
+  summary: string,
+  options?: { projectTitle?: string; authorName?: string }
 ): string {
-  const dir = getProjectWarehouseDir(companyDir, sessionId);
+  const dir = getProjectWarehouseDir(companyDir, warehouseFolder);
   ensureDir(dir);
-  const filePath = path.join(dir, 'PM_REPORT.md');
-  fs.writeFileSync(
-    filePath,
-    `# PM Project Report\n\n- saved: ${new Date().toISOString()}\n\n${summary}`,
-    'utf8'
-  );
+  const authorName = options?.authorName?.trim() || 'PM';
+  const projectTitle = options?.projectTitle?.trim() || warehouseFolder;
+  const filename = buildFinalReportFilename(warehouseFolder, authorName);
+  const filePath = path.join(dir, filename);
+  const body = [
+    `# ${formatProjectDisplayTitle(projectTitle)} — 최종 보고`,
+    '',
+    `- 작성자: ${authorName}`,
+    `- 저장: ${new Date().toISOString()}`,
+    '',
+    summary,
+  ].join('\n');
+  fs.writeFileSync(filePath, body, 'utf8');
   return path.relative(companyDir, filePath).replace(/\\/g, '/');
+}
+
+const FINAL_REPORT_PATTERN = /^.+_\d{8}_[\w가-힣.-]+\.md$/;
+
+function isFinalReportFile(name: string): boolean {
+  return name === 'PM_REPORT.md' || FINAL_REPORT_PATTERN.test(name);
 }
 
 export function saveProjectExtractedFile(
@@ -106,11 +121,13 @@ export function listProjectArtifacts(companyDir: string, sessionId: string): Pro
 
   walk('tasks', 'task');
   walk('files', 'file');
-  if (fs.existsSync(path.join(root, 'PM_REPORT.md'))) {
-    const abs = path.join(root, 'PM_REPORT.md');
+
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isFile() || !isFinalReportFile(entry.name)) continue;
+    const abs = path.join(root, entry.name);
     const stat = fs.statSync(abs);
     artifacts.push({
-      name: 'PM_REPORT.md',
+      name: entry.name,
       relativePath: path.relative(companyDir, abs).replace(/\\/g, '/'),
       absolutePath: abs,
       sizeBytes: stat.size,

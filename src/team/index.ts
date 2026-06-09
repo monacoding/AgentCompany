@@ -17,6 +17,7 @@ export {
   deriveProjectTitle,
   formatProjectDisplayTitle,
   buildProjectWarehouseFolder,
+  buildFinalReportFilename,
 } from './project-title';
 export {
   PROJECT_REVIEW_MAX_ITERATIONS,

@@ -28,6 +28,7 @@ export interface ProjectRunCallbacks {
 export interface ProjectRunOptions {
   sessionId: string;
   warehouseFolder: string;
+  projectTitle?: string;
   companyDir: string;
   workerDeps?: ProjectWorkerDeps;
   templateScriptPath?: string;
@@ -356,7 +357,10 @@ export async function runProjectSequential(
     summary = `Project 완료 (PM 검토 LLM 오류: ${formatLlmError(error)})`;
   }
 
-  const summaryPath = saveProjectSummaryArtifact(companyDir, warehouseFolder, summary);
+  const summaryPath = saveProjectSummaryArtifact(companyDir, warehouseFolder, summary, {
+    projectTitle: options.projectTitle ?? warehouseFolder,
+    authorName: pm.name,
+  });
   callbacks.onArtifactSaved?.(summaryPath);
 
   const doneCount = tasks.filter((t) => t.status === 'done').length;
