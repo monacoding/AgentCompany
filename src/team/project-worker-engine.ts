@@ -3,7 +3,12 @@ import { formatChatReply, formatResearchChatReply } from '../chat/reply-format';
 import { isExternalResourceFetchTask } from '../chat/cross-agent-file';
 import { ClineAgent, isClineAgent, isClineDevTask } from '../cline';
 import { ProviderEngine } from '../providers';
-import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research';
+import {
+  ResearchAgent,
+  isResearchAgent,
+  isResearchTaskQuery,
+  type ResearchPipelineStep,
+} from '../research';
 import { Agent, ProjectTask } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
 import { WorkspaceEngine } from '../workspace';
@@ -17,6 +22,28 @@ import {
 
 /** Project 태스크 LLM 출력 상한 — 최종 보고서에 전체 산출물이 들어가도록 충분히 크게 설정 */
 export const PROJECT_TASK_MAX_OUTPUT_TOKENS = 16_384;
+
+const LLM_WAIT_HINTS = [
+  '내용 분석 중…',
+  '자료 정리 중…',
+  '보고서 작성 중…',
+  '결과 검토 중…',
+];
+
+function formatResearchProgress(step: ResearchPipelineStep): string {
+  const prefix = step.status === 'running' ? '⏳' : step.status === 'done' ? '✓' : '•';
+  return `${prefix} ${step.step}: ${step.message}`;
+}
+
+function startLlmWaitTicker(onProgress: (message: string) => void): () => void {
+  let idx = 0;
+  onProgress(LLM_WAIT_HINTS[0]!);
+  const timer = setInterval(() => {
+    idx = (idx + 1) % LLM_WAIT_HINTS.length;
+    onProgress(LLM_WAIT_HINTS[idx]!);
+  }, 3500);
+  return () => clearInterval(timer);
+}
 
 export interface ProjectWorkerDeps {
   workspace: WorkspaceEngine;
@@ -45,13 +72,20 @@ async function executeViaResearch(
   agent: Agent,
   command: string,
   task: ProjectTask,
-  deps: ProjectWorkerDeps
+  deps: ProjectWorkerDeps,
+  onProgress?: (message: string) => void
 ): Promise<string | null> {
   if (!deps.research || !isResearchAgent(agent)) return null;
   const query = `${command}\n${task.description}`.trim();
   if (!isResearchTaskQuery(query)) return null;
 
-  const report = await deps.research.execute(query, agent, null);
+  onProgress?.('리서치 파이프라인 시작…');
+  const report = await deps.research.execute(
+    query,
+    agent,
+    null,
+    (step) => onProgress?.(formatResearchProgress(step))
+  );
   const output =
     formatResearchChatReply(report.summary, {
       reportPath: report.reportPath,
@@ -70,7 +104,8 @@ async function executeViaCline(
   command: string,
   task: ProjectTask,
   priorContext: string,
-  deps: ProjectWorkerDeps
+  deps: ProjectWorkerDeps,
+  onProgress?: (message: string) => void
 ): Promise<string | null> {
   if (!deps.cline || !isClineAgent(agent)) return null;
   const query = [command, task.description, priorContext ? `이전 산출물:\n${priorContext.slice(0, 2000)}` : '']
@@ -79,6 +114,7 @@ async function executeViaCline(
 
   if (!needsProgramExecution(command, task.description)) return null;
 
+  onProgress?.('코드·스크립트 실행 중…');
   const result = await deps.cline.execute(query, agent, null, undefined, {
     priorContext: priorContext.slice(0, 4000),
   });
@@ -106,7 +142,8 @@ async function executeViaLlm(
   priorContext: string,
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine,
-  revision?: { previousOutput: string; feedback: string }
+  revision?: { previousOutput: string; feedback: string },
+  onProgress?: (message: string) => void
 ): Promise<string> {
   const folderContext = await agentFolders.buildPromptContext(agent);
   const toolingHint = buildWorkerToolingHint(agent);
@@ -120,12 +157,15 @@ async function executeViaLlm(
     revision
   );
 
-  const response = await providers.chat(
-    agent.provider,
-    [
-      {
-        role: 'system',
-        content: `You are ${formatAgentLabel(agent)} executing ONE project task.
+  const stopTicker = onProgress ? startLlmWaitTicker(onProgress) : undefined;
+  let response;
+  try {
+    response = await providers.chat(
+      agent.provider,
+      [
+        {
+          role: 'system',
+          content: `You are ${formatAgentLabel(agent)} executing ONE project task.
 ${folderContext}
 
 Rules:
@@ -133,12 +173,16 @@ Rules:
 - **프로그램·스크립트를 작성하면 자동 실행됩니다** — filepath 블록으로 .py/.sh 저장 필수
 - 다운로드·수집 업무는 실행 가능한 Python 스크립트를 반드시 포함
 - 완료 시 마지막 줄에 FINISHED`,
-      },
-      { role: 'user', content: userContent },
-    ],
-    { type: agent.provider, model: agent.model, maxTokens: PROJECT_TASK_MAX_OUTPUT_TOKENS }
-  );
+        },
+        { role: 'user', content: userContent },
+      ],
+      { type: agent.provider, model: agent.model, maxTokens: PROJECT_TASK_MAX_OUTPUT_TOKENS }
+    );
+  } finally {
+    stopTicker?.();
+  }
 
+  onProgress?.('응답 정리 중…');
   return formatChatReply(response.content || '') || response.content.trim() || '완료';
 }
 
@@ -162,10 +206,12 @@ export async function executeProjectWorkerTask(
     sessionId: string;
     warehouseFolder: string;
     templateScriptPath?: string;
+    onProgress?: (message: string) => void;
   },
   revision?: { previousOutput: string; feedback: string }
 ): Promise<WorkerExecutionResult> {
   const folder = options.warehouseFolder || options.sessionId;
+  const onProgress = options.onProgress;
 
   if (
     isSuneungPdfTask(command, task.description) &&
@@ -198,9 +244,19 @@ export async function executeProjectWorkerTask(
   }
 
   let output =
-    (await executeViaResearch(agent, command, task, deps)) ??
-    (await executeViaCline(agent, command, task, priorContext, deps)) ??
-    (await executeViaLlm(agent, command, plan, task, priorContext, providers, agentFolders, revision));
+    (await executeViaResearch(agent, command, task, deps, onProgress)) ??
+    (await executeViaCline(agent, command, task, priorContext, deps, onProgress)) ??
+    (await executeViaLlm(
+      agent,
+      command,
+      plan,
+      task,
+      priorContext,
+      providers,
+      agentFolders,
+      revision,
+      onProgress
+    ));
 
   let extractedFiles = extractAndSaveProjectFiles(options.companyDir, folder, output);
   let scriptResults = await runProjectScripts(

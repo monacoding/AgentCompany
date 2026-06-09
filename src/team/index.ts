@@ -26,13 +26,6 @@ export {
   resolveProjectReviewer,
 } from './project-loop';
 export {
-  estimatePmFinalTaskCost,
-  estimateTokensFromText,
-  formatPmFinalTaskCostReport,
-  isPmFinalIntegrationTask,
-} from './project-cost-estimate';
-export type { ProjectTaskCostEstimate } from './project-cost-estimate';
-export {
   listProjectArtifacts,
   getProjectWarehouseDir,
   resolveSessionWarehouseFolder,

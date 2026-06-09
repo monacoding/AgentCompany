@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SendIcon, useCeoCommandInput } from './chat-shared';
 import { VoiceMeterOverlay } from './VoiceMeterOverlay';
 import { VoiceMicButton } from './VoiceMicButton';
@@ -330,28 +330,40 @@ function buildParticipantPhotoMap(
   return Object.keys(map).length > 0 ? map : undefined;
 }
 
-function WorkingStreamPanel({ lines }: { lines: { id: string; text: string }[] }) {
-  const panelRef = useRef<HTMLDivElement>(null);
+function WorkingStreamPanel({
+  lines,
+  fallback,
+}: {
+  lines: { id: string; text: string }[];
+  fallback?: string;
+}) {
+  const latest = lines.length > 0 ? lines[lines.length - 1]! : null;
+  const [visibleLine, setVisibleLine] = useState<{ id: string; text: string } | null>(null);
+  const [fadeIn, setFadeIn] = useState(true);
 
-  useLayoutEffect(() => {
-    const el = panelRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [lines]);
+  useEffect(() => {
+    const next = latest ?? (fallback ? { id: 'fallback', text: fallback } : null);
+    if (!next) {
+      setVisibleLine(null);
+      return;
+    }
+    setFadeIn(false);
+    const swap = window.setTimeout(() => {
+      setVisibleLine(next);
+      setFadeIn(true);
+    }, 140);
+    return () => window.clearTimeout(swap);
+  }, [latest?.id, latest?.text, fallback]);
 
-  if (lines.length === 0) return null;
+  const display = visibleLine ?? latest ?? (fallback ? { id: 'fallback', text: fallback } : null);
+  if (!display) return null;
 
   return (
-    <div className="work-stream-panel" ref={panelRef}>
-      {lines.map((line, index) => (
-        <div
-          key={line.id}
-          className={`work-stream-line${index === lines.length - 1 ? ' latest' : ''}`}
-        >
-          {line.text}
-        </div>
-      ))}
-      <span className="work-stream-cursor" aria-hidden />
+    <div className="work-stream-panel work-stream-single">
+      <div className={`work-stream-live${fadeIn ? ' is-visible' : ' is-fading'}`}>
+        <span className="work-stream-live-text">{display.text}</span>
+        <span className="work-stream-cursor" aria-hidden />
+      </div>
     </div>
   );
 }
@@ -381,12 +393,8 @@ function WorkingIndicator({
       : 'left';
   const isRight = align === 'right';
   const rowClass = isRight ? 'chat-bubble-row collab-right' : 'chat-bubble-row collab-left';
-  const streamLines =
-    working.streamLog && working.streamLog.length > 0
-      ? working.streamLog
-      : working.content
-        ? [{ id: 'fallback', text: working.content }]
-        : [];
+  const streamLines = working.streamLog ?? [];
+  const taskLabel = working.content?.trim() || '';
 
   const bubble = (
     <div className="chat-bubble agent working chat-working-indicator">
@@ -395,7 +403,8 @@ function WorkingIndicator({
         {working.senderRole && <span className="chat-role">{working.senderRole}</span>}
         <span className="chat-status-dot" />
       </div>
-      <WorkingStreamPanel lines={streamLines} />
+      {taskLabel && <p className="work-stream-task">{taskLabel}</p>}
+      <WorkingStreamPanel lines={streamLines} fallback="작업 준비 중…" />
     </div>
   );
 

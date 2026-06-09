@@ -15,28 +15,20 @@ import {
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
-import {
-  estimatePmFinalTaskCost,
-  isPmFinalIntegrationTask,
-  type ProjectTaskCostEstimate,
-} from './project-cost-estimate';
 import { buildReviewPhasePrompt } from './phase-prompts';
 import { ProjectWorkerDeps, executeProjectWorkerTask } from './project-worker-engine';
 import { buildWorkerToolingHint } from './project-tooling';
 
 export interface ProjectRunCallbacks {
   onPhase: (phase: ProjectPhase, detail: string) => void;
+  /** 작업 중 실시간 한 줄 상태 (채팅 working 스트림) */
+  onProgress?: (agent: Agent, message: string) => void;
   onTaskStart: (task: ProjectTask, index: number, total: number) => void;
   onTaskDone: (task: ProjectTask, output: string) => void;
   onMessage: (agent: Agent, content: string) => void;
   onReviewStart?: (task: ProjectTask, reviewer: Agent, iteration: number, max: number) => void;
   onReviewDone?: (task: ProjectTask, reviewer: Agent, approved: boolean, iteration: number) => void;
   onArtifactSaved?: (relativePath: string) => void;
-  /** PM 최종 통합 태스크 직전 — 사장님 비용 승인 대기 */
-  onAwaitPmFinalTaskApproval?: (
-    estimate: ProjectTaskCostEstimate,
-    task: ProjectTask
-  ) => Promise<boolean>;
 }
 
 export interface ProjectRunOptions {
@@ -158,6 +150,11 @@ async function executeTaskWithReviewLoop(
         : `${worker.name} 수정 중 (${iteration}/${max})`
     );
 
+    callbacks.onProgress?.(
+      worker,
+      iteration === 1 ? '작업 시작…' : `피드백 반영 수정 중 (${iteration}/${max})…`
+    );
+
     const previousOutput = iteration > 1 ? output : undefined;
     const workerResult = await executeProjectWorkerTask(
       worker,
@@ -173,6 +170,7 @@ async function executeTaskWithReviewLoop(
         sessionId: runOptions.sessionId,
         warehouseFolder: runOptions.warehouseFolder,
         templateScriptPath: runOptions.templateScriptPath,
+        onProgress: (message) => callbacks.onProgress?.(worker, message),
       },
       previousOutput && feedback ? { previousOutput, feedback } : undefined
     );
@@ -273,30 +271,6 @@ export async function runProjectSequential(
     }
 
     const priorContext = buildPriorDeliverablesContext(priorDeliverables);
-
-    if (
-      isPmFinalIntegrationTask(tasks, i, pm.id) &&
-      callbacks.onAwaitPmFinalTaskApproval
-    ) {
-      const estimate = estimatePmFinalTaskCost({
-        pm,
-        command,
-        plan,
-        task,
-        priorDeliverables,
-      });
-      callbacks.onPhase('planning', 'PM 최종 작업 예상 비용 사장님 보고 중');
-      const approved = await callbacks.onAwaitPmFinalTaskApproval(estimate, task);
-      if (!approved) {
-        task.status = 'failed';
-        task.output = '사장님 승인 거절로 PM 최종 작업을 건너뛰었습니다.';
-        callbacks.onMessage(
-          pm,
-          `⏭️ **PM 최종 작업 건너뜀**\n${task.description}\n\n사장님 비용 승인이 없어 최종 통합 작업을 생략하고 기존 산출물로 보고서를 마무리합니다.`
-        );
-        continue;
-      }
-    }
 
     task.status = 'running';
     callbacks.onTaskStart(task, i, tasks.length);
