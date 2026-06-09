@@ -342,7 +342,7 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
       }
 
       case 'openAgentGram': {
-        AgentGramPanel.open(this.extensionUri);
+        AgentGramPanel.open(this.extensionUri, this.service);
         break;
       }
 

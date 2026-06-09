@@ -22,6 +22,7 @@ import { AgentDescriptionRequiredError, AgentDuplicateNameError } from '../agent
 import { ChatService, detectSpeakerEmotion, resolveThreadForCommand } from '../chat';
 import { Database } from '../database';
 import { ExternalApiRegistrySync } from '../external-api/registry';
+import { AgentGramEngine, AgentGramService } from '../agentgram';
 import { IdeaEngine } from '../ideas/idea-engine';
 import { IdeaService } from '../ideas/idea-service';
 import {
@@ -121,6 +122,8 @@ export class AgentCompanyService {
   readonly knowledgeLearner: KnowledgeLearner;
   readonly ideaEngine: IdeaEngine;
   readonly ideas: IdeaService;
+  readonly agentGramEngine: AgentGramEngine;
+  readonly agentGram: AgentGramService;
   readonly telegramInbound: TelegramInboundPoller;
   readonly teams: TeamEngine;
   readonly orgEngine: OrgEngine;
@@ -219,6 +222,19 @@ export class AgentCompanyService {
       this.chat,
       this.ideaEngine
     );
+    this.agentGramEngine = new AgentGramEngine(
+      this.providers,
+      this.agentFolders,
+      this.memory
+    );
+    this.agentGram = new AgentGramService(
+      this.context,
+      this.db,
+      this.agents,
+      this.agentFolders,
+      this.memory,
+      this.agentGramEngine
+    );
     this.externalApis = new ExternalApiService(context);
     this.apiRegistrySync = new ExternalApiRegistrySync(this.externalApis, this.agents, this.memory);
     this.orchestrator = new Orchestrator(
@@ -299,6 +315,7 @@ export class AgentCompanyService {
       this.agents.getAll().map((a) => a.provider)
     );
     this.ideas.start();
+    this.agentGram.start();
     this.telegramInbound.start();
     void this.prewarmChatContexts();
   }

@@ -1539,3 +1539,57 @@ button.gram-avatar {
   resize: vertical;
   min-height: 100px;
 }
+
+.gram-follow-requests {
+  margin: 0 16px 16px;
+  padding: 12px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.gram-follow-requests h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.gram-follow-request-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.gram-follow-request-row > div {
+  display: flex;
+  gap: 6px;
+}
+
+.gram-follow-accept,
+.gram-follow-reject {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gram-follow-accept {
+  background: #0095f6;
+  color: #fff;
+}
+
+.gram-follow-reject {
+  background: #efefef;
+  color: #262626;
+}
+
+.gram-feed-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8e8e8e;
+  font-size: 14px;
+}

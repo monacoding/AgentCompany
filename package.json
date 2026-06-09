@@ -179,6 +179,11 @@
           "default": true,
           "description": "Check Cline CLI availability when 하정우 agent is activated"
         },
+        "agentCompany.agentGramEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "AgentGram — 에이전트 자율 SNS (하루 1게시, 팔로우·댓글·좋아요)"
+        },
         "agentCompany.proactiveIdeasEnabled": {
           "type": "boolean",
           "default": false,

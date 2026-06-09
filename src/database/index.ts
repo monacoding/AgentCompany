@@ -11,6 +11,12 @@ import {
   TeamSession,
   ProjectTask,
 } from '../types';
+import type {
+  AgentGramComment,
+  AgentGramFollowRequest,
+  AgentGramFollowStatus,
+  AgentGramPost,
+} from '../types/agentgram';
 import { parseJson } from '../utils';
 
 const SCHEMA = `
@@ -94,6 +100,57 @@ CREATE TABLE IF NOT EXISTS team_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_team_sessions_thread ON team_sessions(thread_id);
+
+CREATE TABLE IF NOT EXISTS agentgram_posts (
+  id TEXT PRIMARY KEY,
+  author_id TEXT NOT NULL,
+  caption TEXT NOT NULL,
+  image_emoji TEXT DEFAULT '📝',
+  location TEXT DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS agentgram_comments (
+  id TEXT PRIMARY KEY,
+  post_id TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS agentgram_likes (
+  post_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (post_id, account_id)
+);
+
+CREATE TABLE IF NOT EXISTS agentgram_follows (
+  follower_id TEXT NOT NULL,
+  following_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (follower_id, following_id)
+);
+
+CREATE TABLE IF NOT EXISTS agentgram_follow_requests (
+  id TEXT PRIMARY KEY,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  status TEXT DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  resolved_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS agentgram_daily_posts (
+  account_id TEXT NOT NULL,
+  post_date TEXT NOT NULL,
+  post_id TEXT NOT NULL,
+  PRIMARY KEY (account_id, post_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agentgram_posts_author ON agentgram_posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_agentgram_comments_post ON agentgram_comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_agentgram_follow_req_to ON agentgram_follow_requests(to_id, status);
 `;
 
 export class Database {
@@ -609,6 +666,223 @@ export class Database {
     requesterAgentId: (obj.requester_agent_id as string | null) ?? null,
     createdAt: obj.created_at as string,
     updatedAt: obj.updated_at as string,
+  });
+
+  // --- AgentGram ---
+
+  insertAgentGramPost(post: AgentGramPost): void {
+    this.db!.run(
+      `INSERT INTO agentgram_posts (id, author_id, caption, image_emoji, location, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [post.id, post.authorId, post.caption, post.imageEmoji, post.location, post.createdAt]
+    );
+    this.persist();
+  }
+
+  recordAgentGramDailyPost(accountId: string, postDate: string, postId: string): void {
+    this.db!.run(
+      `INSERT OR REPLACE INTO agentgram_daily_posts (account_id, post_date, post_id) VALUES (?, ?, ?)`,
+      [accountId, postDate, postId]
+    );
+    this.persist();
+  }
+
+  hasAgentGramPostToday(accountId: string, postDate: string): boolean {
+    return (
+      this.queryOne(
+        'SELECT post_id FROM agentgram_daily_posts WHERE account_id = ? AND post_date = ?',
+        [accountId, postDate],
+        (r) => r.post_id as string
+      ) !== null
+    );
+  }
+
+  getAgentGramPosts(limit = 100): AgentGramPost[] {
+    return this.queryAll(
+      'SELECT * FROM agentgram_posts ORDER BY created_at DESC LIMIT ?',
+      [limit],
+      this.mapAgentGramPost
+    );
+  }
+
+  getAgentGramPostsByAuthor(authorId: string, limit = 50): AgentGramPost[] {
+    return this.queryAll(
+      'SELECT * FROM agentgram_posts WHERE author_id = ? ORDER BY created_at DESC LIMIT ?',
+      [authorId, limit],
+      this.mapAgentGramPost
+    );
+  }
+
+  countAgentGramPostsByAuthor(authorId: string): number {
+    const row = this.queryOne(
+      'SELECT COUNT(*) AS c FROM agentgram_posts WHERE author_id = ?',
+      [authorId],
+      (r) => Number(r.c)
+    );
+    return row ?? 0;
+  }
+
+  insertAgentGramComment(comment: AgentGramComment): void {
+    this.db!.run(
+      `INSERT INTO agentgram_comments (id, post_id, author_id, text, created_at) VALUES (?, ?, ?, ?, ?)`,
+      [comment.id, comment.postId, comment.authorId, comment.text, comment.createdAt]
+    );
+    this.persist();
+  }
+
+  getAgentGramCommentsForPost(postId: string): AgentGramComment[] {
+    return this.queryAll(
+      'SELECT * FROM agentgram_comments WHERE post_id = ? ORDER BY created_at ASC',
+      [postId],
+      this.mapAgentGramComment
+    );
+  }
+
+  toggleAgentGramLike(postId: string, accountId: string): boolean {
+    const existing = this.queryOne(
+      'SELECT account_id FROM agentgram_likes WHERE post_id = ? AND account_id = ?',
+      [postId, accountId],
+      (r) => r.account_id as string
+    );
+    if (existing) {
+      this.db!.run('DELETE FROM agentgram_likes WHERE post_id = ? AND account_id = ?', [
+        postId,
+        accountId,
+      ]);
+      this.persist();
+      return false;
+    }
+    this.db!.run(
+      'INSERT INTO agentgram_likes (post_id, account_id, created_at) VALUES (?, ?, ?)',
+      [postId, accountId, new Date().toISOString()]
+    );
+    this.persist();
+    return true;
+  }
+
+  getAgentGramLikesForPost(postId: string): string[] {
+    return this.queryAll(
+      'SELECT account_id FROM agentgram_likes WHERE post_id = ?',
+      [postId],
+      (r) => r.account_id as string
+    );
+  }
+
+  insertAgentGramFollow(followerId: string, followingId: string, createdAt: string): void {
+    this.db!.run(
+      `INSERT OR IGNORE INTO agentgram_follows (follower_id, following_id, created_at) VALUES (?, ?, ?)`,
+      [followerId, followingId, createdAt]
+    );
+    this.persist();
+  }
+
+  isAgentGramFollowing(followerId: string, followingId: string): boolean {
+    return (
+      this.queryOne(
+        'SELECT follower_id FROM agentgram_follows WHERE follower_id = ? AND following_id = ?',
+        [followerId, followingId],
+        (r) => r.follower_id as string
+      ) !== null
+    );
+  }
+
+  countAgentGramFollowers(accountId: string): number {
+    const row = this.queryOne(
+      'SELECT COUNT(*) AS c FROM agentgram_follows WHERE following_id = ?',
+      [accountId],
+      (r) => Number(r.c)
+    );
+    return row ?? 0;
+  }
+
+  countAgentGramFollowing(accountId: string): number {
+    const row = this.queryOne(
+      'SELECT COUNT(*) AS c FROM agentgram_follows WHERE follower_id = ?',
+      [accountId],
+      (r) => Number(r.c)
+    );
+    return row ?? 0;
+  }
+
+  insertAgentGramFollowRequest(req: AgentGramFollowRequest): void {
+    this.db!.run(
+      `INSERT INTO agentgram_follow_requests (id, from_id, to_id, status, created_at, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [req.id, req.fromId, req.toId, req.status, req.createdAt, req.resolvedAt ?? null]
+    );
+    this.persist();
+  }
+
+  hasPendingAgentGramFollowRequest(fromId: string, toId: string): boolean {
+    return (
+      this.queryOne(
+        `SELECT id FROM agentgram_follow_requests WHERE from_id = ? AND to_id = ? AND status = 'pending'`,
+        [fromId, toId],
+        (r) => r.id as string
+      ) !== null
+    );
+  }
+
+  getPendingAgentGramFollowRequestsFor(toId: string): AgentGramFollowRequest[] {
+    return this.queryAll(
+      `SELECT * FROM agentgram_follow_requests WHERE to_id = ? AND status = 'pending' ORDER BY created_at ASC`,
+      [toId],
+      this.mapAgentGramFollowRequest
+    );
+  }
+
+  getAllPendingAgentGramFollowRequests(): AgentGramFollowRequest[] {
+    return this.queryAll(
+      `SELECT * FROM agentgram_follow_requests WHERE status = 'pending' ORDER BY created_at ASC`,
+      [],
+      this.mapAgentGramFollowRequest
+    );
+  }
+
+  resolveAgentGramFollowRequest(
+    id: string,
+    status: Exclude<AgentGramFollowStatus, 'pending'>,
+    resolvedAt: string
+  ): void {
+    this.db!.run(
+      `UPDATE agentgram_follow_requests SET status = ?, resolved_at = ? WHERE id = ?`,
+      [status, resolvedAt, id]
+    );
+    this.persist();
+  }
+
+  getAgentGramFollowRequest(id: string): AgentGramFollowRequest | null {
+    return this.queryOne(
+      'SELECT * FROM agentgram_follow_requests WHERE id = ?',
+      [id],
+      this.mapAgentGramFollowRequest
+    );
+  }
+
+  private mapAgentGramPost = (obj: Record<string, unknown>): AgentGramPost => ({
+    id: obj.id as string,
+    authorId: obj.author_id as string,
+    caption: obj.caption as string,
+    imageEmoji: (obj.image_emoji as string) || '📝',
+    location: (obj.location as string) || '',
+    createdAt: obj.created_at as string,
+  });
+
+  private mapAgentGramComment = (obj: Record<string, unknown>): AgentGramComment => ({
+    id: obj.id as string,
+    postId: obj.post_id as string,
+    authorId: obj.author_id as string,
+    text: obj.text as string,
+    createdAt: obj.created_at as string,
+  });
+
+  private mapAgentGramFollowRequest = (obj: Record<string, unknown>): AgentGramFollowRequest => ({
+    id: obj.id as string,
+    fromId: obj.from_id as string,
+    toId: obj.to_id as string,
+    status: obj.status as AgentGramFollowStatus,
+    createdAt: obj.created_at as string,
+    resolvedAt: (obj.resolved_at as string) || undefined,
   });
 
   close(): void {

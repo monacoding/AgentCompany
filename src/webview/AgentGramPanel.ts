@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
+import { AgentCompanyService } from '../services';
 
 export class AgentGramPanel {
   private static instance: AgentGramPanel | null = null;
 
-  static open(extensionUri: vscode.Uri): void {
+  static open(extensionUri: vscode.Uri, service: AgentCompanyService): void {
     if (AgentGramPanel.instance) {
       AgentGramPanel.instance.panel.reveal(vscode.ViewColumn.One);
+      void AgentGramPanel.instance.syncToWebview();
       return;
     }
 
@@ -23,22 +25,74 @@ export class AgentGramPanel {
       }
     );
 
-    AgentGramPanel.instance = new AgentGramPanel(panel, extensionUri);
+    AgentGramPanel.instance = new AgentGramPanel(panel, extensionUri, service);
+  }
+
+  static refresh(): void {
+    void AgentGramPanel.instance?.syncToWebview();
   }
 
   private constructor(
     public readonly panel: vscode.WebviewPanel,
-    extensionUri: vscode.Uri
+    private readonly extensionUri: vscode.Uri,
+    private readonly service: AgentCompanyService
   ) {
-    panel.webview.html = this.getHtml(panel.webview, extensionUri);
+    panel.webview.html = this.getHtml(panel.webview);
+
+    panel.webview.onDidReceiveMessage(async (message) => {
+      await this.handleMessage(message);
+    });
 
     panel.onDidDispose(() => {
       AgentGramPanel.instance = null;
     });
+
+    void this.syncToWebview();
   }
 
-  private getHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    const assetsBase = vscode.Uri.joinPath(extensionUri, 'webview', 'dist', 'assets');
+  async syncToWebview(): Promise<void> {
+    const payload = await this.service.agentGram.getSnapshot();
+    this.panel.webview.postMessage({ type: 'agentGramData', payload });
+  }
+
+  private async handleMessage(message: { type: string; payload?: unknown }): Promise<void> {
+    switch (message.type) {
+      case 'ready':
+      case 'refreshAgentGram':
+        await this.syncToWebview();
+        break;
+
+      case 'createOwnerPost': {
+        const { caption, emoji } = message.payload as { caption: string; emoji: string };
+        this.service.agentGram.createOwnerPost(caption, emoji);
+        await this.syncToWebview();
+        break;
+      }
+
+      case 'toggleOwnerLike': {
+        const { postId } = message.payload as { postId: string };
+        this.service.agentGram.toggleOwnerLike(postId);
+        await this.syncToWebview();
+        break;
+      }
+
+      case 'respondFollowRequest': {
+        const { requestId, accept } = message.payload as { requestId: string; accept: boolean };
+        this.service.agentGram.respondFollowRequest(requestId, accept);
+        await this.syncToWebview();
+        break;
+      }
+
+      case 'runAgentGramCycle': {
+        await this.service.agentGram.runCycle();
+        await this.syncToWebview();
+        break;
+      }
+    }
+  }
+
+  private getHtml(webview: vscode.Webview): string {
+    const assetsBase = vscode.Uri.joinPath(this.extensionUri, 'webview', 'dist', 'assets');
     const snsJs = webview.asWebviewUri(vscode.Uri.joinPath(assetsBase, 'sns.js'));
     const snsCss = webview.asWebviewUri(vscode.Uri.joinPath(assetsBase, 'sns.css'));
     const nonce = getNonce();

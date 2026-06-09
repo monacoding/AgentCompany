@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AgentCompanyService } from './services';
 import { DashboardProvider } from './webview/DashboardProvider';
+import { AgentGramPanel } from './webview/AgentGramPanel';
 import { CeoChatPanel } from './webview/CeoChatPanel';
 import { formatAgentLabel } from './utils/agent-display';
 import type { CreateAgentInput } from './types';
@@ -33,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   service.bindDashboardRefresh(() => dashboardProvider?.refresh());
   service.bindDashboardNavigate((tab) => dashboardProvider?.navigateTo(tab));
+  service.agentGram.setOnChange(() => AgentGramPanel.refresh());
 
   initPromise = service
     .initialize()
