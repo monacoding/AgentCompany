@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T07:02:19.835Z_
+_마지막 동기화: 2026-06-09T22:17:08.142Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -3055,12 +3055,3 @@ Saved: agent/한서준_리서처/outputs/downloads/2026-06-08-2007-년도-수능
 - 다만, 현재 확보된 웹 본문에는 보고서 제목과 포털 내비게이션 정보만 확인되며, **압축기 타입, 압력, 구조, 선급 요구사항, 성능 사양** 등 세부 내용은 노출되지 않았습니다.  
   출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
 - 따라서 본 자료만으로는 선박용 에어 컴프레서 타입별 실무 보고서를 완성하기 어렵고, **SOLAS·선
-
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
