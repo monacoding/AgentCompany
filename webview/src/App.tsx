@@ -1,18 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CeoCommandInput } from './CeoCommandInput';
 import { ExtensionSplashScreen, resolveCeoDisplayName } from './ExtensionSplashScreen';
-import { ActivityFeedPanel } from './dashboard/ActivityFeedPanel';
-import {
-  buildNavigationItems,
-  CommandPalette,
-  CommandPaletteItem,
-  useCommandPaletteShortcut,
-} from './dashboard/CommandPalette';
-import { CeoCommandZone } from './dashboard/CeoCommandZone';
-import { DashboardSidebar } from './dashboard/DashboardSidebar';
-import { ReviewPanel } from './dashboard/ReviewPanel';
-import { StatsOverview } from './dashboard/StatsOverview';
 import { CompanyInfoModal } from './CompanyInfoPanel';
 import { OwnerInfoModal } from './OwnerInfoPanel';
+import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
 import { ProjectsTab } from './ProjectsTab';
@@ -127,7 +118,6 @@ export default function App() {
   const [showOwnerModal, setShowOwnerModal] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const bootStartedAtRef = useRef(Date.now());
   const splashDismissedRef = useRef(false);
   const splashFadeTimerRef = useRef<number | null>(null);
@@ -271,219 +261,188 @@ export default function App() {
     inProgress: data.tasks.filter(isInProgressTask).length,
     review: reviewTasks.length,
     completed: data.tasks.filter((t) => t.status === 'completed').length,
-    projects: teamSessions.length,
   };
 
-  const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
-  useCommandPaletteShortcut(openCommandPalette);
-
-  const commandPaletteItems = useMemo((): CommandPaletteItem[] => {
-    const nav = buildNavigationItems(setActiveTab, {
-      agents: data.agents.length,
-      tasks: data.tasks.length,
-      projects: teamSessions.length,
-      apis: data.externalApis?.length ?? 0,
-    });
-    const presets: CommandPaletteItem[] = [
-      {
-        id: 'preset-project',
-        label: '새 프로젝트 시작',
-        group: 'CEO 프리셋',
-        action: () => postMessage('executeCommand', { command: '@박준호 새 프로젝트를 기획해 주세요.' }),
-      },
-      {
-        id: 'preset-review',
-        label: '팀 리뷰 요청',
-        group: 'CEO 프리셋',
-        action: () => {
-          setActiveTab('tasks');
-        },
-      },
-      {
-        id: 'preset-report',
-        label: '보고서 생성',
-        group: 'CEO 프리셋',
-        action: () => postMessage('executeCommand', { command: '@박준호 최근 프로젝트 결과를 종합 보고해 주세요.' }),
-      },
-      {
-        id: 'action-refresh',
-        label: '데이터 새로고침',
-        hint: '↻',
-        group: '시스템',
-        action: () => postMessage('refresh'),
-      },
-    ];
-    return [...nav, ...presets];
-  }, [data.agents.length, data.tasks.length, data.externalApis?.length, teamSessions.length]);
-
-  const handleAgentWorkLog = useCallback((agentId: string) => {
-    postMessage('getAgentWorkLog', { agentId });
-  }, []);
-
   return (
-    <div className="app dashboard-v2">
+    <div className="app">
       <ExtensionSplashScreen
         visible={splashVisible}
         fading={splashFading}
         logoUrl={data.companyLogoUrl}
         ceoName={resolveCeoDisplayName(data.ownerInfo?.name)}
       />
-      <CommandPalette
-        open={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        items={commandPaletteItems}
-      />
-
-      <div className="dashboard-shell">
-        <DashboardSidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          badges={{
-            agents: data.agents.length,
-            projects: teamSessions.length,
-            tasks: data.tasks.length,
-            review: reviewTasks.length,
-          }}
-          onOpenCommandPalette={openCommandPalette}
-        />
-
-        <div className="dashboard-main">
-          <header className="header dashboard-header">
-            <div className="header-title">
-              {data.companyLogoUrl ? (
-                <img src={data.companyLogoUrl} alt="" className="logo logo-img" />
-              ) : (
-                <span className="logo">🏢</span>
-              )}
-              <div>
-                <div className="header-heading-row">
-                  <h1>{data.companyInfo?.companyName?.trim() || 'AgentCompany'}</h1>
-                  <span className="header-version-badge">v{data.version}</span>
-                  <button type="button" className="header-company-btn" onClick={() => setShowCompanyModal(true)}>
-                    회사 정보
-                  </button>
-                  <button type="button" className="header-company-btn" onClick={() => setShowOwnerModal(true)}>
-                    사장 정보
-                  </button>
-                </div>
-                <p className="subtitle">Professional AI Company Operating Platform</p>
-              </div>
-            </div>
-            <div className="header-right">
-              <HeaderStatusBar foundedAt={data.companyInfo?.foundedAt} />
+      <header className="header">
+        <div className="header-title">
+          {data.companyLogoUrl ? (
+            <img src={data.companyLogoUrl} alt="" className="logo logo-img" />
+          ) : (
+            <span className="logo">🏢</span>
+          )}
+          <div>
+            <div className="header-heading-row">
+              <h1>{data.companyInfo?.companyName?.trim() || 'AgentCompany'}</h1>
+              <span className="header-version-badge">v{data.version}</span>
               <button
-                className={`btn-icon${releasing ? ' btn-icon--spin' : ''}`}
-                onClick={() => postMessage('refresh')}
-                title="릴리스 (npm run release) & Reload"
-                disabled={releasing}
-                aria-busy={releasing}
+                type="button"
+                className="header-company-btn"
+                onClick={() => setShowCompanyModal(true)}
               >
-                ↻
+                회사 정보
+              </button>
+              <button
+                type="button"
+                className="header-company-btn"
+                onClick={() => setShowOwnerModal(true)}
+              >
+                사장 정보
               </button>
             </div>
-          </header>
-
-          {(pendingIdeas.length > 0 || activeTeamSessions.length > 0) && (
-            <div className="dashboard-alerts">
-              {pendingIdeas.length > 0 && (
-                <button type="button" className="alert-chip ideas" onClick={() => setActiveTab('overview')}>
-                  💡 아이디어 {pendingIdeas.length}건
-                </button>
-              )}
-              {activeTeamSessions.length > 0 && (
-                <button type="button" className="alert-chip projects" onClick={() => setActiveTab('projects')}>
-                  📁 Project 진행 {activeTeamSessions.length}건
-                </button>
-              )}
-            </div>
-          )}
-
-          <CeoCommandZone
-            agents={data.agents}
-            llmStatus={data.llmStatus}
-            llmChecking={llmChecking}
-            onCheckLlm={handleCheckLlm}
-            agentPhotos={data.agentPhotos}
-          />
-
-          <main className="content dashboard-content">
-            {activeTab === 'overview' && (
-              <OverviewTab
-                stats={stats}
-                agents={data.agents}
-                ideas={pendingIdeas}
-                reviewTasks={reviewTasks}
-                teamSessions={teamSessions}
-                agentPhotos={data.agentPhotos}
-                onOpenProjects={() => setActiveTab('projects')}
-                onProjectDoubleClick={openProjectDetail}
-                onApprove={(id) => postMessage('approveTask', { taskId: id })}
-                onReject={(id) => postMessage('rejectTask', { taskId: id, reason: 'Needs revision' })}
-                onAgentClick={handleAgentWorkLog}
-              />
-            )}
-            {activeTab === 'agents' && (
-              <AgentsTab
-                agents={data.agents}
-                tasks={data.tasks}
-                showCreate={showCreateAgent}
-                newAgent={newAgent}
-                editingAgentId={editingAgentId}
-                editAgent={editAgent}
-                onToggleCreate={() => setShowCreateAgent(!showCreateAgent)}
-                onNewAgentChange={setNewAgent}
-                onCreate={handleCreateAgent}
-                onStartEdit={startEditAgent}
-                onEditChange={setEditAgent}
-                onUpdate={handleUpdateAgent}
-                onCancelEdit={() => setEditingAgentId(null)}
-                onDelete={(id) => postMessage('deleteAgent', { id })}
-                onActivate={(id) => postMessage('activateAgent', { id })}
-                onDeactivate={(id) => postMessage('deactivateAgent', { id })}
-                createError={createAgentError}
-              />
-            )}
-            {activeTab === 'org' && (
-              <OrgChartTab
-                agents={data.agents}
-                orgChart={data.orgChart}
-                agentPhotos={data.agentPhotos ?? {}}
-                ownerPhotoUrl={data.ownerProfilePhotoUrl}
-              />
-            )}
-            {activeTab === 'projects' && (
-              <ProjectsTab sessions={data.teamSessions ?? []} agents={data.agents} />
-            )}
-            {activeTab === 'tasks' && (
-              <TasksTab
-                tasks={data.tasks}
-                agents={data.agents}
-                newTaskTitle={newTaskTitle}
-                expandedTaskId={expandedTaskId}
-                onNewTaskChange={setNewTaskTitle}
-                onCreate={handleCreateTask}
-                onDelete={(id) => postMessage('deleteTask', { id })}
-                onRun={(taskId, agentId) => postMessage('runTask', { taskId, agentId })}
-                onAssign={(taskId, agentId) => postMessage('assignTask', { taskId, agentId })}
-                onApprove={(taskId) => postMessage('approveTask', { taskId })}
-                onReject={(taskId) => postMessage('rejectTask', { taskId, reason: 'Needs revision' })}
-                onToggleExpand={(id) => setExpandedTaskId(expandedTaskId === id ? null : id)}
-              />
-            )}
-            {activeTab === 'activity' && <ActivityTab activities={data.activities} agents={data.agents} />}
-            {activeTab === 'api' && <ApiTab apis={data.externalApis ?? []} />}
-            {activeTab === 'settings' && (
-              <SettingsTab
-                settings={data.settings}
-                version={data.version}
-                availableModels={data.llmStatus.availableModels ?? []}
-              />
-            )}
-          </main>
+            <p className="subtitle">
+              {data.companyInfo?.companyName?.trim()
+                ? 'AI 회사 운영 플랫폼 · AgentCompany'
+                : 'AI 회사 운영 플랫폼'}
+            </p>
+          </div>
         </div>
+        <div className="header-right">
+          <HeaderStatusBar foundedAt={data.companyInfo?.foundedAt} />
+          <button
+            className={`btn-icon${releasing ? ' btn-icon--spin' : ''}`}
+            onClick={() => postMessage('refresh')}
+            title="릴리스 (npm run release) & Reload"
+            disabled={releasing}
+            aria-busy={releasing}
+          >
+            ↻
+          </button>
+        </div>
+      </header>
 
-        <ActivityFeedPanel activities={data.activities} agents={data.agents} />
-      </div>
+      {pendingIdeas.length > 0 && (
+        <section className="ideas-banner">
+          <span>💡 에이전트 아이디어 {pendingIdeas.length}건</span>
+          <button className="btn-sm" onClick={() => setActiveTab('overview')}>
+            확인
+          </button>
+        </section>
+      )}
+
+      {reviewTasks.length > 0 && (
+        <section className="review-banner">
+          <span>📋 Review 대기: {reviewTasks.length}건</span>
+          <button className="btn-sm" onClick={() => setActiveTab('tasks')}>
+            확인
+          </button>
+        </section>
+      )}
+
+      {activeTeamSessions.length > 0 && (
+        <section className="review-banner" style={{ borderColor: '#3b82f6' }}>
+          <span>📁 Project 진행 중: {activeTeamSessions.length}건</span>
+          <button className="btn-sm" onClick={() => setActiveTab('projects')}>
+            보기
+          </button>
+        </section>
+      )}
+
+      <LlmStatusBar
+        status={data.llmStatus}
+        checking={llmChecking}
+        onCheckConnection={handleCheckLlm}
+      />
+
+      <CeoCommandInput agents={data.agents} />
+
+      <nav className="tabs">
+        {(['overview', 'agents', 'org', 'projects', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
+          <button
+            key={tab}
+            className={`tab ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab === 'overview' && 'Overview'}
+            {tab === 'agents' && `Agents (${data.agents.length})`}
+            {tab === 'org' && 'Organization'}
+            {tab === 'projects' && `Project (${data.teamSessions?.length ?? 0})`}
+            {tab === 'tasks' && `Tasks (${data.tasks.length})`}
+            {tab === 'activity' && 'Activity'}
+            {tab === 'api' && `API (${data.externalApis?.length ?? 0})`}
+            {tab === 'settings' && 'Settings'}
+          </button>
+        ))}
+      </nav>
+
+      <main className="content">
+        {activeTab === 'overview' && (
+          <OverviewTab
+            stats={stats}
+            agents={data.agents}
+            ideas={pendingIdeas}
+            reviewTasks={reviewTasks}
+            teamSessions={teamSessions}
+            teamSessionCount={teamSessions.length}
+            onOpenProjects={() => setActiveTab('projects')}
+            onProjectDoubleClick={openProjectDetail}
+          />
+        )}
+        {activeTab === 'agents' && (
+          <AgentsTab
+            agents={data.agents}
+            tasks={data.tasks}
+            showCreate={showCreateAgent}
+            newAgent={newAgent}
+            editingAgentId={editingAgentId}
+            editAgent={editAgent}
+            onToggleCreate={() => setShowCreateAgent(!showCreateAgent)}
+            onNewAgentChange={setNewAgent}
+            onCreate={handleCreateAgent}
+            onStartEdit={startEditAgent}
+            onEditChange={setEditAgent}
+            onUpdate={handleUpdateAgent}
+            onCancelEdit={() => setEditingAgentId(null)}
+            onDelete={(id) => postMessage('deleteAgent', { id })}
+            onActivate={(id) => postMessage('activateAgent', { id })}
+            onDeactivate={(id) => postMessage('deactivateAgent', { id })}
+            createError={createAgentError}
+          />
+        )}
+        {activeTab === 'org' && (
+          <OrgChartTab
+            agents={data.agents}
+            orgChart={data.orgChart}
+            agentPhotos={data.agentPhotos ?? {}}
+            ownerPhotoUrl={data.ownerProfilePhotoUrl}
+          />
+        )}
+        {activeTab === 'projects' && (
+          <ProjectsTab sessions={data.teamSessions ?? []} agents={data.agents} />
+        )}
+        {activeTab === 'tasks' && (
+          <TasksTab
+            tasks={data.tasks}
+            agents={data.agents}
+            newTaskTitle={newTaskTitle}
+            expandedTaskId={expandedTaskId}
+            onNewTaskChange={setNewTaskTitle}
+            onCreate={handleCreateTask}
+            onDelete={(id) => postMessage('deleteTask', { id })}
+            onRun={(taskId, agentId) => postMessage('runTask', { taskId, agentId })}
+            onAssign={(taskId, agentId) => postMessage('assignTask', { taskId, agentId })}
+            onApprove={(taskId) => postMessage('approveTask', { taskId })}
+            onReject={(taskId) => postMessage('rejectTask', { taskId, reason: 'Needs revision' })}
+            onToggleExpand={(id) => setExpandedTaskId(expandedTaskId === id ? null : id)}
+          />
+        )}
+        {activeTab === 'activity' && <ActivityTab activities={data.activities} agents={data.agents} />}
+        {activeTab === 'api' && <ApiTab apis={data.externalApis ?? []} />}
+        {activeTab === 'settings' && (
+          <SettingsTab
+            settings={data.settings}
+            version={data.version}
+            availableModels={data.llmStatus.availableModels ?? []}
+          />
+        )}
+      </main>
 
       {showCompanyModal && (
         <CompanyInfoModal
@@ -595,37 +554,29 @@ function OverviewTab({
   ideas,
   reviewTasks,
   teamSessions,
-  agentPhotos,
+  teamSessionCount,
   onOpenProjects,
   onProjectDoubleClick,
-  onApprove,
-  onReject,
-  onAgentClick,
 }: {
   stats: Record<string, number>;
   agents: Agent[];
   ideas: AgentIdea[];
   reviewTasks: Task[];
   teamSessions: TeamSession[];
-  agentPhotos?: Record<string, string>;
+  teamSessionCount: number;
   onOpenProjects: () => void;
   onProjectDoubleClick: (sessionId: string) => void;
-  onApprove: (taskId: string) => void;
-  onReject: (taskId: string) => void;
-  onAgentClick: (agentId: string) => void;
 }) {
   return (
-    <div className="overview overview-v2">
-      <StatsOverview stats={{ ...stats, projects: teamSessions.length }} onProjectClick={onOpenProjects} />
-
-      <ReviewPanel
-        reviewTasks={reviewTasks}
-        agents={agents}
-        agentPhotos={agentPhotos}
-        onApprove={onApprove}
-        onReject={onReject}
-        onAgentClick={onAgentClick}
-      />
+    <div className="overview">
+      <div className="stats-grid">
+        <StatCard label="Project" value={teamSessionCount} onClick={onOpenProjects} />
+        <StatCard label="Agents" value={stats.agents} />
+        <StatCard label="Working" value={stats.working} accent />
+        <StatCard label="Progress" value={stats.progress} />
+        <StatCard label="Review" value={stats.review} />
+        <StatCard label="Completed" value={stats.completed} success />
+      </div>
 
       <div className="panel ideas-panel">
         <div className="ideas-panel-header">
@@ -662,6 +613,15 @@ function OverviewTab({
           })
         )}
       </div>
+
+      {reviewTasks.length > 0 && (
+        <div className="panel review-panel">
+          <h3>📋 CEO Review Required</h3>
+          {reviewTasks.map((t) => (
+            <TaskRow key={t.id} task={t} compact />
+          ))}
+        </div>
+      )}
 
       <ProjectListPanel
         sessions={teamSessions}
@@ -1075,6 +1035,49 @@ function HeaderStatusBar({ foundedAt }: { foundedAt?: string }) {
   );
 }
 
+function StatCard({
+  label,
+  value,
+  accent,
+  success,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  accent?: boolean;
+  success?: boolean;
+  onClick?: () => void;
+}) {
+  const className = `stat-card ${accent ? 'accent' : ''} ${success ? 'success' : ''} ${onClick ? 'stat-card-interactive' : ''}`;
+  const content = (
+    <>
+      <span className="stat-value">{value}</span>
+      <span className="stat-label">{label}</span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <div
+        className={className}
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
+}
+
 function AgentDetailModal({
   agent,
   isEditing,
@@ -1345,6 +1348,15 @@ function AgentCard({
           )
         )}
       </div>
+    </div>
+  );
+}
+
+function TaskRow({ task, compact }: { task: Task; compact?: boolean }) {
+  return (
+    <div className={`task-row ${compact ? 'compact' : ''}`}>
+      <span className="task-title">{task.title}</span>
+      <StatusBadge status={task.status} source="task" />
     </div>
   );
 }

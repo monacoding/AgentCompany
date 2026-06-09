@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { bootstrapVoiceShortcutSync } from './voice-shortcut-sync';
 import './styles.css';
-import './dashboard/dashboard.css';
 
 bootstrapVoiceShortcutSync();
 

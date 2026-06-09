@@ -21,7 +21,7 @@ export function isLikelyImeLeftover(command: string): boolean {
 export function useCeoCommandInput(agents: Agent[], threadId?: string) {
   const [value, setValue] = useState('');
   const [highlight, setHighlight] = useState(0);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isComposingRef = useRef(false);
   const discardImeLeftoverUntilRef = useRef(0);
 
@@ -136,7 +136,7 @@ export function useCeoCommandInput(agents: Agent[], threadId?: string) {
   }, []);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (e: KeyboardEvent<HTMLInputElement>) => {
       if (showDropdown && filteredAgents.length > 0) {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
