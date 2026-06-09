@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import type { TeamSession } from '../types';
+import type { ProjectTask, TeamSession } from '../types';
 import { buildFinalReportFilename, formatProjectDisplayTitle } from './project-title';
 
 export interface ProjectArtifact {
@@ -51,10 +51,31 @@ export function saveProjectTaskArtifact(
   return path.relative(companyDir, filePath).replace(/\\/g, '/');
 }
 
+/** PM 통합 태스크(또는 마지막 태스크) 산출물을 최종 보고서 본문으로 사용 */
+export function resolvePrimaryReportBody(tasks: ProjectTask[], pmAgentId: string): string | null {
+  const withOutput = tasks.filter((t) => t.output?.trim());
+  if (withOutput.length === 0) return null;
+
+  const pmTasks = withOutput.filter((t) => t.agentId === pmAgentId);
+  const primary = pmTasks.length > 0 ? pmTasks[pmTasks.length - 1] : withOutput[withOutput.length - 1];
+  return primary.output!.trim();
+}
+
+/** PM 통합 태스크 산출물 우선, 없으면 전체 태스크 산출물을 최종 보고서 본문으로 사용 */
+export function buildFullReportBody(tasks: ProjectTask[], pmAgentId: string): string {
+  const primary = resolvePrimaryReportBody(tasks, pmAgentId);
+  if (primary) return primary;
+
+  const blocks = tasks
+    .filter((t) => t.output?.trim())
+    .map((t) => `## @${t.agentName} — ${t.description}\n\n${t.output!.trim()}`);
+  return blocks.join('\n\n---\n\n') || 'Project가 완료되었습니다.';
+}
+
 export function saveProjectSummaryArtifact(
   companyDir: string,
   warehouseFolder: string,
-  summary: string,
+  content: string,
   options?: { projectTitle?: string; authorName?: string }
 ): string {
   const dir = getProjectWarehouseDir(companyDir, warehouseFolder);
@@ -69,7 +90,7 @@ export function saveProjectSummaryArtifact(
     `- 작성자: ${authorName}`,
     `- 저장: ${new Date().toISOString()}`,
     '',
-    summary,
+    content,
   ].join('\n');
   fs.writeFileSync(filePath, body, 'utf8');
   return path.relative(companyDir, filePath).replace(/\\/g, '/');

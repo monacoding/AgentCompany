@@ -3,7 +3,11 @@ import { formatChatReply, formatLlmError } from '../chat/reply-format';
 import { ProviderEngine } from '../providers';
 import { Agent, ProjectPhase, ProjectTask } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
-import { saveProjectSummaryArtifact, saveProjectTaskArtifact } from './project-artifacts';
+import {
+  buildFullReportBody,
+  saveProjectSummaryArtifact,
+  saveProjectTaskArtifact,
+} from './project-artifacts';
 import { buildPriorDeliverablesContext, PriorDeliverable } from './project-context';
 import {
   PROJECT_REVIEW_MAX_ITERATIONS,
@@ -11,7 +15,7 @@ import {
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
-import { buildPmReportPhasePrompt, buildReviewPhasePrompt } from './phase-prompts';
+import { buildReviewPhasePrompt } from './phase-prompts';
 import { ProjectWorkerDeps, executeProjectWorkerTask } from './project-worker-engine';
 import { buildWorkerToolingHint } from './project-tooling';
 
@@ -210,7 +214,7 @@ async function executeTaskWithReviewLoop(
   }
 
   return {
-    output: output.slice(0, 4000),
+    output,
     approved,
     iterations: usedIterations,
     extractedFiles: allExtracted,
@@ -323,41 +327,10 @@ export async function runProjectSequential(
     }
   }
 
-  callbacks.onPhase('reviewing', 'PM 최종 보고 작성 중');
+  callbacks.onPhase('reviewing', '최종 보고서 저장 중');
 
-  const completedOutputs = tasks
-    .filter((t) => t.status === 'done' && t.output)
-    .map((t) => ({
-      agent: t.agentName,
-      description: t.description,
-      output: t.output!,
-      approved: true,
-    }));
-
-  let summary: string;
-  try {
-    const deliverables = completedOutputs
-      .map((d) => `### ${d.agent}\n${d.description}\n${d.output}`)
-      .join('\n\n');
-
-    const reportPrompt = buildPmReportPhasePrompt(command, deliverables);
-    const review = await providers.chat(
-      pm.provider,
-      [
-        {
-          role: 'system',
-          content: `You are ${pm.name}, PM. Report to CEO in Korean.`,
-        },
-        { role: 'user', content: reportPrompt },
-      ],
-      { type: pm.provider, model: pm.model }
-    );
-    summary = (review.content || '').trim() || 'Project가 완료되었습니다.';
-  } catch (error) {
-    summary = `Project 완료 (PM 검토 LLM 오류: ${formatLlmError(error)})`;
-  }
-
-  const summaryPath = saveProjectSummaryArtifact(companyDir, warehouseFolder, summary, {
+  const reportContent = buildFullReportBody(tasks, pm.id);
+  const summaryPath = saveProjectSummaryArtifact(companyDir, warehouseFolder, reportContent, {
     projectTitle: options.projectTitle ?? warehouseFolder,
     authorName: pm.name,
   });
@@ -366,5 +339,6 @@ export async function runProjectSequential(
   const doneCount = tasks.filter((t) => t.status === 'done').length;
   callbacks.onPhase('done', `${doneCount}/${tasks.length} 완료`);
 
+  const summary = `Project 완료.\n📄 최종 보고서: company/${summaryPath}`;
   return { tasks, summary };
 }

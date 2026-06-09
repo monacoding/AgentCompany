@@ -1,0 +1,285 @@
+# Research digest: ## 사장님 지시
+
+@박준호 선박에 적용 되는 에어 컴프레서 타입 조사 및 보고서 작성 계
+
+_자동 수집: 2026-06-09T06:22:34.431Z_
+
+- **Query:** ## 사장님 지시
+
+@박준호 선박에 적용 되는 에어 컴프레서 타입 조사 및 보고서 작성 계획
+
+## PM 계획 요약
+
+사장님, 선박에 적용되는 에어 컴프레서 타입을 조사하고 보고서로 정리하는 계획을 잡겠습니다. 목표는 선박용 에어 컴프레서의 주요 적용 목적, 타입별 특징, 장단점, 적용 위치, 선정 기준을 조사해 실무적으로 참고 가능한 보고서 작성안을 수립하는 것입니다. 계획은 다음 흐름으로 진행하겠습니다. 1. 조사 범위 확정 - 선박 내 에어 컴프레서 사용 목적 정리 - 시동 공기, 제어 공기, 작업 공기, 비상용 공기 등 적용 분야 구분 - 상선, 특수선, 해양플랜트 등 포함 범위 검토 2. 타입별 조사 - 왕복동식 컴프레서 - 스크류식 컴프레서 - 원심식 컴프레서 - 오일 윤활식과 오일 프리 방식 - 고압, 중압, 저압 용도별 구분 3. 선박 적용 관점 분석 - 각 타입의 선박 내 사용 위치 - 유지보수성, 신뢰성, 설치 공간, 소음, 진동, 효율 비교 - 해양 환경에서의 내구성 및 안전성 고려 4. 보고서 구성안 작성 - 개요 - 선박용 압축공기 시스템의 역할 - 에어 컴프레서 타입별 설명
+
+## 목표  
+사장님, **선박에 적용되는 에어 컴프레서 타입을 조사하여, 타입별 구조·용도·장단점·선박 적용 사례·선정 기준을 정리한 실무형 보고서**를 작성하는 것을 목표로 하겠습니다.
+
+## 계획  
+
+### P1. 조사 범위 확정  
+- 선박 내 에어 컴프레서 사용 목적 분류  
+  - 주기관 시동용 Starting Air Compressor  
+  - 제어 공기용 Control Air Compressor  
+  - 계장 공기용 Instrument Air Compressor  
+  - 서비스/작업 공기용 Service Air Compressor  
+  - 비상용 Emergency Air Compressor  
+- 적용 선박 범위 정리  
+  - 일반 상선  
+  - LNG/LPG 운반선  
+  - 컨테이너선  
+  - 탱커  
+  - 특수선 및 해양 설비는 필요 시 참고 수준으로 포함  
+
+### P2. 에어 컴프레서 타입 조사  
+- 구조 방식별 조사  
+  - 왕복동식, Reciprocating/Piston Type  
+  - 스크류식, Screw Type  
+  - 원심식, Centrifugal Type  
+  - 베인식, Vane Type  
+  - 다이어프램식, Diaphragm Type  
+- 윤활 방식별 조사  
+  - Oil-lubricated Type  
+  - Oil-free Type  
+- 압력 등급별 조사  
+  - 저압  
+  - 중압  
+  - 고압, 특히 시동 공기용 30 bar급 중심  
+
+### P3. 선박 적용 관점 분석  
+- 타입별 주요 적용 위치와 용도 매칭  
+- 선박 환경 기준 분석  
+  - 공간 제약  
+  - 진동/소음  
+  - 염분 환경  
+  - 유지보수성  
+  - 에너지 효율  
+  - 안전성  
+  - 예비기 구성 필요성  
+- 선급/해사 규정 관련 확인 필요 항목 정리  
+  - SOLAS 관련 안전 관점  
+  - Classification Society 요구사항 검토 포인트  
+  - 압력용기, 안전밸브, 드레인, 냉각 방식 등  
+
+### P4. 비교표 및 선정 기준 작성  
+- 타입별 비교표 작성  
+  - 구조  
+  - 압력 범위  
+  - 장점  
+  - 단점  
+  - 대표 적용처  
+  - 유지보수 난이도  
+  - 선박 적용 적합도  
+- 용도별 추천 타입 정리  
+  - 시동 공기용  
+  - 제어/계장 공기용  
+  - 서비스 공기용  
+  - 비상용  
+
+### P5. 최종 보고서 작성 및 검토  
+- 보고서 목차 구성  
+- 핵심 요약 작성  
+- 상세 본문 작성  
+- 표/도식 중심으로 가독성 개선  
+- PM 검토 후 최종본 제출  
+- 산출물은 Project 폴더에 최종 보고서 Markdown 형태로 정리  
+
+## 작업 분배  
+
+1. **@한서준:** 선박용 에어 컴프레서 타입, 적용 용도, 제조사/선급/기술자료 기반 1차 자료 조사  
+2. **@박준호:** 조사 범위 확정, 보고서 구조 설계, 타입별 비교 프레임 작성  
+3. **@한서준:** 선박 적용 사례 및 용도별 컴프레서 매칭 자료 추가 조사  
+4. **@강하늘:** 조사 결과 정리 보조, 표 형식 정돈, 보고서 문장 가독성 점검  
+5. **@박준호:** 최종 보고서 통합 작성, 리스크/선정 기준/결론 정리  
+
+## 참여 에이전트  
+@박준호 · @한서준 · @강하늘  
+
+사장님, 이대로 진행할까요?
+선박용 에어 컴프레서 타입·용도·제조사·선급 기술자료 조사
+- **Source:** https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+---
+
+## 1. 요약
+
+- 현재 수집된 근거자료는 ScienceON/KISTI에 등록된 **「22,000TEU급 Container선박의 Main Engine 시동용 공기압축기 국산화 개발」** 1건입니다. 출처상 대형 컨테이너선의 **주기관 시동용 공기압축기**와 관련된 연구·개발 보고서로 확인됩니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+- 다만, 현재 확보된 웹 본문에는 보고서 제목과 포털 내비게이션 정보만 확인되며, **압축기 타입, 압력, 구조, 선급 요구사항, 성능 사양** 등 세부 내용은 노출되지 않았습니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+- 따라서 본 자료만으로는 선박용 에어 컴프레서 타입별 실무 보고서를 완성하기 어렵고, **SOLAS·선급 규정·제조사 기술자료**를 추가 확보해야 합니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+---
+
+## 2. 핵심 발견
+
+- **확보 자료는 1건**이며, 자료명은 「22,000TEU급 Container선박의 Main Engine 시동용 공기압축기 국산화 개발」입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 해당 자료는 제목상 **22,000TEU급 컨테이너선**과 **Main Engine 시동용 공기압축기**를 다루는 보고서입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 해당 자료는 선박용 에어 컴프레서 중에서도 **Starting Air Compressor, 즉 주기관 시동 공기용 공기압축기** 조사에 활용 가능한 후보 자료입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 현재 수집된 페이지 본문에는 보고서 상세 목차, 압축기 형식, 정격 압력, 용량, 단계 수, 냉각 방식, 선급 승인 여부 등 실무 비교에 필요한 세부 데이터가 확인되지 않습니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 현재 자료만으로는 **왕복동식, 스크류식, 원심식, 베인식, 다이어프램식** 등 타입별 구조·장단점 비교를 확정할 수 없습니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 현재 자료만으로는 **SOLAS, 선급 규칙, 압력용기, 안전밸브, 시동공기 저장용기, 예비기 구성** 관련 요구사항을 확인할 수 없습니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+---
+
+## 3. 출처 신뢰도
+
+### A등급 — 정부·공식·학술성 자료
+
+- **ScienceON/KISTI 보고서 페이지**  
+  - 자료명: 「22,000TEU급 Container선박의 Main Engine 시동용 공기압축기 국산화 개발」  
+  - 분류: A등급  
+  - 판단 근거: ScienceON은 국내 과학기술 정보 검색 플랫폼이며, 수집 자료는 연구보고서 형태로 등록되어 있습니다.  
+  - URL: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+### B등급 — 언론·기업 자료
+
+- 현재 수집된 B등급 자료 없음.
+
+### C등급 — 블로그·SNS·비공식 자료
+
+- 현재 수집된 C등급 자료 없음.
+
+---
+
+## 4. 교차검증
+
+### 일치 항목
+
+- 현재 수집 자료 1건에서 확인 가능한 사실은 **“22,000TEU급 컨테이너선의 Main Engine 시동용 공기압축기 국산화 개발 보고서가 존재한다”**는 점입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+### 불일치 항목
+
+- 현재 수집된 자료가 1건뿐이므로, 다른 공식 규정·선급 자료·제조사 자료와의 불일치 여부는 확인할 수 없습니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+### 불확실 항목
+
+- **시동공기용 컴프레서의 일반 적용 압력**, 예: 30 bar급 적용 여부는 현재 수집 자료만으로 확인 불가입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- **주기관 시동용 컴프레서의 대표 타입**, 예: 왕복동식 적용 여부는 현재 수집 자료만으로 확인 불가입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- **제어공기·계장공기·서비스공기용 컴프레서의 적용 압력 및 타입**은 현재 수집 자료만으로 확인 불가입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- **선급 규정상 예비 컴프레서 수량, 공기병 용량, 안전밸브, 드레인, 냉각수 요구사항**은 현재 수집 자료만으로 확인 불가입니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+---
+
+## 5. 다음 단계
+
+### 5.1 공식 규정 자료 우선 확보
+
+아래 자료를 우선 확인해야 합니다.
+
+- **IMO SOLAS**  
+  - 확인 목적: 주기관 시동, 비상 발전기, 필수 보조기기, 압축공기 관련 안전 요구사항 확인  
+  - 후보 URL: https://www.imo.org/en/KnowledgeCentre/ConferencesMeetings/Pages/SOLAS.aspx
+
+- **IACS Unified Requirements**  
+  - 확인 목적: 선급 공통 요구사항, 기관장치·압력용기·공기병 관련 기준 확인  
+  - 후보 URL: https://iacs.org.uk/resolutions/unified-requirements/
+
+- **KR Rules / 한국선급 선급 및 강선규칙**  
+  - 확인 목적: 국내 조선 실무에서 적용 가능한 기관장치, 압력용기, 공기압축기, 공기탱크 규정 확인  
+  - 후보 URL: https://www.krs.co.kr
+
+- **DNV Rules for Ships**  
+  - 확인 목적: 공기압축기, 압력용기, 시동공기 시스템, 제어공기 시스템 관련 요구사항 확인  
+  - 후보 URL: https://www.dnv.com/rules-standards/
+
+- **ABS Rules & Guides**  
+  - 확인 목적: 선박 기관장치, 압축공기계통, 압력용기 관련 요구사항 확인  
+  - 후보 URL: https://ww2.eagle.org/en/rules-and-resources/rules-and-guides.html
+
+- **Lloyd’s Register Rules and Regulations**  
+  - 확인 목적: 선급 관점의 machinery, compressed air system, pressure vessel 요구사항 확인  
+  - 후보 URL: https://www.lr.org/en/knowledge/rules-and-regulations/
+
+### 5.2 제조사 기술자료 확보
+
+아래 제조사 자료를 확보해 실제 선박 적용 타입, 압력, 용량, 냉각 방식, 유지보수 항목을 보강해야 합니다.
+
+- **Sauer Compressors**  
+  - 확인 목적: 선박용 고압 왕복동식 시동공기 컴프레서 사양 확인  
+  - 후보 URL: https://www.sauercompressors.com
+
+- **Sperre Air Power**  
+  - 확인 목적: 선박용 시동공기 컴프레서, 서비스공기 컴프레서, 제어공기 적용 사례 확인  
+  - 후보 URL: https://www.sperre.com
+
+- **Atlas Copco Marine Compressors**  
+  - 확인 목적: 선박용 스크류·오일프리·서비스공기·계장공기 적용 자료 확인  
+  - 후보 URL: https://www.atlascopco.com
+
+- **TMC Compressors**  
+  - 확인 목적: 선박·해양용 스크류 컴프레서, 제어공기·서비스공기 시스템 사양 확인  
+  - 후보 URL: https://www.tmc.com
+
+### 5.3 보고서 작성용 추가 수집 항목
+
+다음 항목별로 최소 2개 이상 출처를 확보해 교차검증해야 합니다.
+
+- **용도별 요구 압력**
+  - Starting Air
+  - Control Air
+  - Instrument Air
+  - Service Air
+  - Emergency Air
+
+- **타입별 구조**
+  - 왕복동식
+  - 스크류식
+  - 원심식
+  - 베인식
+  - 다이어프램식
+
+- **윤활 방식**
+  - Oil-lubricated
+  - Oil-free
+
+- **선박 적용 기준**
+  - 예비기 구성
+  - 자동 기동/정지
+  - 압력스위치
+  - 안전밸브
+  - 드레인
+  - 냉각 방식
+  - 공기병 용량
+  - 선급 승인 및 형식승인
+
+- **실무 선정 기준**
+  - 압력
+  - 토출량
+  - 운전 패턴
+  - 설치 공간
+  - 소음·진동
+  - 정비성
+  - 예비품 수급성
+  - 전력 소비
+  - 오일프리 필요 여부
+  - 선급 승인 여부
+
+### 5.4 현재 단계 결론
+
+- 현재 확보 자료는 **대형 컨테이너선 주기관 시동용 공기압축기 개발 보고서 1건**으로, 보고서 작성의 출발점으로는 유효하지만 단독 근거로는 부족합니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138
+
+- 다음 조사에서는 **선급 규정 → SOLAS/IACS → 제조사 기술자료 → 실제 선박 적용 사례** 순서로 자료를 보강하는 것이 적절합니다.  
+  출처: https://scienceon.kisti.re.kr/srch/selectPORSrchReport.do?cn=TRKO201800040138

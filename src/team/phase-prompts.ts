@@ -55,17 +55,3 @@ ${output}
 - 수정 필요 시 구체적 피드백만 (FINISHED 금지)`;
 }
 
-/** PM 최종 보고 literal */
-export function buildPmReportPhasePrompt(command: string, deliverables: string): string {
-  return `Modality: CEO Report.
-Task: Project 완료 보고 (600자 이내, 한국어).
-산출물은 프로젝트 폴더에 \`{프로젝트명}_{날짜}_{작성자}.md\` 형식으로 자동 저장됩니다.
-
-## 사장님 지시
-${command}
-
-## 전체 산출물
-${deliverables}
-
-완료 보고를 작성하세요.`;
-}

@@ -15,6 +15,9 @@ import {
   runProjectScripts,
 } from './script-runner';
 
+/** Project 태스크 LLM 출력 상한 — 최종 보고서에 전체 산출물이 들어가도록 충분히 크게 설정 */
+export const PROJECT_TASK_MAX_OUTPUT_TOKENS = 16_384;
+
 export interface ProjectWorkerDeps {
   workspace: WorkspaceEngine;
   research?: ResearchAgent;
@@ -133,7 +136,7 @@ Rules:
       },
       { role: 'user', content: userContent },
     ],
-    { type: agent.provider, model: agent.model }
+    { type: agent.provider, model: agent.model, maxTokens: PROJECT_TASK_MAX_OUTPUT_TOKENS }
   );
 
   return formatChatReply(response.content || '') || response.content.trim() || '완료';
@@ -187,7 +190,7 @@ export async function executeProjectWorkerTask(
         'FINISHED',
       ].join('\n');
       return {
-        output: output.slice(0, 6000),
+        output,
         extractedFiles: [scriptRel, ...bundled.producedFiles],
         executedArtifacts: bundled.producedFiles,
       };
@@ -240,7 +243,7 @@ export async function executeProjectWorkerTask(
   }
 
   return {
-    output: output.slice(0, 6000),
+    output,
     extractedFiles,
     executedArtifacts: produced,
   };

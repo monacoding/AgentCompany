@@ -143,6 +143,8 @@ export interface ProviderConfig {
   apiKey?: string;
   baseUrl?: string;
   model: string;
+  /** 미설정 시 프로바이더 기본값 사용 */
+  maxTokens?: number;
 }
 
 export interface ChatMessage {

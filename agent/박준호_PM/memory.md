@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T05:32:09.545Z_
+_마지막 동기화: 2026-06-09T06:20:31.873Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -718,3 +718,27 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://api.openweathermap.org/data/2.5
    - 설명: 날씨 관련 API
    - 인증: query-param (appid)
+
+[PM 계획] 선박에 적용 되는 에어 컴프레서 타입 조사 및 보고서 작성 계획
+## 목표  
+사장님, **선박에 적용되는 에어 컴프레서 타입을 조사하여, 타입별 구조·용도·장단점·선박 적용 사례·선정 기준을 정리한 실무형 보고서**를 작성하는 것을 목표로 하겠습니다.
+
+## 계획  
+
+### P1. 조사 범위 확정  
+- 선박 내 에어 컴프레서 사용 목적 분류  
+  - 주기관 시동용 Starting Air Compressor  
+  - 제어 공기용 Control Air Compressor  
+  - 계장 공기용 Instrument Air Compressor  
+  - 서비스/작업 공기용 Service Air Compressor  
+  - 비상용 Emergency Air Compressor  
+- 적용 선박 범위 정리  
+  - 일반 상선  
+  - LNG/LPG 운반선  
+  - 컨테이너선  
+  - 탱커  
+  - 특수선 및 해양 설비는 필요 시 참고 수준으로 포함  
+
+### P2. 에어 컴프레서 타입 조사  
+- 구조 방식별 조사  
+  - 왕복동식,

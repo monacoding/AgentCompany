@@ -35,6 +35,7 @@ class OpenAIProvider extends BaseProvider {
         body: JSON.stringify({
           model: config.model,
           messages,
+          ...(config.maxTokens ? { max_tokens: config.maxTokens } : {}),
         }),
       });
 
@@ -185,7 +186,7 @@ class AnthropicProvider extends BaseProvider {
       },
       body: JSON.stringify({
         model: config.model,
-        max_tokens: 4096,
+        max_tokens: config.maxTokens ?? 4096,
         system: systemMessage?.content,
         messages: chatMessages.map((m) => ({ role: m.role, content: m.content })),
       }),
