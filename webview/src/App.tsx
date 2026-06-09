@@ -7,7 +7,6 @@ import { LlmStatusBar } from './LlmStatusBar';
 import { ApiTab } from './ApiTab';
 import { OrgChartTab } from './OrgChartTab';
 import { ProjectsTab } from './ProjectsTab';
-import { openProjectDetail, ProjectListPanel } from './ProjectListPanel';
 import { ProjectDetail, ProjectDetailModal } from './ProjectDetailModal';
 import { SettingsTab } from './SettingsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task, TeamSession } from './vscode';
@@ -379,12 +378,9 @@ export default function App() {
             stats={stats}
             agents={data.agents}
             ideas={pendingIdeas}
-            reviewTasks={reviewTasks}
-            teamSessions={teamSessions}
             teamSessionCount={teamSessions.length}
             agentPhotos={data.agentPhotos}
             onOpenProjects={() => setActiveTab('projects')}
-            onProjectDoubleClick={openProjectDetail}
           />
         )}
         {activeTab === 'agents' && (
@@ -558,22 +554,16 @@ function OverviewTab({
   stats,
   agents,
   ideas,
-  reviewTasks,
-  teamSessions,
   teamSessionCount,
   agentPhotos,
   onOpenProjects,
-  onProjectDoubleClick,
 }: {
   stats: Record<string, number>;
   agents: Agent[];
   ideas: AgentIdea[];
-  reviewTasks: Task[];
-  teamSessions: TeamSession[];
   teamSessionCount: number;
   agentPhotos?: Record<string, string>;
   onOpenProjects: () => void;
-  onProjectDoubleClick: (sessionId: string) => void;
 }) {
   return (
     <div className="overview">
@@ -625,22 +615,6 @@ function OverviewTab({
           })
         )}
       </div>
-
-      {reviewTasks.length > 0 && (
-        <div className="panel review-panel">
-          <h3>📋 CEO Review Required</h3>
-          {reviewTasks.map((t) => (
-            <TaskRow key={t.id} task={t} compact />
-          ))}
-        </div>
-      )}
-
-      <ProjectListPanel
-        sessions={teamSessions}
-        agents={agents}
-        onDoubleClick={onProjectDoubleClick}
-        emptyHint="완료된 Project 작업이 여기에 표시됩니다. PM과 계획 확정 후 「진행하세요」 또는 /project 로 시작하세요."
-      />
     </div>
   );
 }
@@ -1378,15 +1352,6 @@ function AgentCard({
           )
         )}
       </div>
-    </div>
-  );
-}
-
-function TaskRow({ task, compact }: { task: Task; compact?: boolean }) {
-  return (
-    <div className={`task-row ${compact ? 'compact' : ''}`}>
-      <span className="task-title">{task.title}</span>
-      <StatusBadge status={task.status} source="task" />
     </div>
   );
 }

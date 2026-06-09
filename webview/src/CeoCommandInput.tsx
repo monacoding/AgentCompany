@@ -33,9 +33,6 @@ export function CeoCommandInput({
   return (
     <section className="ceo-section">
       <label className="ceo-label">CEO Command</label>
-      <p className="ceo-hint">
-        PM과 계획 확정 후 <code>진행하세요</code> → Project 채팅방 생성 · 즉시 실행: <code>/project</code>
-      </p>
 
       <div className="ceo-input-wrap">
         <div className="ceo-input-row">
