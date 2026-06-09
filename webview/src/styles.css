@@ -1166,10 +1166,23 @@ body {
 .ceo-mention-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 6px 10px;
   cursor: pointer;
   font-size: 12px;
+}
+
+.ceo-mention-option .agent-profile-tile {
+  width: 40px;
+  pointer-events: none;
+}
+
+.ceo-mention-option-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
 }
 
 .ceo-mention-option:hover,
@@ -1234,16 +1247,165 @@ body {
 
 .ceo-mention-hints {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .ceo-mention-label {
   font-size: 11px;
   color: var(--vscode-descriptionForeground);
-  margin-right: 2px;
+}
+
+.ceo-agent-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+/* iOS 스타일 에이전트 프로필 타일 */
+.agent-profile-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 56px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.agent-profile-tile.clickable {
+  cursor: pointer;
+}
+
+.agent-profile-tile.clickable:hover .agent-profile-tile-photo,
+.agent-profile-tile.clickable:hover .agent-profile-tile-fallback {
+  transform: scale(1.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.agent-profile-tile.selected .agent-profile-tile-photo,
+.agent-profile-tile.selected .agent-profile-tile-fallback {
+  box-shadow: 0 0 0 2px var(--vscode-focusBorder, #007acc);
+}
+
+.agent-profile-tile.offline {
+  opacity: 0.45;
+}
+
+.agent-profile-tile.sm {
+  width: 48px;
+}
+
+.agent-profile-tile-avatar-wrap {
+  position: relative;
+  line-height: 0;
+}
+
+.agent-profile-tile-photo,
+.agent-profile-tile-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agent-profile-tile.sm .agent-profile-tile-photo,
+.agent-profile-tile.sm .agent-profile-tile-fallback {
+  width: 36px;
+  height: 36px;
+}
+
+.agent-profile-tile-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #3b4a5c, #2a3441);
+  color: #e2e8f0;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.agent-profile-tile.sm .agent-profile-tile-fallback {
+  font-size: 13px;
+}
+
+.agent-profile-tile-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--vscode-sideBar-background, #1e1e1e);
+}
+
+.agent-profile-tile.sm .agent-profile-tile-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.agent-profile-tile-dot.online {
+  background: #22c55e;
+}
+
+.agent-profile-tile-dot.thinking {
+  background: #3b82f6;
+  animation: agent-dot-pulse 1.2s ease-in-out infinite;
+}
+
+.agent-profile-tile-dot.idle {
+  background: #6b7280;
+}
+
+@keyframes agent-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.agent-profile-tile-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--vscode-foreground, #ccc);
+}
+
+.agent-profile-tile-role {
+  font-size: 9px;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--vscode-descriptionForeground);
+}
+
+.agent-profile-tile-badge {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--vscode-badge-background, #4d4d4d);
+  color: var(--vscode-badge-foreground, #fff);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
 }
 
 .ceo-mention-chip {
@@ -1724,9 +1886,41 @@ select:focus {
 .task-agent-filter {
   display: flex;
   flex: 1;
-  gap: 4px;
+  align-items: flex-end;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.task-agent-filter-all {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 44px;
+  height: 58px;
+  background: var(--vscode-input-background, #3c3c3c);
+  color: var(--vscode-descriptionForeground);
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.task-agent-filter-all:hover {
+  color: var(--vscode-foreground);
+  border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.task-agent-filter-all.active {
+  color: var(--vscode-foreground);
+  border-color: var(--vscode-focusBorder, #007acc);
+  background: var(--vscode-list-hoverBackground, #2a2d2e);
 }
 
 .task-agent-filter-item {
@@ -1823,28 +2017,12 @@ select:focus {
   opacity: 0.55;
 }
 
-.agent-workload-header {
+.agent-workload-profile {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
-  margin-bottom: 2px;
-}
-
-.agent-workload-name {
-  font-size: 12px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agent-workload-role {
-  display: block;
-  font-size: 10px;
-  color: var(--vscode-descriptionForeground);
   margin-bottom: 8px;
-  text-transform: uppercase;
 }
 
 .agent-workload-metrics {
@@ -2255,12 +2433,16 @@ select:focus {
 
 .activity-item {
   display: flex;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 10px;
+  padding: 8px 10px;
   background: var(--vscode-editor-background, #252526);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11px;
-  align-items: baseline;
+  align-items: flex-start;
+}
+
+.activity-item .agent-profile-tile {
+  margin-top: 1px;
 }
 
 .activity-time {
@@ -2270,9 +2452,10 @@ select:focus {
 }
 
 .activity-agent {
-  color: #3b82f6;
+  color: var(--vscode-descriptionForeground);
   white-space: nowrap;
   font-weight: 600;
+  font-size: 11px;
 }
 
 .activity-message {
@@ -2350,10 +2533,14 @@ select:focus {
 
 .idea-card-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 6px;
+}
+
+.idea-card-head .agent-profile-tile {
+  flex-shrink: 0;
 }
 
 .idea-agent {

@@ -2,9 +2,16 @@ import { SendIcon, useCeoCommandInput } from './chat-shared';
 import { VoiceMeterOverlay } from './VoiceMeterOverlay';
 import { VoiceMicButton } from './VoiceMicButton';
 import { formatAgentLabel } from './agent-display';
+import { AgentProfileTile } from './AgentProfileTile';
 import { Agent } from './vscode';
 
-export function CeoCommandInput({ agents }: { agents: Agent[] }) {
+export function CeoCommandInput({
+  agents,
+  agentPhotos,
+}: {
+  agents: Agent[];
+  agentPhotos?: Record<string, string>;
+}) {
   const {
     value,
     setValue,
@@ -73,8 +80,11 @@ export function CeoCommandInput({ agents }: { agents: Agent[] }) {
                   }}
                   onMouseEnter={() => setHighlight(index)}
                 >
-                  <span className="ceo-mention-option-name">@{agent.name}</span>
-                  <span className="ceo-mention-option-role">{formatAgentLabel(agent)}</span>
+                  <AgentProfileTile agent={agent} photoUrl={agentPhotos?.[agent.id]} size="sm" />
+                  <div className="ceo-mention-option-text">
+                    <span className="ceo-mention-option-name">@{agent.name}</span>
+                    <span className="ceo-mention-option-role">{formatAgentLabel(agent)}</span>
+                  </div>
                 </li>
               ))
             )}
@@ -84,21 +94,22 @@ export function CeoCommandInput({ agents }: { agents: Agent[] }) {
 
       {!showDropdown && agents.length > 0 && (
         <div className="ceo-mention-hints">
-          <span className="ceo-mention-label">@ 로 직접 지정:</span>
-          {agents.slice(0, 6).map((agent) => (
-            <button
-              key={agent.id}
-              type="button"
-              className={`ceo-mention-chip ${agent.status === 'offline' ? 'offline' : ''}`}
-              onClick={() => {
-                setValue(`@${agent.name} `);
-                inputRef.current?.focus();
-              }}
-            >
-              @{agent.name}
-              {agent.title?.trim() ? ` (${agent.title})` : ''}
-            </button>
-          ))}
+          <span className="ceo-mention-label">@ 로 직접 지정</span>
+          <div className="ceo-agent-tiles">
+            {agents.map((agent) => (
+              <AgentProfileTile
+                key={agent.id}
+                agent={agent}
+                photoUrl={agentPhotos?.[agent.id]}
+                size="md"
+                disabled={agent.status === 'offline'}
+                onClick={() => {
+                  setValue(`@${agent.name} `);
+                  inputRef.current?.focus();
+                }}
+              />
+            ))}
+          </div>
         </div>
       )}
     </section>

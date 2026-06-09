@@ -11,6 +11,7 @@ import { openProjectDetail, ProjectListPanel } from './ProjectListPanel';
 import { ProjectDetail, ProjectDetailModal } from './ProjectDetailModal';
 import { SettingsTab } from './SettingsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task, TeamSession } from './vscode';
+import { AgentProfileTile } from './AgentProfileTile';
 import {
   formatAgentLabel,
   isInProgressTask,
@@ -351,7 +352,7 @@ export default function App() {
         onCheckConnection={handleCheckLlm}
       />
 
-      <CeoCommandInput agents={data.agents} />
+      <CeoCommandInput agents={data.agents} agentPhotos={data.agentPhotos} />
 
       <nav className="tabs">
         {(['overview', 'agents', 'org', 'projects', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
@@ -381,6 +382,7 @@ export default function App() {
             reviewTasks={reviewTasks}
             teamSessions={teamSessions}
             teamSessionCount={teamSessions.length}
+            agentPhotos={data.agentPhotos}
             onOpenProjects={() => setActiveTab('projects')}
             onProjectDoubleClick={openProjectDetail}
           />
@@ -389,6 +391,7 @@ export default function App() {
           <AgentsTab
             agents={data.agents}
             tasks={data.tasks}
+            agentPhotos={data.agentPhotos}
             showCreate={showCreateAgent}
             newAgent={newAgent}
             editingAgentId={editingAgentId}
@@ -421,6 +424,7 @@ export default function App() {
           <TasksTab
             tasks={data.tasks}
             agents={data.agents}
+            agentPhotos={data.agentPhotos}
             newTaskTitle={newTaskTitle}
             expandedTaskId={expandedTaskId}
             onNewTaskChange={setNewTaskTitle}
@@ -433,7 +437,9 @@ export default function App() {
             onToggleExpand={(id) => setExpandedTaskId(expandedTaskId === id ? null : id)}
           />
         )}
-        {activeTab === 'activity' && <ActivityTab activities={data.activities} agents={data.agents} />}
+        {activeTab === 'activity' && (
+          <ActivityTab activities={data.activities} agents={data.agents} agentPhotos={data.agentPhotos} />
+        )}
         {activeTab === 'api' && <ApiTab apis={data.externalApis ?? []} />}
         {activeTab === 'settings' && (
           <SettingsTab
@@ -555,6 +561,7 @@ function OverviewTab({
   reviewTasks,
   teamSessions,
   teamSessionCount,
+  agentPhotos,
   onOpenProjects,
   onProjectDoubleClick,
 }: {
@@ -564,6 +571,7 @@ function OverviewTab({
   reviewTasks: Task[];
   teamSessions: TeamSession[];
   teamSessionCount: number;
+  agentPhotos?: Record<string, string>;
   onOpenProjects: () => void;
   onProjectDoubleClick: (sessionId: string) => void;
 }) {
@@ -597,7 +605,11 @@ function OverviewTab({
               <div key={idea.id} className="idea-card">
                 <div className="idea-card-head">
                   <strong>{idea.title}</strong>
-                  <span className="idea-agent">{agent ? formatAgentLabel(agent) : '에이전트'}</span>
+                  {agent ? (
+                    <AgentProfileTile agent={agent} photoUrl={agentPhotos?.[agent.id]} size="sm" />
+                  ) : (
+                    <span className="idea-agent">에이전트</span>
+                  )}
                 </div>
                 <p className="idea-body">{idea.body}</p>
                 <div className="idea-actions">
@@ -652,10 +664,12 @@ function computeAgentWorkload(agents: Agent[], tasks: Task[]) {
 function AgentWorkloadBoard({
   agents,
   tasks,
+  agentPhotos,
   onSelectAgent,
 }: {
   agents: Agent[];
   tasks: Task[];
+  agentPhotos?: Record<string, string>;
   onSelectAgent?: (id: string) => void;
 }) {
   const stats = computeAgentWorkload(agents, tasks);
@@ -675,11 +689,10 @@ function AgentWorkloadBoard({
             className={`agent-workload-card ${agent.status === 'working' || agent.status === 'progress' ? 'active-agent' : ''} ${onSelectAgent ? 'selectable' : ''}`}
             onClick={() => onSelectAgent?.(agent.id)}
           >
-            <div className="agent-workload-header">
-              <span className="agent-workload-name">{formatAgentLabel(agent)}</span>
+            <div className="agent-workload-profile">
+              <AgentProfileTile agent={agent} photoUrl={agentPhotos?.[agent.id]} size="sm" />
               <StatusBadge status={agent.status} />
             </div>
-            <span className="agent-workload-role">{agent.title?.trim() || agent.role}</span>
             <div className="agent-workload-metrics">
               <div className="agent-workload-metric">
                 <span className="agent-workload-value">{workload}</span>
@@ -711,6 +724,7 @@ function AgentWorkloadBoard({
 function AgentsTab({
   agents,
   tasks,
+  agentPhotos,
   showCreate,
   newAgent,
   editingAgentId,
@@ -729,6 +743,7 @@ function AgentsTab({
 }: {
   agents: Agent[];
   tasks: Task[];
+  agentPhotos?: Record<string, string>;
   showCreate: boolean;
   newAgent: AgentForm;
   editingAgentId: string | null;
@@ -778,6 +793,7 @@ function AgentsTab({
       <AgentWorkloadBoard
         agents={agents}
         tasks={tasks}
+        agentPhotos={agentPhotos}
         onSelectAgent={(id) => {
           setSelectedAgentId(id);
           setDeleteConfirmId(null);
@@ -813,6 +829,7 @@ function AgentsTab({
 function TasksTab({
   tasks,
   agents,
+  agentPhotos,
   newTaskTitle,
   expandedTaskId,
   onNewTaskChange,
@@ -826,6 +843,7 @@ function TasksTab({
 }: {
   tasks: Task[];
   agents: Agent[];
+  agentPhotos?: Record<string, string>;
   newTaskTitle: string;
   expandedTaskId: string | null;
   onNewTaskChange: (v: string) => void;
@@ -850,7 +868,7 @@ function TasksTab({
           <div className="task-agent-filter">
             <button
               type="button"
-              className={`task-agent-filter-item ${agentFilter === null ? 'active' : ''}`}
+              className={`task-agent-filter-all ${agentFilter === null ? 'active' : ''}`}
               onClick={() => setAgentFilter(null)}
             >
               전체
@@ -859,15 +877,15 @@ function TasksTab({
             {agents.map((agent) => {
               const count = tasks.filter((t) => t.agentId === agent.id).length;
               return (
-                <button
+                <AgentProfileTile
                   key={agent.id}
-                  type="button"
-                  className={`task-agent-filter-item ${agentFilter === agent.id ? 'active' : ''}`}
+                  agent={agent}
+                  photoUrl={agentPhotos?.[agent.id]}
+                  size="sm"
+                  selected={agentFilter === agent.id}
+                  badge={count}
                   onClick={() => setAgentFilter(agent.id)}
-                >
-                  {formatAgentLabel(agent)}
-                  <span className="task-agent-filter-count">{count}</span>
-                </button>
+                />
               );
             })}
           </div>
@@ -961,7 +979,15 @@ function TasksTab({
   );
 }
 
-function ActivityTab({ activities, agents }: { activities: Activity[]; agents: Agent[] }) {
+function ActivityTab({
+  activities,
+  agents,
+  agentPhotos,
+}: {
+  activities: Activity[];
+  agents: Agent[];
+  agentPhotos?: Record<string, string>;
+}) {
   return (
     <div>
       <h2>Activity Monitor</h2>
@@ -974,7 +1000,11 @@ function ActivityTab({ activities, agents }: { activities: Activity[]; agents: A
             return (
               <div key={a.id} className="activity-item">
                 <span className="activity-time">{formatTime(a.createdAt)}</span>
-                {agent && <span className="activity-agent">{formatAgentLabel(agent)}</span>}
+                {agent ? (
+                  <AgentProfileTile agent={agent} photoUrl={agentPhotos?.[agent.id]} size="sm" />
+                ) : (
+                  <span className="activity-agent">시스템</span>
+                )}
                 <span className="activity-message">{a.message}</span>
               </div>
             );
