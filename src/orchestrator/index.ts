@@ -71,7 +71,7 @@ import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
 import { getAutoAssignThreshold, routeCommand, SECRETARY_AGENT, SecretaryMessages, isSecretaryAgent } from '../secretary';
 import { ExternalApiExecutor } from '../external-api/executor';
-import { shouldTryExternalApi } from '../external-api/auto-detect';
+import { shouldTryExternalApi, isInquiryOrApiCommand } from '../external-api/auto-detect';
 import { ExternalApiService } from '../services/external-api';
 import { LlmStatusService } from '../services/llm-status';
 import { TaskEngine } from '../tasks';
@@ -472,6 +472,10 @@ export class Orchestrator {
     const allAgents = this.agentManager.getAll();
     const effective = resolved.effective;
 
+    if (isInquiryOrApiCommand(rawCommand)) {
+      return null;
+    }
+
     if (isExternalResourceFetchTask(effective)) {
       return null;
     }
@@ -549,6 +553,11 @@ export class Orchestrator {
 
     const folderHandled = await this.tryHandleFolderCommand(agent, command, resolved.effective);
     if (folderHandled) return folderHandled;
+
+    const enabledApis = this.externalApis.getEnabled();
+    if (enabledApis.length > 0 && shouldTryExternalApi(command, enabledApis)) {
+      return this.executeDirectCommandFlat(agent, command, fullCommand, personaAckSent);
+    }
 
     // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변
     if (isConversationalCommand(command)) {
@@ -1340,7 +1349,7 @@ ${pmBlock}${devBlock}
 
       if (isExternalResourceFetchTask(resolved.effective)) {
         // 외부 다운로드 업무 — 폴더 검색 생략, PM/리서치 등 실제 작업으로 진행
-      } else {
+      } else if (!isInquiryOrApiCommand(command)) {
       const ownFileReq = detectOwnFolderFileRequest(resolved.effective, agent, allAgents);
       if (ownFileReq) {
         this.memory.logActivity(
@@ -1389,14 +1398,9 @@ ${pmBlock}${devBlock}
 
       if (isClineAgent(agent) && isClineDevTask(command)) {
         if (commandNeedsKnowledgeLearning(command)) {
-          await this.knowledgeLearner.syncAgent(agent, { force: true });
+          void this.knowledgeLearner.syncAgent(agent, { force: true });
         }
         await this.runClineTask(agent, task);
-        return;
-      }
-
-      if (isPmAgent(agent)) {
-        await this.runPmPlanningTask(agent, task, command, resolved);
         return;
       }
 
@@ -1437,6 +1441,11 @@ ${pmBlock}${devBlock}
           );
           return;
         }
+      }
+
+      if (isPmAgent(agent) && !isInquiryOrApiCommand(command)) {
+        await this.runPmPlanningTask(agent, task, command, resolved);
+        return;
       }
 
       if (commandNeedsKnowledgeLearning(command)) {

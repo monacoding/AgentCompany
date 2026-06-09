@@ -9,7 +9,7 @@ export interface ResolvedCommand {
 }
 
 var FOLLOW_UP_PREFIX = /^(?:그거|그것|그\s*파일|이거|저거|이\s*파일|위에|아까|방금|그럼|그래서|그리고|근데|자|응|네|좋아|오케이|ok)/i;
-var FOLLOW_UP_ACTION = /(?:전달|줄래|줘|줄게|보내|가져|받아|드려|드릴|해줘|해주|해\s*줄래|해\s*주|부탁|진행|시작|계속|그렇게)/i;
+var FOLLOW_UP_ACTION = /(?:전달|줄래|보내|가져|받아|드려|드릴|해\s*줄래|해\s*주(?:세요)?|부탁|진행|시작|계속|그렇게)/i;
 var TOPIC_SIGNAL = /(?:파일|pdf|수능|폴더|전달|가져|복사|다운|자료|문서|기출|국어|수학|영어|문제|산출물|리포트|outputs?)/i;
 var STANDALONE_TASK = /(?:파일|pdf|구현|조사|만들|작성|분석|제작|배포|리서치|크롤|다운로드|저장|복사|전달해\s*줘?.{0,20}(?:파일|pdf|수능|폴더))/i;
 var STANDALONE_GREETING =
@@ -22,6 +22,8 @@ export function isContextDependentCommand(command: string): boolean {
   if (/^(?:예|아니오|아니요|취소|중지|멈춰|그만)\b/i.test(text))
     return false;
   if (STANDALONE_GREETING.test(text))
+    return false;
+  if (/날씨|weather|기온|온도|환율|주가|번역|몇\s*시/i.test(text))
     return false;
   if (text.length > 50 && STANDALONE_TASK.test(text))
     return false;

@@ -164,9 +164,11 @@ Your job:
 5. Plan ends with CEO approval cue ("진행하세요")
 
 Output format (strict):
+---TITLE---
+(사장님 지시를 담은 짧은 프로젝트명 — 20~35자, 명사형, 직관적으로)
 ---PLAN---
 ## 목표
-(한 문장)
+(한 문장, TITLE과 동일하거나 더 짧게)
 
 ## 계획
 P1 … / P2 …
@@ -193,12 +195,16 @@ ${buildPmPlanningContextBlock(command)}`,
     );
 
     const raw = (response.content || '').trim();
+    const titleMatch = raw.match(/---TITLE---\s*([\s\S]*?)\s*---PLAN---/i);
     const planMatch = raw.match(/---PLAN---\s*([\s\S]*?)\s*---AGENTS---/i);
     const agentsMatch = raw.match(/---AGENTS---\s*([\s\S]*?)\s*---END---/i);
 
     const planBody = (planMatch?.[1] ?? raw).trim();
+    const titlePrefix = titleMatch?.[1]?.trim()
+      ? `---TITLE---\n${titleMatch[1].trim()}\n---\n\n`
+      : '';
     const plan =
-      planBody ||
+      (titlePrefix + planBody).trim() ||
       fallbackPlan(pm, requester, command, mergeMembers(pm, requester, [], allAgents));
 
     let picked: Agent[] = [];

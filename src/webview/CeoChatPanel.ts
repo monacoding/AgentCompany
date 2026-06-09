@@ -371,6 +371,13 @@ export class CeoChatPanel {
       collabParticipants,
     };
 
+    const session = this.service.teams.getSessionByThreadId(this.thread.threadId);
+    if (session?.title) {
+      base.projectTitle = session.title;
+      base.panelTitle = session.title;
+      this.panel.title = session.title;
+    }
+
     const emotionPhotos: Record<string, string> = {};
     for (const emotion of CHAT_EMOTIONS) {
       const emotionPath = await this.service.agentFolders.resolveEmotionPhotoPath(slug, emotion);

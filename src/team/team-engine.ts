@@ -10,7 +10,7 @@ import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
 import { ProjectWorkerDeps } from './project-worker-engine';
 import { parseProjectTasks, runProjectSequential } from './project-runner';
-import { buildProjectWarehouseFolder, formatProjectDisplayTitle } from './project-title';
+import { buildProjectWarehouseFolder, deriveProjectTitle } from './project-title';
 import { buildTeamThreadId } from './thread-id';
 import { TeamRunResult } from './types';
 
@@ -74,7 +74,7 @@ export class TeamEngine {
     const id = generateId();
     const timestamp = now();
     const projectTasks = parseProjectTasks(plan, members);
-    const displayTitle = formatProjectDisplayTitle(command) || `${pm.name} Project`;
+    const displayTitle = deriveProjectTitle(plan, command, pm);
     const companyDir = this.agentFolders.getCompanyDir();
     const warehouseFolder = buildProjectWarehouseFolder(displayTitle, companyDir, new Date(timestamp));
 

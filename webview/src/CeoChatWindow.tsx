@@ -110,6 +110,78 @@ function ProjectParticipantStrip({
   );
 }
 
+function ProjectChatHeader({
+  config,
+  statusInfo,
+  working,
+  ownerDisplay,
+  displayName,
+}: {
+  config: AgentChatThreadConfig;
+  statusInfo: { kind: string; label: string };
+  working: ChatWorkingState | null;
+  ownerDisplay: string;
+  displayName: string;
+}) {
+  const storageKey = `project-header-expanded:${config.threadId}`;
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) !== '0';
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleExpanded = () => {
+    setExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(storageKey, next ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div
+      className={`project-chat-header-stack${expanded ? ' is-expanded' : ' is-collapsed'}`}
+    >
+      <div className="project-chat-title-block">
+        <div className="ceo-chat-window-title-row">
+          <h1 className="project-chat-title">{collabTitle(config)}</h1>
+          <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
+        </div>
+        <button
+          type="button"
+          className="project-header-toggle"
+          onClick={toggleExpanded}
+          aria-expanded={expanded}
+          aria-label={expanded ? '프로젝트 정보 접기' : '프로젝트 정보 펼치기'}
+          title={expanded ? '접기' : '펼치기'}
+        >
+          <span className="project-header-toggle-icon" aria-hidden>
+            {expanded ? '▲' : '▼'}
+          </span>
+        </button>
+      </div>
+      {expanded && (
+        <>
+          {config.collabParticipants && config.collabParticipants.length > 0 && (
+            <ProjectParticipantStrip
+              participants={config.collabParticipants}
+              leadAgentId={config.projectLeadAgentId}
+            />
+          )}
+          <p className="project-chat-subline">{collabSubtitle(config, ownerDisplay, displayName)}</p>
+          {working && <p className="ceo-chat-working-detail">{working.content}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
 function AgentAvatar({
   name,
   photoUrl,
@@ -549,20 +621,13 @@ export function CeoChatWindow({ threadConfig }: { threadConfig: AgentChatThreadC
         className={`ceo-chat-window-header${config.projectMode ? ' project-chat-header' : ''}`}
       >
         {config.projectMode ? (
-          <div className="project-chat-header-stack">
-            <div className="ceo-chat-window-title-row">
-              <h1 className="project-chat-title">{collabTitle(config)}</h1>
-              <span className={`ceo-chat-status-badge ${statusInfo.kind}`}>{statusInfo.label}</span>
-            </div>
-            {config.collabParticipants && config.collabParticipants.length > 0 && (
-              <ProjectParticipantStrip
-                participants={config.collabParticipants}
-                leadAgentId={config.projectLeadAgentId}
-              />
-            )}
-            <p className="project-chat-subline">{collabSubtitle(config, ownerDisplay, displayName)}</p>
-            {working && <p className="ceo-chat-working-detail">{working.content}</p>}
-          </div>
+          <ProjectChatHeader
+            config={config}
+            statusInfo={statusInfo}
+            working={working}
+            ownerDisplay={ownerDisplay}
+            displayName={displayName}
+          />
         ) : (
           <>
             {isCollab && config.collabParticipants && config.collabParticipants.length > 0 ? (

@@ -1,20 +1,62 @@
 import fs from 'fs';
 import path from 'path';
 
-/** Project 채팅·탭에 표시할 짧은 제목 */
+const MAX_TITLE_LEN = 48;
+
+function sanitizeProjectTitle(text: string): string {
+  return text
+    .replace(/^사장님[,，]?\s*/i, '')
+    .replace(/\*\*/g, '')
+    .replace(/[「」"']/g, '')
+    .replace(/\s*프로젝트로\s*(?:잡|진행)(?:하겠|할게|할게요)[습니다]*\.?$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_TITLE_LEN);
+}
+
+/** PM 계획·사장님 지시에서 Project 채팅·탭용 짧은 제목 추출 */
+export function deriveProjectTitle(
+  plan: string,
+  ceoCommand: string,
+  pm?: { name: string }
+): string {
+  const titleBlock = plan.match(/---TITLE---\s*([\s\S]*?)\s*---(?:PLAN|AGENTS|END)/i);
+  if (titleBlock?.[1]?.trim()) {
+    const cleaned = sanitizeProjectTitle(titleBlock[1]);
+    if (cleaned.length >= 4) return cleaned;
+  }
+
+  const goalMatch = plan.match(/##?\s*목표\s*\n+([^\n#@]+)/i);
+  if (goalMatch?.[1]?.trim()) {
+    const cleaned = sanitizeProjectTitle(goalMatch[1]);
+    if (cleaned.length >= 4) return cleaned;
+  }
+
+  const fromCommand = formatProjectDisplayTitle(ceoCommand);
+  if (fromCommand && fromCommand !== 'Project') return fromCommand;
+
+  return pm ? `${pm.name} Project` : 'Project';
+}
+
+/** Project 채팅·탭에 표시할 짧은 제목 (레거시·폴백) */
 export function formatProjectDisplayTitle(raw: string): string {
   const text = raw.trim();
   if (!text) return 'Project';
 
+  const titleBlock = text.match(/---TITLE---\s*([\s\S]*?)\s*---/i);
+  if (titleBlock?.[1]?.trim()) {
+    return sanitizeProjectTitle(titleBlock[1]);
+  }
+
   const goalMatch = text.match(/##?\s*목표\s*\n+([^\n#@]+)/i);
   if (goalMatch?.[1]?.trim()) {
-    return goalMatch[1].trim().slice(0, 80);
+    return sanitizeProjectTitle(goalMatch[1]);
   }
 
   const ceoMatch = text.match(/##?\s*사장님\s*지시\s*\n+([^\n#@]+)/i);
   if (ceoMatch?.[1]?.trim()) {
-    const line = ceoMatch[1].trim().replace(/^@\S+\s*/, '');
-    if (line.length >= 8) return line.slice(0, 80);
+    const line = sanitizeProjectTitle(ceoMatch[1].replace(/^@\S+\s*/, ''));
+    if (line.length >= 8) return line;
   }
 
   const lines = text
@@ -29,15 +71,18 @@ export function formatProjectDisplayTitle(raw: string): string {
     );
 
   for (const line of lines) {
-    const cleaned = line.replace(/^@\S+\s*/, '').trim();
-    if (cleaned.length >= 6) return cleaned.slice(0, 80);
+    const cleaned = sanitizeProjectTitle(line.replace(/^@\S+\s*/, ''));
+    if (cleaned.length >= 6) return cleaned;
   }
 
-  return text
-    .replace(/^#+\s*/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 80) || 'Project';
+  return (
+    sanitizeProjectTitle(
+      text
+        .replace(/^#+\s*/gm, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    ) || 'Project'
+  );
 }
 
 /** company/projects/{폴더명} — 프로젝트명_YYYYMMDD */

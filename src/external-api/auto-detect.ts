@@ -96,6 +96,27 @@ export function isResearchPipelineTask(command: string): boolean {
   return /다운|download|\.pdf|크롤|crawl|리서치|기출|수능\s*pdf/i.test(command);
 }
 
+/** 날씨·환율 등 정보 조회 — 파일 전달·PM 계획과 분리 */
+export function isInquiryOrApiCommand(command: string): boolean {
+  const text = command.trim();
+  if (!text) return false;
+
+  if (/날씨|weather|기온|온도|미세먼지|강수|습도|체감/i.test(text)) return true;
+  if (/환율|주가|코스피|나스닥|금값|유가|bitcoin|btc/i.test(text)) return true;
+  if (/번역|translate/i.test(text)) return true;
+  if (/몇\s*시|지금\s*시간|현재\s*시간|타임존/i.test(text)) return true;
+
+  if (
+    /(?:알려(?:줘|주(?:세요)?)|말해(?:줘|주(?:세요)?)|알아봐(?:줘|주(?:세요)?)|설명해(?:줘|주(?:세요)?)|요약해(?:줘|주(?:세요)?))/i.test(
+      text
+    )
+  ) {
+    return !/(?:파일|pdf|폴더|전달|보내|가져|자료|수능|기출|리포트|outputs?|다운(?:로드|받))/i.test(text);
+  }
+
+  return false;
+}
+
 export function shouldTryExternalApi(command: string, apis: ExternalApi[]): boolean {
   if (apis.length === 0) return false;
   if (isCodeDevTask(command) || isResearchPipelineTask(command)) return false;

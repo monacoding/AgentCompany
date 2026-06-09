@@ -13,7 +13,11 @@ export {
 } from './trigger';
 export { hasProjectPlanningContext, extractProjectBriefFromChat } from './project-brief';
 export { looksLikePmPlan, buildPmApprovalConfirmationText } from './pm-approval';
-export { formatProjectDisplayTitle, buildProjectWarehouseFolder } from './project-title';
+export {
+  deriveProjectTitle,
+  formatProjectDisplayTitle,
+  buildProjectWarehouseFolder,
+} from './project-title';
 export {
   PROJECT_REVIEW_MAX_ITERATIONS,
   PROJECT_TEST_MAX_ITERATIONS,

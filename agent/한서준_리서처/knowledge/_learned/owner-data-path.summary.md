@@ -1,39 +1,39 @@
 # Learned: owner-data-path.md
 
-_hash: dbc5abc9e797cc95_  
-_learned: 2026-06-08T15:22:34.531Z_
+_hash: 28ec63cd4f2e0884_  
+_learned: 2026-06-09T01:24:30.950Z_
 
 # `owner-data-path.md` 요약 — 한서준(pm)
 
-- **목적**
-  - 사장님(Owner) 관련 데이터의 공식 저장 위치를 명확히 지정한 문서입니다.
-  - 동일 내용이 반복되어 있으나 핵심 지침은 하나입니다.
+- 사장님(Owner) 관련 데이터는 **반드시 지정된 경로**에서만 찾거나 저장해야 함.
+- 동일 내용이 반복되어 있으며, 핵심 규칙은 아래와 같음.
 
-- **사장님 데이터 공식 경로**
-  - **절대 경로**
-    - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-  - **워크스페이스 기준 경로**
-    - `company/owner`
+## 필수 경로
 
-- **주요 파일 및 폴더**
-  - `profile.json`
-    - 사장님 프로필 정보
-    - 예: 이름, 성격 등
-  - `persona.md`
-    - 사장님 페르소나 정보
-    - 대화, 보고, 응답 톤 참고용
-  - `photo/`
-    - 사장님 사진 저장 폴더
+- **절대 경로**
+  - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
 
-- **필수 운영 규칙**
-  - 사장님 관련 정보를 **찾거나 저장할 때 반드시 위 경로만 사용**해야 합니다.
-  - 다른 위치를 임의로 추측하거나 대체 경로를 사용하면 안 됩니다.
-  - 사장님 프로필, 페르소나, 사진 관련 작업 시 우선 확인 경로는 `company/owner`입니다.
+- **워크스페이스 기준 경로**
+  - `company/owner`
 
-- **PM 에이전트 참고사항**
-  - 사장님 보고서, 의사결정 자료, 커뮤니케이션 톤 조정이 필요한 경우:
-    - `persona.md`를 참고합니다.
-  - 사장님 개인정보나 기본 프로필 확인이 필요한 경우:
-    - `profile.json`을 참고합니다.
-  - 이미지·사진 자료가 필요한 경우:
-    - `photo/` 폴더를 확인합니다.
+## 주요 파일
+
+- `profile.json`
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 용도: 사장님 프로필 정보
+  - 예: 이름, 성격 등
+
+- `persona.md`
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 용도: 사장님 페르소나
+  - 대화 및 보고 시 참고
+
+- `photo/`
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 용도: 사장님 사진 저장 위치
+
+## 운영 원칙
+
+- 사장님 관련 정보를 조회하거나 저장할 때는 **반드시 위 경로만 사용**.
+- 다른 위치를 임의로 추측하거나 탐색하지 않음.
+- 중복 기재가 많지만, 모든 반복 문단의 의미는 동일함.

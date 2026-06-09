@@ -1,5 +1,6 @@
 import { Agent } from '../types';
 import { getAgentMatchTokens, textMentionsAgent } from '../utils/agent-display';
+import { isInquiryOrApiCommand } from '../external-api/auto-detect';
 import { detectFolderOpenRequest } from './folder-path';
 
 export interface CrossAgentFileRequest {
@@ -42,7 +43,8 @@ export function detectFolderPathInquiry(command: string): FolderPathScope | null
 }
 
 var TRANSFER_SIGNAL = /(?:가져|옮기|복사|전달|이동|받아|넘겨|공유|옮겨|가져가|가져와|받을|전해|제공받|받은|저장|내\s*폴더|제\s*폴더|우리\s*폴더|갖고\s*있|가지고\s*있|추출하여|추출해서|저장하도록|저장해)/i;
-var GIVE_TO_CEO_SIGNAL = /(?:줄래|줘|주세요|보내|보내줘|드릴|드려|줄게|제공해|전해줘)/i;
+var GIVE_TO_CEO_SIGNAL =
+  /(?:파일|pdf|자료|문서|리포트|산출물|데이터).{0,40}(?:줄래|줘|보내|전달|드려|드릴)|(?:줄래|보내줘|보내|드릴|드려|전해줘|제공해)/i;
 var SELF_FOLDER_SIGNAL = /(?:너(?:의)?|니(?:가)?|네|당신(?:의)?|본인(?:의)?|자기(?:의)?|제\s*폴더|내\s*폴더|우리\s*폴더|여기\s*폴더|여기\s*있)/i;
 var AGENT_REQUEST_SIGNAL = /(?:에게|한테).{0,80}(?:요청|부탁|전달|제공받|제공해|말씀|연락|협력)/i;
 var FILE_SIGNAL = /(?:파일|폴더|데이터(?:베이스)?|outputs?|다운(?:로드|받)|pdf|자료|산출물|리포트|보관|저장|문서)/i;
@@ -148,7 +150,7 @@ export function detectCrossAgentFileRequest(
   allAgents: Agent[]
 ): CrossAgentFileRequest | null {
   const text = command.trim();
-  if (!text || detectFolderOpenRequest(text) || !FILE_SIGNAL.test(text))
+  if (!text || detectFolderOpenRequest(text) || isInquiryOrApiCommand(text) || !FILE_SIGNAL.test(text))
     return null;
   if (isExternalResourceFetchTask(text))
     return null;
@@ -201,7 +203,7 @@ export function detectOwnFolderFileRequest(
   allAgents: Agent[]
 ): OwnFolderFileRequest | null {
   const text = command.trim();
-  if (!text || detectFolderOpenRequest(text) || !FILE_SIGNAL.test(text))
+  if (!text || detectFolderOpenRequest(text) || isInquiryOrApiCommand(text) || !FILE_SIGNAL.test(text))
     return null;
   if (isExternalResourceFetchTask(text))
     return null;
