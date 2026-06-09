@@ -101,7 +101,8 @@ export class AgentGramService {
   }
 
   async getSnapshot(): Promise<AgentGramSnapshot> {
-    const ownerName = await getOwnerDisplayName();
+    const ownerInfo = await this.agentFolders.loadOwnerInfo();
+    const ownerName = getOwnerDisplayName(ownerInfo);
     const agents = this.agents.getAll();
     const agentAccounts = agents.map((a) => this.mapAgentAccount(a));
     const owner: AgentGramAccount = {

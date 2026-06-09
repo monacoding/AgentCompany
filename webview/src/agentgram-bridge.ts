@@ -53,29 +53,43 @@ export interface AgentGramSnapshot {
   ownerPostCount: number;
 }
 
-const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : null;
+const vscodeApi = window.acquireVsCodeApi?.() ?? null;
 
 export function postGramMessage(type: string, payload?: unknown): void {
-  vscode?.postMessage({ type, payload });
+  if (vscodeApi) {
+    vscodeApi.postMessage({ type, payload });
+  }
 }
 
 export function useAgentGramSnapshot(): {
   snapshot: AgentGramSnapshot | null;
+  loadError: string | null;
   refresh: () => void;
   createOwnerPost: (caption: string, emoji: string) => void;
   toggleOwnerLike: (postId: string) => void;
   respondFollowRequest: (requestId: string, accept: boolean) => void;
 } {
   const [snapshot, setSnapshot] = useState<AgentGramSnapshot | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       const msg = event.data;
       if (msg?.type === 'agentGramData') {
+        setLoadError(null);
         setSnapshot(msg.payload as AgentGramSnapshot);
+      }
+      if (msg?.type === 'agentGramError') {
+        setLoadError(String(msg.payload ?? '데이터를 불러오지 못했습니다.'));
       }
     };
     window.addEventListener('message', handler);
+
+    if (!vscodeApi) {
+      setLoadError('VS Code API에 연결되지 않았습니다.');
+      return () => window.removeEventListener('message', handler);
+    }
+
     postGramMessage('ready');
     return () => window.removeEventListener('message', handler);
   }, []);
@@ -91,5 +105,5 @@ export function useAgentGramSnapshot(): {
     postGramMessage('respondFollowRequest', { requestId, accept });
   }, []);
 
-  return { snapshot, refresh, createOwnerPost, toggleOwnerLike, respondFollowRequest };
+  return { snapshot, loadError, refresh, createOwnerPost, toggleOwnerLike, respondFollowRequest };
 }

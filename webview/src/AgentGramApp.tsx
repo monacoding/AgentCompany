@@ -801,7 +801,8 @@ function FeedScreen({
 }
 
 export function AgentGramApp() {
-  const { snapshot, createOwnerPost, toggleOwnerLike, respondFollowRequest } = useAgentGramSnapshot();
+  const { snapshot, loadError, refresh, createOwnerPost, toggleOwnerLike, respondFollowRequest } =
+    useAgentGramSnapshot();
   const [bottomTab, setBottomTab] = useState<BottomTab>('profile');
   const [agentProfileId, setAgentProfileId] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
@@ -825,7 +826,17 @@ export function AgentGramApp() {
       <div className="gram-app">
         <div className="gram-mobile-frame">
           <div className="gram-placeholder-screen">
-            <p>AgentGram 불러오는 중...</p>
+            {loadError ? (
+              <>
+                <p>AgentGram을 불러오지 못했습니다.</p>
+                <p style={{ fontSize: 12, color: '#8e8e8e', marginTop: 8 }}>{loadError}</p>
+                <button type="button" className="gram-complete-action" style={{ marginTop: 16 }} onClick={refresh}>
+                  다시 시도
+                </button>
+              </>
+            ) : (
+              <p>AgentGram 불러오는 중...</p>
+            )}
           </div>
         </div>
       </div>

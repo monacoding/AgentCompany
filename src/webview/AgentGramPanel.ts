@@ -51,8 +51,13 @@ export class AgentGramPanel {
   }
 
   async syncToWebview(): Promise<void> {
-    const payload = await this.service.agentGram.getSnapshot();
-    this.panel.webview.postMessage({ type: 'agentGramData', payload });
+    try {
+      const payload = await this.service.agentGram.getSnapshot();
+      this.panel.webview.postMessage({ type: 'agentGramData', payload });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.panel.webview.postMessage({ type: 'agentGramError', payload: message });
+    }
   }
 
   private async handleMessage(message: { type: string; payload?: unknown }): Promise<void> {
