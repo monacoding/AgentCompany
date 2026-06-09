@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T05:17:31.985Z_
+_마지막 동기화: 2026-06-09T05:25:59.272Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
