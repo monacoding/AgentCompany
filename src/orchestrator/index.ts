@@ -223,6 +223,25 @@ export class Orchestrator {
       return { taskId: '', success: false, message: 'No pending delegation' };
     }
 
+    if (pending.kind === 'pm-final-task') {
+      const resolved = this.teamEngine.resolvePmFinalTaskApproval(pendingId, true);
+      if (!resolved) {
+        return { taskId: '', success: false, message: 'PM 최종 작업 승인 대기가 없습니다.' };
+      }
+      const agent = this.agentManager.get(pending.agentId);
+      if (agent) {
+        this.agentSay(
+          agent,
+          '사장님, 승인 확인했습니다. PM 최종 통합 작업을 시작합니다.',
+          'agent',
+          'done',
+          undefined,
+          true
+        );
+      }
+      return { taskId: '', success: true, message: 'PM final task approved' };
+    }
+
     this.chat.resolveConfirmationByPendingId(pendingId, 'confirmed');
     this.chat.clearPending();
 
@@ -332,6 +351,24 @@ export class Orchestrator {
       this.chat.resolveConfirmationByPendingId(pendingId, 'rejected');
       this.chat.clearPending();
       void this.rejectFileMatchAndReSearch(pending);
+      return;
+    }
+
+    if (pending.kind === 'pm-final-task') {
+      const resolved = this.teamEngine.resolvePmFinalTaskApproval(pendingId, false);
+      if (resolved) {
+        const agent = this.agentManager.get(pending.agentId);
+        if (agent) {
+          this.agentSay(
+            agent,
+            '사장님, PM 최종 작업은 건너뛰고 기존 산출물로 보고서를 마무리하겠습니다.',
+            'agent',
+            'done',
+            undefined,
+            true
+          );
+        }
+      }
       return;
     }
 

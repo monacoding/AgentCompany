@@ -15,6 +15,11 @@ import {
   isDeliverableApproved,
   resolveProjectReviewer,
 } from './project-loop';
+import {
+  estimatePmFinalTaskCost,
+  isPmFinalIntegrationTask,
+  type ProjectTaskCostEstimate,
+} from './project-cost-estimate';
 import { buildReviewPhasePrompt } from './phase-prompts';
 import { ProjectWorkerDeps, executeProjectWorkerTask } from './project-worker-engine';
 import { buildWorkerToolingHint } from './project-tooling';
@@ -27,6 +32,11 @@ export interface ProjectRunCallbacks {
   onReviewStart?: (task: ProjectTask, reviewer: Agent, iteration: number, max: number) => void;
   onReviewDone?: (task: ProjectTask, reviewer: Agent, approved: boolean, iteration: number) => void;
   onArtifactSaved?: (relativePath: string) => void;
+  /** PM 최종 통합 태스크 직전 — 사장님 비용 승인 대기 */
+  onAwaitPmFinalTaskApproval?: (
+    estimate: ProjectTaskCostEstimate,
+    task: ProjectTask
+  ) => Promise<boolean>;
 }
 
 export interface ProjectRunOptions {
@@ -263,6 +273,30 @@ export async function runProjectSequential(
     }
 
     const priorContext = buildPriorDeliverablesContext(priorDeliverables);
+
+    if (
+      isPmFinalIntegrationTask(tasks, i, pm.id) &&
+      callbacks.onAwaitPmFinalTaskApproval
+    ) {
+      const estimate = estimatePmFinalTaskCost({
+        pm,
+        command,
+        plan,
+        task,
+        priorDeliverables,
+      });
+      callbacks.onPhase('planning', 'PM 최종 작업 예상 비용 사장님 보고 중');
+      const approved = await callbacks.onAwaitPmFinalTaskApproval(estimate, task);
+      if (!approved) {
+        task.status = 'failed';
+        task.output = '사장님 승인 거절로 PM 최종 작업을 건너뛰었습니다.';
+        callbacks.onMessage(
+          pm,
+          `⏭️ **PM 최종 작업 건너뜀**\n${task.description}\n\n사장님 비용 승인이 없어 최종 통합 작업을 생략하고 기존 산출물로 보고서를 마무리합니다.`
+        );
+        continue;
+      }
+    }
 
     task.status = 'running';
     callbacks.onTaskStart(task, i, tasks.length);

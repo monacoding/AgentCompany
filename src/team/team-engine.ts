@@ -3,9 +3,15 @@ import { ChatService } from '../chat';
 import { Database } from '../database';
 import { AgentManager } from '../agents';
 import { ProviderEngine } from '../providers';
-import { Agent, ProjectPhase, TeamSession } from '../types';
+import { Agent, ProjectPhase, ProjectTask, TeamSession } from '../types';
 import { generateId, now } from '../utils';
 import { formatAgentLabel } from '../utils/agent-display';
+import { CeoChatPanel } from '../webview/CeoChatPanel';
+import {
+  buildPmFinalTaskApprovalConfirmationText,
+  formatPmFinalTaskCostReport,
+  type ProjectTaskCostEstimate,
+} from './project-cost-estimate';
 import { formatTeamMemberLabels } from './member-picker';
 import { planTeamWithPm, TeamPlanResult } from './pm-planner';
 import { ProjectWorkerDeps } from './project-worker-engine';
@@ -30,6 +36,11 @@ export interface TeamRunContext {
 export class TeamEngine {
   private runningSessionId: string | null = null;
   private runContext: TeamRunContext | null = null;
+  private pmFinalTaskApprovalWait: {
+    sessionId: string;
+    pendingId: string;
+    resolve: (approved: boolean) => void;
+  } | null = null;
 
   constructor(
     private db: Database,
@@ -41,6 +52,22 @@ export class TeamEngine {
 
   isRunning(): boolean {
     return this.runningSessionId !== null;
+  }
+
+  hasPendingPmFinalTaskApproval(sessionId?: string): boolean {
+    if (!this.pmFinalTaskApprovalWait) return false;
+    if (!sessionId) return true;
+    return this.pmFinalTaskApprovalWait.sessionId === sessionId;
+  }
+
+  resolvePmFinalTaskApproval(pendingId: string, approved: boolean): boolean {
+    const wait = this.pmFinalTaskApprovalWait;
+    if (!wait || wait.pendingId !== pendingId) return false;
+    this.pmFinalTaskApprovalWait = null;
+    this.chat.resolveConfirmationByPendingId(pendingId, approved ? 'confirmed' : 'rejected');
+    this.chat.clearPending();
+    wait.resolve(approved);
+    return true;
   }
 
   setRunContext(ctx: TeamRunContext): void {
@@ -219,6 +246,8 @@ export class TeamEngine {
               `📁 **산출물 저장** \`company/${relativePath}\``
             );
           },
+          onAwaitPmFinalTaskApproval: (estimate, task) =>
+            this.requestPmFinalTaskApproval(session, pm, threadId, estimate, task),
         },
         {
           sessionId: session.id,
@@ -306,5 +335,69 @@ export class TeamEngine {
 
   private updateSession(id: string, fields: Partial<TeamSession>): void {
     this.db.updateTeamSession(id, fields);
+  }
+
+  private async requestPmFinalTaskApproval(
+    session: TeamSession,
+    pm: Agent,
+    projectThreadId: string,
+    estimate: ProjectTaskCostEstimate,
+    task: ProjectTask
+  ): Promise<boolean> {
+    if (this.chat.getPending()) {
+      this.pushMessage(
+        projectThreadId,
+        null,
+        '시스템',
+        'system',
+        '⚠️ 다른 승인 대기 중이라 PM 최종 작업 비용 보고를 건너뛰고 진행합니다.'
+      );
+      return true;
+    }
+
+    const costReport = formatPmFinalTaskCostReport(estimate);
+    this.pushMessage(projectThreadId, pm.id, formatAgentLabel(pm), 'agent', costReport);
+    this.pushMessage(
+      projectThreadId,
+      null,
+      '시스템',
+      'system',
+      '💰 **PM 최종 작업 예상 비용** — 사장님 승인 대기 중 (CEO 채팅에서 승인/거절)'
+    );
+
+    const pendingId = generateId();
+    const approvalText = buildPmFinalTaskApprovalConfirmationText();
+
+    return new Promise<boolean>((resolve) => {
+      this.pmFinalTaskApprovalWait = { sessionId: session.id, pendingId, resolve };
+
+      this.chat.setPending({
+        pendingId,
+        command: task.description,
+        agentId: pm.id,
+        agentName: pm.name,
+        kind: 'pm-final-task',
+        teamSessionId: session.id,
+        pmFinalTaskDescription: task.description,
+      });
+
+      this.chat.push({
+        threadId: pm.id,
+        senderId: pm.id,
+        senderName: formatAgentLabel(pm),
+        senderRole: pm.title?.trim() || pm.role,
+        content: `${costReport}\n\n---\n\n${approvalText}`,
+        type: 'confirmation',
+        status: 'pending',
+        confirmation: {
+          pendingId,
+          command: task.description,
+          agentId: pm.id,
+          agentName: pm.name,
+          kind: 'pm-final-task',
+        },
+      });
+      CeoChatPanel.refreshThread(pm.id);
+    });
   }
 }

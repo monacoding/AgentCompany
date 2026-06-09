@@ -172,7 +172,12 @@ export interface DashboardData {
   version: string;
 }
 
-export type DelegateConfirmationKind = 'secretary' | 'agent-collab' | 'file-match' | 'pm-project';
+export type DelegateConfirmationKind =
+  | 'secretary'
+  | 'agent-collab'
+  | 'file-match'
+  | 'pm-project'
+  | 'pm-final-task';
 
 export interface CeoChatConfirmation {
   pendingId: string;

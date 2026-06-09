@@ -1,6 +1,6 @@
 # 강하늘 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T06:23:53.875Z_
+_마지막 동기화: 2026-06-09T07:02:19.931Z_
 
 [[강하늘] 뭐해?]
 안녕하세요! 오늘도 변함없이 여러분의 비서로서 맡은 임무를 수행하고 있습니다. 현재 진행 중인 업무나 도움이 필요한 점이 있으시다면 언제든지 말씀해 주세요. 필요하신 자료가 있거나 프로젝트와 관련하여 궁금하신 사항이 있다면 도와드리겠습니다!
@@ -1677,15 +1677,6 @@ P1 … / P2 … / P3 …
 
 사장님, 이런 방향으로 진행할까요? 더 필요하신 사항이 있다면 언제든지 말씀해 주세요! 🌟
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@2b86b830]
 # `cross-agent-file-transfer.md` 요약 — 강하늘(pm)
 
@@ -1836,3 +1827,12 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 |--------|------|---------|
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

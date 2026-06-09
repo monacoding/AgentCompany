@@ -6,7 +6,12 @@ export interface ChatTokenUsage {
   totalTokens: number;
 }
 
-export type DelegateConfirmationKind = 'secretary' | 'agent-collab' | 'file-match' | 'pm-project';
+export type DelegateConfirmationKind =
+  | 'secretary'
+  | 'agent-collab'
+  | 'file-match'
+  | 'pm-project'
+  | 'pm-final-task';
 
 export interface CeoChatConfirmation {
   pendingId: string;
@@ -53,6 +58,9 @@ export interface PendingDelegate {
   fileCollabRequest?: string;
   /** PM Project 계획 승인 대기 */
   planBrief?: string;
+  /** PM 최종 통합 작업 승인 대기 */
+  teamSessionId?: string;
+  pmFinalTaskDescription?: string;
   /** 사장님 파일 확인 대기 */
   fileMatchPending?: boolean;
   candidateFiles?: Array<{ fileName: string; fromRelative: string; fromAbsolute: string }>;
