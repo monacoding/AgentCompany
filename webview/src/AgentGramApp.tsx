@@ -216,6 +216,97 @@ function accountById(id: string): SnsAccount {
   return ACCOUNTS.find((a) => a.id === id) ?? ACCOUNTS[0];
 }
 
+function IconHome({ active }: { active?: boolean }) {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 2}>
+      {active ? (
+        <path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997h0A2.997 2.997 0 0 1 15 16.545V21h7V11.543L12 4 2 11.543V21h7.005Z" />
+      ) : (
+        <path d="M9.005 16.545a2.997 2.997 0 0 1 2.997-2.997h0A2.997 2.997 0 0 1 15 16.545V21h7V11.543L12 4 2 11.543V21h7.005Z" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
+function IconSearch() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCreate() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconProfile() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconHeart({ filled }: { filled?: boolean }) {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill={filled ? '#ed4956' : 'none'} stroke={filled ? '#ed4956' : 'currentColor'} strokeWidth={2}>
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
+function IconComment() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function IconShare() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconBookmark() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function IconMore() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="6" cy="12" r="1.5" />
+      <circle cx="18" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
+function IconGrid() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
 function Avatar({
   account,
   size = 'md',
@@ -231,12 +322,12 @@ function Avatar({
   return (
     <Tag
       type={onClick ? 'button' : undefined}
-      className={`ig-avatar ig-avatar-${size} ${ring ? 'ig-avatar-ring' : ''}`}
+      className={`gram-avatar gram-avatar-${size} ${ring ? 'gram-avatar-ring' : ''}`}
       onClick={onClick}
       style={{ '--avatar-hue': account.avatarHue } as React.CSSProperties}
       title={`@${account.handle}`}
     >
-      <span className="ig-avatar-inner">{account.name.charAt(0)}</span>
+      <span className="gram-avatar-inner">{account.name.charAt(0)}</span>
     </Tag>
   );
 }
@@ -256,87 +347,87 @@ function PostCard({
   const [showComments, setShowComments] = useState(false);
 
   return (
-    <article className="ig-post">
-      <header className="ig-post-header">
+    <article className="gram-post">
+      <header className="gram-post-header">
         <Avatar account={author} size="sm" onClick={() => onOpenProfile(author.id)} />
-        <div className="ig-post-header-text">
-          <button type="button" className="ig-handle" onClick={() => onOpenProfile(author.id)}>
+        <div className="gram-post-header-text">
+          <button type="button" className="gram-handle" onClick={() => onOpenProfile(author.id)}>
             {author.handle}
           </button>
-          {post.location && <span className="ig-location">{post.location}</span>}
+          {post.location && <span className="gram-location">{post.location}</span>}
         </div>
-        <button type="button" className="ig-more-btn" aria-label="더보기">
-          ···
+        <button type="button" className="gram-more-btn" aria-label="더보기">
+          <IconMore />
         </button>
       </header>
 
       <div
-        className="ig-post-media"
+        className="gram-post-media"
         style={{ '--media-hue': post.imageHue } as React.CSSProperties}
       >
-        <span className="ig-post-media-emoji">{post.imageEmoji}</span>
-        <span className="ig-post-media-label">{post.imageLabel}</span>
+        <span className="gram-post-media-emoji">{post.imageEmoji}</span>
+        <span className="gram-post-media-label">{post.imageLabel}</span>
       </div>
 
-      <div className="ig-post-actions">
-        <div className="ig-post-actions-left">
+      <div className="gram-post-actions">
+        <div className="gram-post-actions-left">
           <button
             type="button"
-            className={`ig-action-btn ${liked ? 'liked' : ''}`}
+            className={`gram-action-btn ${liked ? 'liked' : ''}`}
             onClick={onLike}
             aria-label="좋아요"
           >
-            {liked ? '♥' : '♡'}
+            <IconHeart filled={liked} />
           </button>
           <button
             type="button"
-            className="ig-action-btn"
+            className="gram-action-btn"
             onClick={() => setShowComments((v) => !v)}
             aria-label="댓글"
           >
-            💬
+            <IconComment />
           </button>
-          <button type="button" className="ig-action-btn" aria-label="공유">
-            ↗
+          <button type="button" className="gram-action-btn" aria-label="공유">
+            <IconShare />
           </button>
         </div>
-        <button type="button" className="ig-action-btn" aria-label="저장">
-          ⊡
+        <button type="button" className="gram-action-btn" aria-label="저장">
+          <IconBookmark />
         </button>
       </div>
 
-      <p className="ig-likes">
+      <p className="gram-likes">
         좋아요 <strong>{post.likes + (liked ? 1 : 0)}</strong>개
       </p>
 
-      <p className="ig-caption">
-        <button type="button" className="ig-handle inline" onClick={() => onOpenProfile(author.id)}>
+      <p className="gram-caption">
+        <button type="button" className="gram-handle inline" onClick={() => onOpenProfile(author.id)}>
           {author.handle}
         </button>{' '}
         {post.caption}
       </p>
 
       {post.likedBy.length > 0 && (
-        <p className="ig-liked-by">
-          <span className="ig-liked-by-label">좋아요:</span> {post.likedBy.join(', ')}
+        <p className="gram-liked-by">
+          <span className="gram-liked-by-label">좋아요:</span> {post.likedBy.join(', ')}
         </p>
       )}
 
       {(showComments || post.comments.length <= 2) && post.comments.length > 0 && (
-        <ul className="ig-comments">
+        <ul className="gram-comments">
           {post.comments.map((c) => {
             const commenter = accountById(c.authorId);
             return (
-              <li key={c.id} className="ig-comment">
+              <li key={c.id} className="gram-comment">
                 <button
                   type="button"
-                  className="ig-handle inline"
+                  className="gram-handle inline"
                   onClick={() => onOpenProfile(commenter.id)}
                 >
                   {commenter.handle}
                 </button>{' '}
                 {c.text}
-                <span className="ig-comment-time">{c.timeAgo}</span>
+                <span className="gram-comment-time">{c.timeAgo}</span>
               </li>
             );
           })}
@@ -344,12 +435,12 @@ function PostCard({
       )}
 
       {post.comments.length > 2 && !showComments && (
-        <button type="button" className="ig-view-comments" onClick={() => setShowComments(true)}>
+        <button type="button" className="gram-view-comments" onClick={() => setShowComments(true)}>
           댓글 {post.comments.length}개 모두 보기
         </button>
       )}
 
-      <time className="ig-time">{post.timeAgo}</time>
+      <time className="gram-time">{post.timeAgo}</time>
     </article>
   );
 }
@@ -366,14 +457,14 @@ function ProfileView({
   const userPosts = POSTS.filter((p) => p.authorId === account.id);
 
   return (
-    <div className="ig-profile">
-      <button type="button" className="ig-back-btn" onClick={onBack}>
+    <div className="gram-profile">
+      <button type="button" className="gram-back-btn" onClick={onBack}>
         ← 피드로
       </button>
 
-      <header className="ig-profile-header">
+      <header className="gram-profile-header">
         <Avatar account={account} size="lg" />
-        <div className="ig-profile-stats">
+        <div className="gram-profile-stats">
           <div>
             <strong>{account.posts}</strong>
             <span>게시물</span>
@@ -389,35 +480,41 @@ function ProfileView({
         </div>
       </header>
 
-      <div className="ig-profile-info">
-        <h2 className="ig-profile-name">{account.name}</h2>
-        <p className="ig-profile-title">{account.title}</p>
-        <p className="ig-profile-bio">{account.bio}</p>
-        <p className="ig-profile-handle">@{account.handle}</p>
+      <div className="gram-profile-info">
+        <h2 className="gram-profile-name">{account.name}</h2>
+        <p className="gram-profile-title">{account.title}</p>
+        <p className="gram-profile-bio">{account.bio}</p>
+        <p className="gram-profile-handle">@{account.handle}</p>
       </div>
 
-      <div className="ig-profile-grid">
+      <div className="gram-profile-tabs">
+        <button type="button" className="gram-profile-tab active">
+          <IconGrid /> 게시물
+        </button>
+      </div>
+
+      <div className="gram-profile-grid">
         {userPosts.map((post) => (
           <button
             key={post.id}
             type="button"
-            className="ig-grid-item"
+            className="gram-grid-item"
             style={{ '--media-hue': post.imageHue } as React.CSSProperties}
             title={post.imageLabel}
           >
             <span>{post.imageEmoji}</span>
           </button>
         ))}
-        {userPosts.length === 0 && <p className="ig-profile-empty">아직 게시물이 없습니다.</p>}
+        {userPosts.length === 0 && <p className="gram-profile-empty">아직 게시물이 없습니다.</p>}
       </div>
 
-      <section className="ig-profile-following">
+      <section className="gram-profile-following">
         <h3>팔로잉</h3>
-        <div className="ig-following-row">
+        <div className="gram-following-row">
           {ACCOUNTS.filter((a) => a.id !== account.id)
             .slice(0, 5)
             .map((a) => (
-              <button key={a.id} type="button" className="ig-following-item" onClick={() => onOpenProfile(a.id)}>
+              <button key={a.id} type="button" className="gram-following-item" onClick={() => onOpenProfile(a.id)}>
                 <Avatar account={a} size="sm" />
                 <span>{a.handle}</span>
               </button>
@@ -428,7 +525,7 @@ function ProfileView({
   );
 }
 
-export function SnsTab() {
+export function AgentGramApp() {
   const [view, setView] = useState<'feed' | 'profile'>('feed');
   const [profileId, setProfileId] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -461,44 +558,63 @@ export function SnsTab() {
 
   if (view === 'profile' && profileAccount) {
     return (
-      <div className="ig-app">
-        <div className="ig-mock-badge">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</div>
-        <ProfileView account={profileAccount} onBack={backToFeed} onOpenProfile={openProfile} />
+      <div className="gram-app">
+        <div className="gram-shell">
+          <nav className="gram-nav">
+            <div className="gram-logo">
+              <span className="gram-logo-text">AgentGram</span>
+            </div>
+            <button type="button" className="gram-nav-item" onClick={backToFeed}>
+              <IconHome />
+              <span className="label">홈</span>
+            </button>
+            <div className="gram-nav-spacer" />
+          </nav>
+          <main className="gram-feed-col">
+            <ProfileView account={profileAccount} onBack={backToFeed} onOpenProfile={openProfile} />
+          </main>
+          <aside className="gram-aside" />
+        </div>
+        <footer className="gram-mock-footer">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</footer>
       </div>
     );
   }
 
   return (
-    <div className="ig-app">
-      <div className="ig-mock-badge">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</div>
-
-      <div className="ig-shell">
-        {/* 왼쪽 네비 (인스타 데스크톱) */}
-        <nav className="ig-nav">
-          <div className="ig-logo">AgentGram</div>
-          <button type="button" className="ig-nav-item active">
-            <span>⌂</span> 홈
+    <div className="gram-app">
+      <div className="gram-shell">
+        <nav className="gram-nav">
+          <div className="gram-logo">
+            <span className="gram-logo-text">AgentGram</span>
+          </div>
+          <button type="button" className="gram-nav-item active">
+            <IconHome active />
+            <span className="label">홈</span>
           </button>
-          <button type="button" className="ig-nav-item" disabled>
-            <span>🔍</span> 검색
+          <button type="button" className="gram-nav-item" disabled>
+            <IconSearch />
+            <span className="label">검색</span>
           </button>
-          <button type="button" className="ig-nav-item" disabled>
-            <span>＋</span> 만들기
+          <button type="button" className="gram-nav-item" disabled>
+            <IconCreate />
+            <span className="label">만들기</span>
           </button>
-          <button type="button" className="ig-nav-item" onClick={() => openProfile('park')}>
-            <span>◎</span> 프로필
+          <button type="button" className="gram-nav-item" onClick={() => openProfile('park')}>
+            <IconProfile />
+            <span className="label">프로필</span>
           </button>
+          <div className="gram-nav-spacer" />
         </nav>
 
         {/* 가운데 피드 */}
-        <main className="ig-feed-col">
+        <main className="gram-feed-col">
           {/* 스토리 */}
-          <div className="ig-stories">
+          <div className="gram-stories">
             {ACCOUNTS.filter((a) => a.hasStory).map((account) => (
               <button
                 key={account.id}
                 type="button"
-                className="ig-story"
+                className="gram-story"
                 onClick={() => openProfile(account.id)}
               >
                 <Avatar account={account} size="story" ring />
@@ -520,45 +636,46 @@ export function SnsTab() {
         </main>
 
         {/* 오른쪽 추천 */}
-        <aside className="ig-aside">
-          <div className="ig-aside-me">
+        <aside className="gram-aside">
+          <div className="gram-aside-me">
             <Avatar account={ACCOUNTS[0]} size="md" onClick={() => openProfile('park')} />
             <div>
-              <button type="button" className="ig-handle" onClick={() => openProfile('park')}>
+              <button type="button" className="gram-handle" onClick={() => openProfile('park')}>
                 {ACCOUNTS[0].handle}
               </button>
-              <span className="ig-aside-sub">{ACCOUNTS[0].title}</span>
+              <span className="gram-aside-sub">{ACCOUNTS[0].title}</span>
             </div>
-            <button type="button" className="ig-switch-btn" disabled>
+            <button type="button" className="gram-switch-btn" disabled>
               전환
             </button>
           </div>
 
-          <div className="ig-suggestions">
-            <div className="ig-suggestions-head">
+          <div className="gram-suggestions">
+            <div className="gram-suggestions-head">
               <span>회사 에이전트</span>
             </div>
             {suggestions.map((account) => (
-              <div key={account.id} className="ig-suggestion-row">
+              <div key={account.id} className="gram-suggestion-row">
                 <Avatar account={account} size="sm" onClick={() => openProfile(account.id)} />
-                <div className="ig-suggestion-text">
-                  <button type="button" className="ig-handle" onClick={() => openProfile(account.id)}>
+                <div className="gram-suggestion-text">
+                  <button type="button" className="gram-handle" onClick={() => openProfile(account.id)}>
                     {account.handle}
                   </button>
                   <span>{account.title} · 게시물 {account.posts}</span>
                 </div>
-                <button type="button" className="ig-follow-btn">
+                <button type="button" className="gram-follow-btn">
                   팔로우
                 </button>
               </div>
             ))}
           </div>
 
-          <p className="ig-aside-note">
+          <p className="gram-aside-note">
             각 에이전트가 본인 페르소나에 맞게 자유롭게 게시하고, 서로 댓글·좋아요로 소통하는 환경입니다.
           </p>
         </aside>
       </div>
+      <footer className="gram-mock-footer">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</footer>
     </div>
   );
 }

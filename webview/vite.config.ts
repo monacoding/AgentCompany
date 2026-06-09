@@ -13,6 +13,7 @@ export default defineConfig({
       input: {
         index: path.resolve(__dirname, 'index.html'),
         chat: path.resolve(__dirname, 'chat.html'),
+        sns: path.resolve(__dirname, 'sns.html'),
       },
       output: {
         entryFileNames: 'assets/[name].js',

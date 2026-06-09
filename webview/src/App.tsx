@@ -9,7 +9,6 @@ import { OrgChartTab } from './OrgChartTab';
 import { ProjectsTab } from './ProjectsTab';
 import { ProjectDetail, ProjectDetailModal } from './ProjectDetailModal';
 import { SettingsTab } from './SettingsTab';
-import { SnsTab } from './SnsTab';
 import { Activity, Agent, AgentIdea, AgentWorkLog, DashboardData, LlmConnectionStatus, postMessage, TabId, Task, TeamSession } from './vscode';
 import { AgentProfileTile } from './AgentProfileTile';
 import {
@@ -297,6 +296,14 @@ export default function App() {
               >
                 사장 정보
               </button>
+              <button
+                type="button"
+                className="header-agentgram-btn"
+                onClick={() => postMessage('openAgentGram')}
+                title="AgentGram — 에이전트 SNS"
+              >
+                AgentGram
+              </button>
             </div>
             <p className="subtitle">
               {data.companyInfo?.companyName?.trim()
@@ -355,7 +362,7 @@ export default function App() {
       <CeoCommandInput agents={data.agents} agentPhotos={data.agentPhotos} />
 
       <nav className="tabs">
-        {(['overview', 'agents', 'org', 'projects', 'tasks', 'activity', 'sns', 'api', 'settings'] as const).map((tab) => (
+        {(['overview', 'agents', 'org', 'projects', 'tasks', 'activity', 'api', 'settings'] as const).map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? 'active' : ''}`}
@@ -367,7 +374,6 @@ export default function App() {
             {tab === 'projects' && `Project (${data.teamSessions?.length ?? 0})`}
             {tab === 'tasks' && `Tasks (${data.tasks.length})`}
             {tab === 'activity' && 'Activity'}
-            {tab === 'sns' && 'SNS'}
             {tab === 'api' && `API (${data.externalApis?.length ?? 0})`}
             {tab === 'settings' && 'Settings'}
           </button>
@@ -438,7 +444,6 @@ export default function App() {
         {activeTab === 'activity' && (
           <ActivityTab activities={data.activities} agents={data.agents} agentPhotos={data.agentPhotos} />
         )}
-        {activeTab === 'sns' && <SnsTab />}
         {activeTab === 'api' && <ApiTab apis={data.externalApis ?? []} />}
         {activeTab === 'settings' && (
           <SettingsTab

@@ -4,6 +4,7 @@ import { formatAgentLabel } from '../utils/agent-display';
 import { CHAT_EMOTIONS } from '../chat';
 import { AgentCompanyService } from '../services';
 import { AppSettings, CreateAgentInput, CreateTaskInput, TaskStatus, UpdateAgentInput, CreateExternalApiInput, UpdateExternalApiInput, AgentOrganization } from '../types';
+import { AgentGramPanel } from './AgentGramPanel';
 import { CeoChatPanel } from './CeoChatPanel';
 import { handleVoiceWebviewMessage } from './voice-message-handlers';
 import { pushVoiceShortcutToWebview, registerVoiceWebview } from './voice-webview-registry';
@@ -337,6 +338,11 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
 
       case 'openCeoChat': {
         CeoChatPanel.openSecretaryChat(this.extensionUri, this.service);
+        break;
+      }
+
+      case 'openAgentGram': {
+        AgentGramPanel.open(this.extensionUri);
         break;
       }
 

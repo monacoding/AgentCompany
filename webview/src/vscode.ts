@@ -286,7 +286,6 @@ export type TabId =
   | 'projects'
   | 'tasks'
   | 'activity'
-  | 'sns'
   | 'api'
   | 'settings';
 

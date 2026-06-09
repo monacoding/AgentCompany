@@ -1,0 +1,746 @@
+/* AgentGram — Instagram web clone (white theme) */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #fafafa;
+  color: #262626;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+.gram-app {
+  min-height: 100vh;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.gram-shell {
+  display: grid;
+  grid-template-columns: 244px minmax(0, 630px) 319px;
+  gap: 0 32px;
+  justify-content: center;
+  align-items: start;
+  flex: 1;
+  padding: 0 20px 48px;
+  max-width: 935px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Left nav (Instagram desktop) ── */
+.gram-nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px 20px 8px;
+}
+
+.gram-logo {
+  padding: 25px 12px 16px 8px;
+  margin-bottom: 8px;
+}
+
+.gram-logo-text {
+  font-family: 'Billabong', 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -1px;
+}
+
+.gram-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #262626;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.gram-nav-item svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.gram-nav-item:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+
+.gram-nav-item.active {
+  font-weight: 700;
+}
+
+.gram-nav-item.active svg {
+  stroke-width: 2.5;
+}
+
+.gram-nav-item:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.gram-nav-spacer {
+  flex: 1;
+}
+
+/* ── Avatar ── */
+.gram-avatar {
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+button.gram-avatar {
+  cursor: pointer;
+}
+
+.gram-avatar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(
+    145deg,
+    hsl(var(--avatar-hue, 210) 55% 55%),
+    hsl(var(--avatar-hue, 210) 65% 40%)
+  );
+  color: #fff;
+  font-weight: 600;
+}
+
+.gram-avatar-sm .gram-avatar-inner {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.gram-avatar-md .gram-avatar-inner {
+  width: 44px;
+  height: 44px;
+  font-size: 17px;
+}
+
+.gram-avatar-lg .gram-avatar-inner {
+  width: 150px;
+  height: 150px;
+  font-size: 48px;
+}
+
+.gram-avatar-story {
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.gram-avatar-story .gram-avatar-inner {
+  width: 56px;
+  height: 56px;
+  font-size: 18px;
+  border: 2px solid #fafafa;
+}
+
+.gram-avatar-ring {
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+/* ── Stories ── */
+.gram-stories {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  scrollbar-width: none;
+}
+
+.gram-stories::-webkit-scrollbar {
+  display: none;
+}
+
+.gram-story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: #262626;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  max-width: 66px;
+}
+
+.gram-story span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ── Feed column ── */
+.gram-feed-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 30px;
+}
+
+/* ── Post card ── */
+.gram-post {
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 0;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.gram-post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.gram-post-header-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gram-handle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  cursor: pointer;
+  text-align: left;
+}
+
+.gram-handle.inline {
+  display: inline;
+}
+
+.gram-handle:hover {
+  color: #262626;
+  text-decoration: none;
+}
+
+.gram-location {
+  font-size: 12px;
+  color: #262626;
+}
+
+.gram-more-btn {
+  border: none;
+  background: none;
+  color: #262626;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.gram-more-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.gram-post-media {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(
+    145deg,
+    hsl(var(--media-hue, 210) 70% 88%),
+    hsl(var(--media-hue, 210) 55% 78%)
+  );
+}
+
+.gram-post-media-emoji {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.gram-post-media-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+  text-align: center;
+  padding: 0 24px;
+  max-width: 100%;
+  opacity: 0.75;
+}
+
+.gram-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px 8px;
+}
+
+.gram-post-actions-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.gram-action-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #262626;
+  transition: opacity 0.1s;
+}
+
+.gram-action-btn:hover {
+  opacity: 0.6;
+}
+
+.gram-action-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.gram-action-btn.liked svg {
+  fill: #ed4956;
+  stroke: #ed4956;
+}
+
+.gram-likes {
+  padding: 0 16px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: #262626;
+}
+
+.gram-caption {
+  padding: 0 16px 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+  color: #262626;
+}
+
+.gram-liked-by {
+  padding: 0 16px 8px;
+  font-size: 12px;
+  color: #8e8e8e;
+  margin: 0;
+}
+
+.gram-liked-by-label {
+  font-weight: 600;
+  color: #8e8e8e;
+}
+
+.gram-comments {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gram-comment {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+  color: #262626;
+}
+
+.gram-comment-time {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #8e8e8e;
+}
+
+.gram-view-comments {
+  border: none;
+  background: none;
+  padding: 0 16px 8px;
+  font-size: 14px;
+  color: #8e8e8e;
+  cursor: pointer;
+}
+
+.gram-view-comments:hover {
+  color: #262626;
+}
+
+.gram-time {
+  display: block;
+  padding: 0 16px 16px;
+  font-size: 10px;
+  color: #8e8e8e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Right sidebar ── */
+.gram-aside {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 36px;
+}
+
+.gram-aside-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gram-aside-me > div {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gram-aside-sub {
+  font-size: 14px;
+  color: #8e8e8e;
+}
+
+.gram-switch-btn {
+  border: none;
+  background: none;
+  color: #0095f6;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gram-suggestions-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8e8e8e;
+}
+
+.gram-suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.gram-suggestion-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gram-suggestion-text span {
+  font-size: 12px;
+  color: #8e8e8e;
+}
+
+.gram-follow-btn {
+  border: none;
+  background: none;
+  color: #0095f6;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gram-follow-btn:hover {
+  color: #00376b;
+}
+
+.gram-aside-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #c7c7c7;
+  margin: 0;
+}
+
+.gram-aside-footer {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #c7c7c7;
+  margin-top: 8px;
+}
+
+/* ── Profile view ── */
+.gram-profile {
+  max-width: 630px;
+  margin: 0 auto;
+  padding-top: 30px;
+  width: 100%;
+}
+
+.gram-back-btn {
+  border: none;
+  background: transparent;
+  color: #0095f6;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 0;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.gram-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 0 0 44px;
+}
+
+.gram-profile-stats {
+  display: flex;
+  gap: 40px;
+}
+
+.gram-profile-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.gram-profile-stats strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gram-profile-stats span {
+  font-size: 16px;
+  color: #262626;
+}
+
+.gram-profile-info {
+  padding: 0 0 20px;
+}
+
+.gram-profile-name {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gram-profile-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: #8e8e8e;
+}
+
+.gram-profile-bio {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.gram-profile-handle {
+  margin: 0;
+  font-size: 14px;
+  color: #8e8e8e;
+}
+
+.gram-profile-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  border-top: 1px solid #dbdbdb;
+  padding-top: 0;
+}
+
+.gram-profile-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  border-top: 1px solid transparent;
+  margin-top: -1px;
+  color: #8e8e8e;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.gram-profile-tab.active {
+  color: #262626;
+  border-top-color: #262626;
+}
+
+.gram-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.gram-grid-item {
+  aspect-ratio: 1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: linear-gradient(
+    145deg,
+    hsl(var(--media-hue, 210) 70% 88%),
+    hsl(var(--media-hue, 210) 55% 78%)
+  );
+  transition: opacity 0.12s;
+}
+
+.gram-grid-item:hover {
+  opacity: 0.9;
+}
+
+.gram-profile-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #8e8e8e;
+  font-size: 14px;
+}
+
+.gram-profile-following h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gram-following-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.gram-following-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #262626;
+  font-size: 11px;
+  cursor: pointer;
+  max-width: 64px;
+}
+
+.gram-following-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.gram-mock-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 11px;
+  color: #c7c7c7;
+  border-top: 1px solid #efefef;
+  margin-top: auto;
+}
+
+@media (max-width: 1000px) {
+  .gram-shell {
+    grid-template-columns: 72px minmax(0, 630px);
+    gap: 0 28px;
+  }
+
+  .gram-nav-item span.label {
+    display: none;
+  }
+
+  .gram-aside {
+    display: none;
+  }
+
+  .gram-logo-text {
+    font-size: 0;
+    width: 24px;
+    height: 24px;
+    display: block;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23262626' d='M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.252-.148-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+}
+
+@media (max-width: 735px) {
+  .gram-shell {
+    grid-template-columns: 1fr;
+    max-width: 470px;
+    padding: 0 0 48px;
+  }
+
+  .gram-nav {
+    display: none;
+  }
+
+  .gram-feed-col,
+  .gram-profile {
+    padding-top: 0;
+  }
+}
