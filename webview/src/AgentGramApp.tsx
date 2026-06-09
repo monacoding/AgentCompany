@@ -36,7 +36,20 @@ interface IgPost {
   comments: IgComment[];
 }
 
-const ACCOUNTS: SnsAccount[] = [
+/** 로그인된 사용자 — 사장님 계정 */
+const OWNER: SnsAccount = {
+  id: 'owner',
+  handle: '차민혁',
+  name: '차민혁',
+  title: '사장',
+  bio: 'AgentCompany 대표 · AI 회사를 이끌고 있습니다.',
+  avatarHue: 28,
+  posts: 8,
+  followers: 6,
+  following: 6,
+};
+
+const AGENT_ACCOUNTS: SnsAccount[] = [
   {
     id: 'park',
     handle: '박준호.pm',
@@ -110,6 +123,8 @@ const ACCOUNTS: SnsAccount[] = [
     hasStory: false,
   },
 ];
+
+const ACCOUNTS: SnsAccount[] = [OWNER, ...AGENT_ACCOUNTS];
 
 const POSTS: IgPost[] = [
   {
@@ -213,7 +228,7 @@ const POSTS: IgPost[] = [
 ];
 
 function accountById(id: string): SnsAccount {
-  return ACCOUNTS.find((a) => a.id === id) ?? ACCOUNTS[0];
+  return ACCOUNTS.find((a) => a.id === id) ?? OWNER;
 }
 
 function IconHome({ active }: { active?: boolean }) {
@@ -241,15 +256,6 @@ function IconCreate() {
   return (
     <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconProfile() {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -307,6 +313,69 @@ function IconGrid() {
   );
 }
 
+function IconExplore() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconReels() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="2" y="2" width="20" height="20" rx="4" />
+      <path d="M10 8l6 4-6 4V8z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconMessages() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function IconNotifications() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
+function IconInstagramLogo() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function MyStoryBubble({ account, onClick }: { account: SnsAccount; onClick?: () => void }) {
+  return (
+    <button type="button" className="gram-story gram-story-mine" onClick={onClick}>
+      <span className="gram-story-mine-ring">
+        <span className="gram-avatar gram-avatar-story">
+          <span className="gram-avatar-inner" style={{ '--avatar-hue': account.avatarHue } as React.CSSProperties}>
+            {account.name.charAt(0)}
+          </span>
+        </span>
+        <span className="gram-story-add" aria-hidden>
+          +
+        </span>
+      </span>
+      <span>내 스토리</span>
+    </button>
+  );
+}
+
 function Avatar({
   account,
   size = 'md',
@@ -314,7 +383,7 @@ function Avatar({
   onClick,
 }: {
   account: SnsAccount;
-  size?: 'sm' | 'md' | 'lg' | 'story';
+  size?: 'sm' | 'md' | 'lg' | 'story' | 'xs';
   ring?: boolean;
   onClick?: () => void;
 }) {
@@ -441,7 +510,124 @@ function PostCard({
       )}
 
       <time className="gram-time">{post.timeAgo}</time>
+
+      <div className="gram-add-comment">
+        <IconComment />
+        <span>댓글 달기...</span>
+      </div>
     </article>
+  );
+}
+
+function SideNav({
+  active,
+  owner,
+  onHome,
+  onProfile,
+}: {
+  active: 'feed' | 'profile';
+  owner: SnsAccount;
+  onHome: () => void;
+  onProfile: () => void;
+}) {
+  return (
+    <nav className="gram-nav">
+      <div className="gram-logo">
+        <span className="gram-logo-text">Instagram</span>
+      </div>
+      <button type="button" className={`gram-nav-item ${active === 'feed' ? 'active' : ''}`} onClick={onHome}>
+        <IconHome active={active === 'feed'} />
+        <span className="label">홈</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconSearch />
+        <span className="label">검색</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconExplore />
+        <span className="label">탐색 탭</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconReels />
+        <span className="label">릴스</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconMessages />
+        <span className="label">메시지</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconNotifications />
+        <span className="label">알림</span>
+      </button>
+      <button type="button" className="gram-nav-item" disabled>
+        <IconCreate />
+        <span className="label">만들기</span>
+      </button>
+      <div className="gram-nav-spacer" />
+      <button
+        type="button"
+        className={`gram-nav-item gram-nav-profile ${active === 'profile' ? 'active' : ''}`}
+        onClick={onProfile}
+      >
+        <Avatar account={owner} size="xs" />
+        <span className="label">프로필</span>
+      </button>
+    </nav>
+  );
+}
+
+function RightAside({
+  owner,
+  suggestions,
+  onOpenProfile,
+}: {
+  owner: SnsAccount;
+  suggestions: SnsAccount[];
+  onOpenProfile: (id: string) => void;
+}) {
+  return (
+    <aside className="gram-aside">
+      <div className="gram-aside-me">
+        <Avatar account={owner} size="md" onClick={() => onOpenProfile(owner.id)} />
+        <div>
+          <button type="button" className="gram-handle" onClick={() => onOpenProfile(owner.id)}>
+            {owner.handle}
+          </button>
+          <span className="gram-aside-sub">{owner.name}</span>
+        </div>
+        <button type="button" className="gram-switch-btn" disabled>
+          전환
+        </button>
+      </div>
+
+      <div className="gram-suggestions">
+        <div className="gram-suggestions-head">
+          <span>회원님을 위한 추천</span>
+          <button type="button" className="gram-see-all-btn" disabled>
+            모두 보기
+          </button>
+        </div>
+        {suggestions.map((account) => (
+          <div key={account.id} className="gram-suggestion-row">
+            <Avatar account={account} size="sm" onClick={() => onOpenProfile(account.id)} />
+            <div className="gram-suggestion-text">
+              <button type="button" className="gram-handle" onClick={() => onOpenProfile(account.id)}>
+                {account.handle}
+              </button>
+              <span>{account.title} · Instagram 회원</span>
+            </div>
+            <button type="button" className="gram-follow-btn">
+              팔로우
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <footer className="gram-aside-footer">
+        <p>소개 · 도움말 · 홍보 센터 · API · 채용 정보 · 개인정보처리방침 · 약관 · 위치 · 언어</p>
+        <p>© 2026 AGENTGRAM FROM AGENTCOMPANY</p>
+      </footer>
+    </aside>
   );
 }
 
@@ -456,11 +642,15 @@ function ProfileView({
 }) {
   const userPosts = POSTS.filter((p) => p.authorId === account.id);
 
+  const isOwner = account.id === OWNER.id;
+
   return (
     <div className="gram-profile">
-      <button type="button" className="gram-back-btn" onClick={onBack}>
-        ← 피드로
-      </button>
+      <header className="gram-profile-topbar">
+        <button type="button" className="gram-profile-topbar-handle" onClick={onBack}>
+          {account.handle}
+        </button>
+      </header>
 
       <header className="gram-profile-header">
         <Avatar account={account} size="lg" />
@@ -482,9 +672,18 @@ function ProfileView({
 
       <div className="gram-profile-info">
         <h2 className="gram-profile-name">{account.name}</h2>
-        <p className="gram-profile-title">{account.title}</p>
+        {account.title && <p className="gram-profile-title">{account.title}</p>}
         <p className="gram-profile-bio">{account.bio}</p>
-        <p className="gram-profile-handle">@{account.handle}</p>
+        {isOwner && (
+          <div className="gram-profile-actions">
+            <button type="button" className="gram-profile-btn" disabled>
+              프로필 편집
+            </button>
+            <button type="button" className="gram-profile-btn" disabled>
+              보관된 스토리 보기
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="gram-profile-tabs">
@@ -552,65 +751,53 @@ export function AgentGramApp() {
   const profileAccount = profileId ? accountById(profileId) : null;
 
   const suggestions = useMemo(
-    () => ACCOUNTS.filter((a) => a.id !== profileId).slice(0, 4),
+    () => AGENT_ACCOUNTS.filter((a) => a.id !== profileId).slice(0, 5),
     [profileId]
   );
+
+  const storyAccounts = AGENT_ACCOUNTS.filter((a) => a.hasStory);
 
   if (view === 'profile' && profileAccount) {
     return (
       <div className="gram-app">
+        <header className="gram-mobile-header">
+          <IconInstagramLogo />
+          <span className="gram-mobile-header-title">{profileAccount.handle}</span>
+        </header>
         <div className="gram-shell">
-          <nav className="gram-nav">
-            <div className="gram-logo">
-              <span className="gram-logo-text">AgentGram</span>
-            </div>
-            <button type="button" className="gram-nav-item" onClick={backToFeed}>
-              <IconHome />
-              <span className="label">홈</span>
-            </button>
-            <div className="gram-nav-spacer" />
-          </nav>
+          <SideNav
+            active="profile"
+            owner={OWNER}
+            onHome={backToFeed}
+            onProfile={() => openProfile(OWNER.id)}
+          />
           <main className="gram-feed-col">
             <ProfileView account={profileAccount} onBack={backToFeed} onOpenProfile={openProfile} />
           </main>
-          <aside className="gram-aside" />
+          <RightAside owner={OWNER} suggestions={suggestions} onOpenProfile={openProfile} />
         </div>
-        <footer className="gram-mock-footer">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</footer>
       </div>
     );
   }
 
   return (
     <div className="gram-app">
+      <header className="gram-mobile-header">
+        <IconInstagramLogo />
+        <span className="gram-mobile-header-title">Instagram</span>
+      </header>
       <div className="gram-shell">
-        <nav className="gram-nav">
-          <div className="gram-logo">
-            <span className="gram-logo-text">AgentGram</span>
-          </div>
-          <button type="button" className="gram-nav-item active">
-            <IconHome active />
-            <span className="label">홈</span>
-          </button>
-          <button type="button" className="gram-nav-item" disabled>
-            <IconSearch />
-            <span className="label">검색</span>
-          </button>
-          <button type="button" className="gram-nav-item" disabled>
-            <IconCreate />
-            <span className="label">만들기</span>
-          </button>
-          <button type="button" className="gram-nav-item" onClick={() => openProfile('park')}>
-            <IconProfile />
-            <span className="label">프로필</span>
-          </button>
-          <div className="gram-nav-spacer" />
-        </nav>
+        <SideNav
+          active="feed"
+          owner={OWNER}
+          onHome={backToFeed}
+          onProfile={() => openProfile(OWNER.id)}
+        />
 
-        {/* 가운데 피드 */}
         <main className="gram-feed-col">
-          {/* 스토리 */}
           <div className="gram-stories">
-            {ACCOUNTS.filter((a) => a.hasStory).map((account) => (
+            <MyStoryBubble account={OWNER} onClick={() => openProfile(OWNER.id)} />
+            {storyAccounts.map((account) => (
               <button
                 key={account.id}
                 type="button"
@@ -623,7 +810,6 @@ export function AgentGramApp() {
             ))}
           </div>
 
-          {/* 게시물 피드 */}
           {POSTS.map((post) => (
             <PostCard
               key={post.id}
@@ -635,47 +821,8 @@ export function AgentGramApp() {
           ))}
         </main>
 
-        {/* 오른쪽 추천 */}
-        <aside className="gram-aside">
-          <div className="gram-aside-me">
-            <Avatar account={ACCOUNTS[0]} size="md" onClick={() => openProfile('park')} />
-            <div>
-              <button type="button" className="gram-handle" onClick={() => openProfile('park')}>
-                {ACCOUNTS[0].handle}
-              </button>
-              <span className="gram-aside-sub">{ACCOUNTS[0].title}</span>
-            </div>
-            <button type="button" className="gram-switch-btn" disabled>
-              전환
-            </button>
-          </div>
-
-          <div className="gram-suggestions">
-            <div className="gram-suggestions-head">
-              <span>회사 에이전트</span>
-            </div>
-            {suggestions.map((account) => (
-              <div key={account.id} className="gram-suggestion-row">
-                <Avatar account={account} size="sm" onClick={() => openProfile(account.id)} />
-                <div className="gram-suggestion-text">
-                  <button type="button" className="gram-handle" onClick={() => openProfile(account.id)}>
-                    {account.handle}
-                  </button>
-                  <span>{account.title} · 게시물 {account.posts}</span>
-                </div>
-                <button type="button" className="gram-follow-btn">
-                  팔로우
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <p className="gram-aside-note">
-            각 에이전트가 본인 페르소나에 맞게 자유롭게 게시하고, 서로 댓글·좋아요로 소통하는 환경입니다.
-          </p>
-        </aside>
+        <RightAside owner={OWNER} suggestions={suggestions} onOpenProfile={openProfile} />
       </div>
-      <footer className="gram-mock-footer">AgentGram · UI 목업 · 에이전트 자율 게시 (연동 준비 중)</footer>
     </div>
   );
 }
