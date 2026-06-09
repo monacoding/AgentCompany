@@ -169,6 +169,12 @@ button.gram-avatar {
   font-size: 48px;
 }
 
+.gram-avatar-profile .gram-avatar-inner {
+  width: 86px;
+  height: 86px;
+  font-size: 28px;
+}
+
 .gram-avatar-story {
   padding: 2px;
   border-radius: 50%;
@@ -875,4 +881,661 @@ button.gram-avatar {
     color: #262626;
     cursor: pointer;
   }
+}
+
+/* ── Mobile Instagram profile layout (white) ── */
+.gram-mobile-frame {
+  max-width: 470px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #fff;
+  border-left: 1px solid #efefef;
+  border-right: 1px solid #efefef;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.gram-mobile-main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 56px;
+}
+
+.gram-owner-profile,
+.gram-feed-screen {
+  background: #fff;
+}
+
+/* Profile top bar */
+.gram-profile-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid #efefef;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.gram-profile-bar-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #262626;
+}
+
+.gram-profile-bar-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.gram-profile-bar-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.gram-profile-bar-user svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Profile summary */
+.gram-profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 16px 16px 12px;
+}
+
+.gram-profile-avatar-col {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.gram-profile-note {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #8e8e8e;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+.gram-profile-avatar-btn {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.gram-profile-avatar-empty {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 1px solid #dbdbdb;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0095f6;
+}
+
+.gram-profile-avatar-empty svg {
+  width: 28px;
+  height: 28px;
+}
+
+.gram-profile-avatar-add {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0095f6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  border: 2px solid #fff;
+}
+
+.gram-profile-stats-row {
+  display: flex;
+  flex: 1;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.gram-profile-stats-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gram-profile-stats-row strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gram-profile-stats-row span {
+  font-size: 13px;
+  color: #262626;
+}
+
+.gram-profile-name-block {
+  padding: 0 16px 12px;
+}
+
+.gram-profile-name-block strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gram-profile-name-block > span {
+  display: block;
+  font-size: 13px;
+  color: #8e8e8e;
+  margin-top: 2px;
+}
+
+.gram-profile-name-block p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Action buttons */
+.gram-profile-action-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.gram-profile-action-btn {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  border-radius: 8px;
+  background: #efefef;
+  color: #262626;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gram-profile-action-icon {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #efefef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gram-profile-action-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Discover people carousel */
+.gram-discover {
+  padding: 0 0 16px;
+  border-bottom: 1px solid #efefef;
+}
+
+.gram-discover-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8e8e8e;
+}
+
+.gram-discover-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 16px 4px;
+  scrollbar-width: none;
+}
+
+.gram-discover-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.gram-discover-card {
+  flex-shrink: 0;
+  width: 156px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  padding: 16px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  background: #fff;
+}
+
+.gram-discover-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: none;
+  color: #8e8e8e;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.gram-discover-name {
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gram-discover-sub {
+  font-size: 11px;
+  color: #8e8e8e;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.gram-discover-follow {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 8px;
+  background: #0095f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Tab icons */
+.gram-profile-tab-icons {
+  display: flex;
+  border-top: 1px solid #efefef;
+}
+
+.gram-profile-tab-icons button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: #8e8e8e;
+  cursor: pointer;
+  border-top: 1px solid transparent;
+  margin-top: -1px;
+}
+
+.gram-profile-tab-icons button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.gram-profile-tab-icons button.active {
+  color: #262626;
+  border-top-color: #262626;
+}
+
+.gram-profile-tab-icons button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Profile complete section */
+.gram-profile-complete {
+  padding: 20px 16px 32px;
+}
+
+.gram-profile-complete h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.gram-profile-complete > p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #8e8e8e;
+}
+
+.gram-profile-complete-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gram-profile-complete-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.gram-complete-card {
+  flex-shrink: 0;
+  width: 200px;
+  border: 1px solid #dbdbdb;
+  border-radius: 12px;
+  padding: 20px 16px;
+  background: #fff;
+}
+
+.gram-complete-card.done {
+  opacity: 0.55;
+}
+
+.gram-complete-emoji {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.gram-complete-card strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.gram-complete-card p {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #8e8e8e;
+  line-height: 1.4;
+}
+
+.gram-complete-action {
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  border-radius: 8px;
+  background: #0095f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gram-complete-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Post grid */
+.gram-profile-grid-mobile {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.gram-grid-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: linear-gradient(
+    145deg,
+    hsl(var(--media-hue, 210) 70% 88%),
+    hsl(var(--media-hue, 210) 55% 78%)
+  );
+}
+
+.gram-profile-empty-mobile {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 16px;
+  color: #8e8e8e;
+}
+
+/* Feed screen */
+.gram-feed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 16px;
+  border-bottom: 1px solid #efefef;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.gram-feed-logo {
+  font-family: 'Billabong', 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: 26px;
+  color: #262626;
+}
+
+.gram-feed-bar button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #262626;
+}
+
+.gram-feed-screen .gram-stories {
+  padding: 12px 16px;
+  margin-bottom: 0;
+  background: #fff;
+  border-bottom: 1px solid #efefef;
+}
+
+.gram-feed-screen .gram-post {
+  border-left: none;
+  border-right: none;
+}
+
+.gram-placeholder-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #8e8e8e;
+}
+
+/* Bottom navigation */
+.gram-bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #fff;
+  border-top: 1px solid #dbdbdb;
+  padding: 0 8px;
+  z-index: 10;
+}
+
+.gram-bottom-nav button {
+  border: none;
+  background: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gram-bottom-nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.gram-bottom-nav button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.gram-bottom-nav button.active svg {
+  stroke-width: 2.5;
+}
+
+.gram-bottom-profile.active .gram-avatar-inner {
+  box-shadow: 0 0 0 2px #262626;
+}
+
+/* Compose modal */
+.gram-compose-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.gram-compose-sheet {
+  width: 100%;
+  max-width: 470px;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.gram-compose-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #efefef;
+}
+
+.gram-compose-header button {
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: #262626;
+  cursor: pointer;
+}
+
+.gram-compose-header span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gram-compose-share {
+  color: #0095f6 !important;
+  font-weight: 600 !important;
+}
+
+.gram-compose-share:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.gram-compose-preview {
+  margin: 16px;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(
+    145deg,
+    hsl(var(--media-hue, 28) 70% 88%),
+    hsl(var(--media-hue, 28) 55% 78%)
+  );
+  padding: 20px;
+  text-align: center;
+}
+
+.gram-compose-emoji {
+  font-size: 48px;
+}
+
+.gram-compose-preview p {
+  margin: 0;
+  font-size: 14px;
+  color: #262626;
+  word-break: break-word;
+}
+
+.gram-compose-emoji-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+  overflow-x: auto;
+}
+
+.gram-compose-emoji-row button {
+  border: 2px solid transparent;
+  background: #fafafa;
+  border-radius: 8px;
+  font-size: 24px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.gram-compose-emoji-row button.active {
+  border-color: #0095f6;
+}
+
+.gram-compose-input {
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
 }

@@ -383,7 +383,7 @@ function Avatar({
   onClick,
 }: {
   account: SnsAccount;
-  size?: 'sm' | 'md' | 'lg' | 'story' | 'xs';
+  size?: 'sm' | 'md' | 'lg' | 'story' | 'xs' | 'profile';
   ring?: boolean;
   onClick?: () => void;
 }) {
@@ -519,144 +519,375 @@ function PostCard({
   );
 }
 
-function SideNav({
-  active,
-  owner,
-  onHome,
-  onProfile,
-}: {
-  active: 'feed' | 'profile';
-  owner: SnsAccount;
-  onHome: () => void;
-  onProfile: () => void;
-}) {
+const POST_EMOJIS = ['📝', '💼', '🎯', '✨', '📊', '🏢', '💡', '🚀'];
+
+type BottomTab = 'home' | 'reels' | 'dm' | 'search' | 'profile';
+
+function IconMenu() {
   return (
-    <nav className="gram-nav">
-      <div className="gram-logo">
-        <span className="gram-logo-text">Instagram</span>
-      </div>
-      <button type="button" className={`gram-nav-item ${active === 'feed' ? 'active' : ''}`} onClick={onHome}>
-        <IconHome active={active === 'feed'} />
-        <span className="label">홈</span>
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconChevronDown() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconLock() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" width={12} height={12}>
+      <path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-3-2a2 2 0 1 1 4 0v2h-4V6z" />
+    </svg>
+  );
+}
+
+function IconTagged() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      <path d="M7 7h10v10H7z" />
+      <path d="M7 7l5 5 5-5" />
+    </svg>
+  );
+}
+
+function IconPersonAdd() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="10" cy="8" r="4" />
+      <path d="M2 20c0-4 3.6-7 8-7s8 3 8 7M19 8v6M22 11h-6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCamera() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+      <path d="M3 9a2 2 0 0 1 2-2h1l1.5-2h9L18 7h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z" />
+      <circle cx="12" cy="13" r="3" />
+    </svg>
+  );
+}
+
+function IconBack() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function createOwnerPost(caption: string, emoji: string): IgPost {
+  return {
+    id: `owner-${Date.now()}`,
+    authorId: OWNER.id,
+    timeAgo: '방금',
+    imageHue: OWNER.avatarHue,
+    imageEmoji: emoji,
+    imageLabel: caption.trim().slice(0, 36) || '새 게시물',
+    caption: caption.trim(),
+    likes: 0,
+    likedBy: [],
+    comments: [],
+  };
+}
+
+function BottomNav({ active, onChange, owner }: { active: BottomTab; onChange: (tab: BottomTab) => void; owner: SnsAccount }) {
+  return (
+    <nav className="gram-bottom-nav">
+      <button type="button" className={active === 'home' ? 'active' : ''} onClick={() => onChange('home')} aria-label="홈">
+        <IconHome active={active === 'home'} />
       </button>
-      <button type="button" className="gram-nav-item" disabled>
-        <IconSearch />
-        <span className="label">검색</span>
-      </button>
-      <button type="button" className="gram-nav-item" disabled>
-        <IconExplore />
-        <span className="label">탐색 탭</span>
-      </button>
-      <button type="button" className="gram-nav-item" disabled>
+      <button type="button" className={active === 'reels' ? 'active' : ''} onClick={() => onChange('reels')} aria-label="릴스" disabled>
         <IconReels />
-        <span className="label">릴스</span>
       </button>
-      <button type="button" className="gram-nav-item" disabled>
-        <IconMessages />
-        <span className="label">메시지</span>
+      <button type="button" className={active === 'dm' ? 'active' : ''} onClick={() => onChange('dm')} aria-label="메시지" disabled>
+        <IconShare />
       </button>
-      <button type="button" className="gram-nav-item" disabled>
-        <IconNotifications />
-        <span className="label">알림</span>
+      <button type="button" className={active === 'search' ? 'active' : ''} onClick={() => onChange('search')} aria-label="검색" disabled>
+        <IconSearch />
       </button>
-      <button type="button" className="gram-nav-item" disabled>
-        <IconCreate />
-        <span className="label">만들기</span>
-      </button>
-      <div className="gram-nav-spacer" />
-      <button
-        type="button"
-        className={`gram-nav-item gram-nav-profile ${active === 'profile' ? 'active' : ''}`}
-        onClick={onProfile}
-      >
+      <button type="button" className={`gram-bottom-profile ${active === 'profile' ? 'active' : ''}`} onClick={() => onChange('profile')} aria-label="프로필">
         <Avatar account={owner} size="xs" />
-        <span className="label">프로필</span>
       </button>
     </nav>
   );
 }
 
-function RightAside({
-  owner,
-  suggestions,
+function ComposePostModal({
+  open,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (caption: string, emoji: string) => void;
+}) {
+  const [caption, setCaption] = useState('');
+  const [emoji, setEmoji] = useState('📝');
+
+  if (!open) return null;
+
+  const handleSubmit = () => {
+    if (!caption.trim()) return;
+    onSubmit(caption, emoji);
+    setCaption('');
+    setEmoji('📝');
+    onClose();
+  };
+
+  return (
+    <div className="gram-compose-overlay" onClick={onClose}>
+      <div className="gram-compose-sheet" onClick={(e) => e.stopPropagation()}>
+        <header className="gram-compose-header">
+          <button type="button" onClick={onClose}>
+            취소
+          </button>
+          <span>새 게시물</span>
+          <button type="button" className="gram-compose-share" onClick={handleSubmit} disabled={!caption.trim()}>
+            공유
+          </button>
+        </header>
+        <div className="gram-compose-preview" style={{ '--media-hue': OWNER.avatarHue } as React.CSSProperties}>
+          <span className="gram-compose-emoji">{emoji}</span>
+          <p>{caption.trim() || '내용을 입력하세요'}</p>
+        </div>
+        <div className="gram-compose-emoji-row">
+          {POST_EMOJIS.map((e) => (
+            <button key={e} type="button" className={emoji === e ? 'active' : ''} onClick={() => setEmoji(e)}>
+              {e}
+            </button>
+          ))}
+        </div>
+        <textarea
+          className="gram-compose-input"
+          placeholder="문구 입력..."
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          rows={5}
+          autoFocus
+        />
+      </div>
+    </div>
+  );
+}
+
+function DiscoverCarousel({
+  agents,
   onOpenProfile,
 }: {
-  owner: SnsAccount;
-  suggestions: SnsAccount[];
+  agents: SnsAccount[];
   onOpenProfile: (id: string) => void;
 }) {
   return (
-    <aside className="gram-aside">
-      <div className="gram-aside-me">
-        <Avatar account={owner} size="md" onClick={() => onOpenProfile(owner.id)} />
-        <div>
-          <button type="button" className="gram-handle" onClick={() => onOpenProfile(owner.id)}>
-            {owner.handle}
-          </button>
-          <span className="gram-aside-sub">{owner.name}</span>
-        </div>
-        <button type="button" className="gram-switch-btn" disabled>
-          전환
+    <section className="gram-discover">
+      <div className="gram-discover-head">
+        <span>사람 찾아보기</span>
+        <button type="button" className="gram-see-all-btn">
+          모두 보기
         </button>
       </div>
-
-      <div className="gram-suggestions">
-        <div className="gram-suggestions-head">
-          <span>회원님을 위한 추천</span>
-          <button type="button" className="gram-see-all-btn" disabled>
-            모두 보기
-          </button>
-        </div>
-        {suggestions.map((account) => (
-          <div key={account.id} className="gram-suggestion-row">
-            <Avatar account={account} size="sm" onClick={() => onOpenProfile(account.id)} />
-            <div className="gram-suggestion-text">
-              <button type="button" className="gram-handle" onClick={() => onOpenProfile(account.id)}>
-                {account.handle}
-              </button>
-              <span>{account.title} · Instagram 회원</span>
-            </div>
-            <button type="button" className="gram-follow-btn">
+      <div className="gram-discover-scroll">
+        {agents.map((account) => (
+          <div key={account.id} className="gram-discover-card">
+            <button type="button" className="gram-discover-dismiss" aria-label="닫기">
+              ×
+            </button>
+            <Avatar account={account} size="md" onClick={() => onOpenProfile(account.id)} />
+            <button type="button" className="gram-discover-name" onClick={() => onOpenProfile(account.id)}>
+              {account.handle}
+            </button>
+            <span className="gram-discover-sub">{account.title} · 회사 에이전트</span>
+            <button type="button" className="gram-discover-follow">
               팔로우
             </button>
           </div>
         ))}
       </div>
-
-      <footer className="gram-aside-footer">
-        <p>소개 · 도움말 · 홍보 센터 · API · 채용 정보 · 개인정보처리방침 · 약관 · 위치 · 언어</p>
-        <p>© 2026 AGENTGRAM FROM AGENTCOMPANY</p>
-      </footer>
-    </aside>
+    </section>
   );
 }
 
-function ProfileView({
-  account,
-  onBack,
-  onOpenProfile,
+function OwnerProfileScreen({
+  owner,
+  ownerPosts,
+  showDiscover,
+  onToggleDiscover,
+  onCompose,
+  onOpenAgent,
 }: {
-  account: SnsAccount;
-  onBack: () => void;
-  onOpenProfile: (id: string) => void;
+  owner: SnsAccount;
+  ownerPosts: IgPost[];
+  showDiscover: boolean;
+  onToggleDiscover: () => void;
+  onCompose: () => void;
+  onOpenAgent: (id: string) => void;
 }) {
-  const userPosts = POSTS.filter((p) => p.authorId === account.id);
-
-  const isOwner = account.id === OWNER.id;
+  const postCount = ownerPosts.length;
+  const profileTasks = [
+    { id: 'name', label: '이름 추가', done: !!owner.name, emoji: '🌈', action: '이름 추가' },
+    { id: 'photo', label: '프로필 사진 추가', done: false, emoji: '☀️', action: '사진 추가' },
+    { id: 'post', label: '첫 게시물 작성', done: postCount > 0, emoji: '📷', action: '게시물 작성' },
+    { id: 'bio', label: '소개 추가', done: !!owner.bio, emoji: '✍️', action: '소개 추가' },
+  ];
+  const completedCount = profileTasks.filter((t) => t.done).length;
 
   return (
-    <div className="gram-profile">
-      <header className="gram-profile-topbar">
-        <button type="button" className="gram-profile-topbar-handle" onClick={onBack}>
-          {account.handle}
+    <div className="gram-owner-profile">
+      <header className="gram-profile-bar">
+        <button type="button" className="gram-profile-bar-btn" onClick={onCompose} aria-label="새 게시물">
+          <IconCreate />
+        </button>
+        <button type="button" className="gram-profile-bar-user">
+          <IconLock />
+          <span>{owner.handle}</span>
+          <IconChevronDown />
+        </button>
+        <button type="button" className="gram-profile-bar-btn" aria-label="메뉴">
+          <IconMenu />
         </button>
       </header>
 
-      <header className="gram-profile-header">
-        <Avatar account={account} size="lg" />
-        <div className="gram-profile-stats">
+      <div className="gram-profile-summary">
+        <div className="gram-profile-avatar-col">
+          <span className="gram-profile-note">첫 메모를 작성해보세요...</span>
+          <button type="button" className="gram-profile-avatar-btn" onClick={onCompose}>
+            <span className="gram-profile-avatar-empty">
+              <IconCamera />
+            </span>
+            <span className="gram-profile-avatar-add">+</span>
+          </button>
+        </div>
+        <div className="gram-profile-stats-row">
           <div>
-            <strong>{account.posts}</strong>
+            <strong>{postCount}</strong>
+            <span>게시물</span>
+          </div>
+          <div>
+            <strong>{owner.followers}</strong>
+            <span>팔로워</span>
+          </div>
+          <div>
+            <strong>{owner.following}</strong>
+            <span>팔로잉</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="gram-profile-name-block">
+        <strong>{owner.name}</strong>
+        <span>{owner.title}</span>
+        <p>{owner.bio}</p>
+      </div>
+
+      <div className="gram-profile-action-row">
+        <button type="button" className="gram-profile-action-btn">
+          프로필 편집
+        </button>
+        <button type="button" className="gram-profile-action-btn">
+          프로필 공유
+        </button>
+        <button type="button" className="gram-profile-action-icon" onClick={onToggleDiscover} aria-label="사람 찾아보기">
+          <IconPersonAdd />
+        </button>
+      </div>
+
+      {showDiscover && <DiscoverCarousel agents={AGENT_ACCOUNTS.slice(0, 6)} onOpenProfile={onOpenAgent} />}
+
+      <div className="gram-profile-tab-icons">
+        <button type="button" className="active" aria-label="게시물">
+          <IconGrid />
+        </button>
+        <button type="button" aria-label="릴스" disabled>
+          <IconReels />
+        </button>
+        <button type="button" aria-label="태그됨" disabled>
+          <IconTagged />
+        </button>
+      </div>
+
+      {postCount === 0 ? (
+        <section className="gram-profile-complete">
+          <h3>프로필 완성하기</h3>
+          <p>
+            <strong>{completedCount}/4개</strong> 완료
+          </p>
+          <div className="gram-profile-complete-scroll">
+            {profileTasks.map((task) => (
+              <div key={task.id} className={`gram-complete-card ${task.done ? 'done' : ''}`}>
+                <span className="gram-complete-emoji">{task.emoji}</span>
+                <strong>{task.label}</strong>
+                <p>{task.done ? '완료됨' : '프로필을 더 풍성하게 만들어 보세요.'}</p>
+                {!task.done && (
+                  <button
+                    type="button"
+                    className="gram-complete-action"
+                    onClick={task.id === 'post' ? onCompose : undefined}
+                    disabled={task.id !== 'post'}
+                  >
+                    {task.action}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="gram-profile-grid-mobile">
+          {ownerPosts.map((post) => (
+            <div
+              key={post.id}
+              className="gram-grid-cell"
+              style={{ '--media-hue': post.imageHue } as React.CSSProperties}
+              title={post.caption}
+            >
+              <span>{post.imageEmoji}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AgentProfileScreen({
+  account,
+  posts,
+  onBack,
+}: {
+  account: SnsAccount;
+  posts: IgPost[];
+  onBack: () => void;
+}) {
+  const userPosts = posts.filter((p) => p.authorId === account.id);
+
+  return (
+    <div className="gram-owner-profile">
+      <header className="gram-profile-bar">
+        <button type="button" className="gram-profile-bar-btn" onClick={onBack} aria-label="뒤로">
+          <IconBack />
+        </button>
+        <button type="button" className="gram-profile-bar-user">
+          <span>{account.handle}</span>
+          <IconChevronDown />
+        </button>
+        <button type="button" className="gram-profile-bar-btn" aria-label="메뉴">
+          <IconMenu />
+        </button>
+      </header>
+
+      <div className="gram-profile-summary">
+        <div className="gram-profile-avatar-col">
+          <Avatar account={account} size="profile" />
+        </div>
+        <div className="gram-profile-stats-row">
+          <div>
+            <strong>{userPosts.length || account.posts}</strong>
             <span>게시물</span>
           </div>
           <div>
@@ -668,75 +899,116 @@ function ProfileView({
             <span>팔로잉</span>
           </div>
         </div>
-      </header>
-
-      <div className="gram-profile-info">
-        <h2 className="gram-profile-name">{account.name}</h2>
-        {account.title && <p className="gram-profile-title">{account.title}</p>}
-        <p className="gram-profile-bio">{account.bio}</p>
-        {isOwner && (
-          <div className="gram-profile-actions">
-            <button type="button" className="gram-profile-btn" disabled>
-              프로필 편집
-            </button>
-            <button type="button" className="gram-profile-btn" disabled>
-              보관된 스토리 보기
-            </button>
-          </div>
-        )}
       </div>
 
-      <div className="gram-profile-tabs">
-        <button type="button" className="gram-profile-tab active">
-          <IconGrid /> 게시물
+      <div className="gram-profile-name-block">
+        <strong>{account.name}</strong>
+        <span>{account.title}</span>
+        <p>{account.bio}</p>
+      </div>
+
+      <div className="gram-profile-action-row">
+        <button type="button" className="gram-profile-action-btn">
+          팔로우
+        </button>
+        <button type="button" className="gram-profile-action-btn">
+          메시지
         </button>
       </div>
 
-      <div className="gram-profile-grid">
+      <div className="gram-profile-tab-icons">
+        <button type="button" className="active" aria-label="게시물">
+          <IconGrid />
+        </button>
+        <button type="button" aria-label="릴스" disabled>
+          <IconReels />
+        </button>
+        <button type="button" aria-label="태그됨" disabled>
+          <IconTagged />
+        </button>
+      </div>
+
+      <div className="gram-profile-grid-mobile">
         {userPosts.map((post) => (
-          <button
+          <div
             key={post.id}
-            type="button"
-            className="gram-grid-item"
+            className="gram-grid-cell"
             style={{ '--media-hue': post.imageHue } as React.CSSProperties}
             title={post.imageLabel}
           >
             <span>{post.imageEmoji}</span>
+          </div>
+        ))}
+        {userPosts.length === 0 && <p className="gram-profile-empty-mobile">게시물이 없습니다.</p>}
+      </div>
+    </div>
+  );
+}
+
+function FeedScreen({
+  ownerPosts,
+  likedPosts,
+  onLike,
+  onOpenAgent,
+  onOpenOwner,
+}: {
+  ownerPosts: IgPost[];
+  likedPosts: Set<string>;
+  onLike: (id: string) => void;
+  onOpenAgent: (id: string) => void;
+  onOpenOwner: () => void;
+}) {
+  const storyAccounts = AGENT_ACCOUNTS.filter((a) => a.hasStory);
+  const allFeedPosts = useMemo(() => [...ownerPosts, ...POSTS], [ownerPosts]);
+
+  return (
+    <div className="gram-feed-screen">
+      <header className="gram-feed-bar">
+        <span className="gram-feed-logo">Instagram</span>
+        <button type="button" aria-label="알림" disabled>
+          <IconNotifications />
+        </button>
+      </header>
+      <div className="gram-stories">
+        <MyStoryBubble account={OWNER} onClick={onOpenOwner} />
+        {storyAccounts.map((account) => (
+          <button key={account.id} type="button" className="gram-story" onClick={() => onOpenAgent(account.id)}>
+            <Avatar account={account} size="story" ring />
+            <span>{account.name}</span>
           </button>
         ))}
-        {userPosts.length === 0 && <p className="gram-profile-empty">아직 게시물이 없습니다.</p>}
       </div>
-
-      <section className="gram-profile-following">
-        <h3>팔로잉</h3>
-        <div className="gram-following-row">
-          {ACCOUNTS.filter((a) => a.id !== account.id)
-            .slice(0, 5)
-            .map((a) => (
-              <button key={a.id} type="button" className="gram-following-item" onClick={() => onOpenProfile(a.id)}>
-                <Avatar account={a} size="sm" />
-                <span>{a.handle}</span>
-              </button>
-            ))}
-        </div>
-      </section>
+      {allFeedPosts.map((post) => (
+        <PostCard
+          key={post.id}
+          post={post}
+          liked={likedPosts.has(post.id)}
+          onLike={() => onLike(post.id)}
+          onOpenProfile={(id) => (id === OWNER.id ? onOpenOwner() : onOpenAgent(id))}
+        />
+      ))}
     </div>
   );
 }
 
 export function AgentGramApp() {
-  const [view, setView] = useState<'feed' | 'profile'>('feed');
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [bottomTab, setBottomTab] = useState<BottomTab>('profile');
+  const [agentProfileId, setAgentProfileId] = useState<string | null>(null);
+  const [ownerPosts, setOwnerPosts] = useState<IgPost[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [showCompose, setShowCompose] = useState(false);
+  const [showDiscover, setShowDiscover] = useState(true);
 
-  const openProfile = (id: string) => {
-    setProfileId(id);
-    setView('profile');
+  const allPosts = useMemo(() => [...ownerPosts, ...POSTS], [ownerPosts]);
+
+  const openAgent = (id: string) => {
+    setAgentProfileId(id);
+    setBottomTab('profile');
   };
 
-  const backToFeed = () => {
-    setView('feed');
-    setProfileId(null);
+  const openOwnerProfile = () => {
+    setAgentProfileId(null);
+    setBottomTab('profile');
   };
 
   const toggleLike = (postId: string) => {
@@ -748,81 +1020,58 @@ export function AgentGramApp() {
     });
   };
 
-  const profileAccount = profileId ? accountById(profileId) : null;
+  const handleCreatePost = (caption: string, emoji: string) => {
+    setOwnerPosts((prev) => [createOwnerPost(caption, emoji), ...prev]);
+  };
 
-  const suggestions = useMemo(
-    () => AGENT_ACCOUNTS.filter((a) => a.id !== profileId).slice(0, 5),
-    [profileId]
-  );
+  const agentAccount = agentProfileId ? accountById(agentProfileId) : null;
 
-  const storyAccounts = AGENT_ACCOUNTS.filter((a) => a.hasStory);
-
-  if (view === 'profile' && profileAccount) {
-    return (
-      <div className="gram-app">
-        <header className="gram-mobile-header">
-          <IconInstagramLogo />
-          <span className="gram-mobile-header-title">{profileAccount.handle}</span>
-        </header>
-        <div className="gram-shell">
-          <SideNav
-            active="profile"
-            owner={OWNER}
-            onHome={backToFeed}
-            onProfile={() => openProfile(OWNER.id)}
-          />
-          <main className="gram-feed-col">
-            <ProfileView account={profileAccount} onBack={backToFeed} onOpenProfile={openProfile} />
-          </main>
-          <RightAside owner={OWNER} suggestions={suggestions} onOpenProfile={openProfile} />
-        </div>
+  let content: React.ReactNode;
+  if (agentAccount && agentAccount.id !== OWNER.id) {
+    content = <AgentProfileScreen account={agentAccount} posts={allPosts} onBack={openOwnerProfile} />;
+  } else if (bottomTab === 'home') {
+    content = (
+      <FeedScreen
+        ownerPosts={ownerPosts}
+        likedPosts={likedPosts}
+        onLike={toggleLike}
+        onOpenAgent={openAgent}
+        onOpenOwner={openOwnerProfile}
+      />
+    );
+  } else if (bottomTab === 'profile') {
+    content = (
+      <OwnerProfileScreen
+        owner={OWNER}
+        ownerPosts={ownerPosts}
+        showDiscover={showDiscover}
+        onToggleDiscover={() => setShowDiscover((v) => !v)}
+        onCompose={() => setShowCompose(true)}
+        onOpenAgent={openAgent}
+      />
+    );
+  } else {
+    content = (
+      <div className="gram-placeholder-screen">
+        <p>준비 중입니다.</p>
       </div>
     );
   }
 
   return (
     <div className="gram-app">
-      <header className="gram-mobile-header">
-        <IconInstagramLogo />
-        <span className="gram-mobile-header-title">Instagram</span>
-      </header>
-      <div className="gram-shell">
-        <SideNav
-          active="feed"
+      <div className="gram-mobile-frame">
+        <main className="gram-mobile-main">{content}</main>
+        <BottomNav
+          active={agentProfileId && agentAccount?.id !== OWNER.id ? 'profile' : bottomTab}
+          onChange={(tab) => {
+            if (tab === 'profile') setAgentProfileId(null);
+            setBottomTab(tab);
+          }}
           owner={OWNER}
-          onHome={backToFeed}
-          onProfile={() => openProfile(OWNER.id)}
         />
-
-        <main className="gram-feed-col">
-          <div className="gram-stories">
-            <MyStoryBubble account={OWNER} onClick={() => openProfile(OWNER.id)} />
-            {storyAccounts.map((account) => (
-              <button
-                key={account.id}
-                type="button"
-                className="gram-story"
-                onClick={() => openProfile(account.id)}
-              >
-                <Avatar account={account} size="story" ring />
-                <span>{account.name}</span>
-              </button>
-            ))}
-          </div>
-
-          {POSTS.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              liked={likedPosts.has(post.id)}
-              onLike={() => toggleLike(post.id)}
-              onOpenProfile={openProfile}
-            />
-          ))}
-        </main>
-
-        <RightAside owner={OWNER} suggestions={suggestions} onOpenProfile={openProfile} />
       </div>
+      <ComposePostModal open={showCompose} onClose={() => setShowCompose(false)} onSubmit={handleCreatePost} />
     </div>
   );
 }
