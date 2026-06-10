@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:50:45.867Z_
+_마지막 동기화: 2026-06-10T22:52:57.440Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -4266,8 +4266,6 @@ P1 … / P2 … / P3 …
 - roster에 없는 인물·역할을 만들지 말 것.
 - PDF/수집 업
 
-[ExternalApiRegistry] 등록된 External API 없음
-
 [KnowledgeLearned: cross-agent-file-transfer.md@83be9f89]
 # 에이전트 간 파일 이동 규칙
 
@@ -4374,3 +4372,5 @@ P1 … / P2 … / P3 …
 - 사장님 지시 수신 후 **목표·계획·분배·에이전트** 4블록 우선 제시
 - roster에 없는 인물·역할 생성 금지
 - PDF/
+
+[ExternalApiRegistry] 등록된 External API 없음
