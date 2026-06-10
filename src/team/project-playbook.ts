@@ -64,7 +64,12 @@ export function getPmProjectPlaybookExtension(): string {
 - PDF/수집 업무: @한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증) 순
 - 영상/콘텐츠: @서윤아델린 + @하정우 조합 검토
 - 계획 확정 전에는 Project 채팅방을 열지 않음
-- 승인 키워드: "진행하세요", "시작하세요", "프로젝트 진행"`;
+- 승인 키워드: "진행하세요", "시작하세요", "프로젝트 진행"
+
+## PM 최종 보고서 (필수)
+- **@한서준 리서치 산출물이 본문의 핵심** — 내용을 빼거나 짧게 요약하지 말 것
+- PM 역할: carry_data를 **전량 보존**한 채 보고서 **형식만** 완성 (목차·Executive Summary·섹션·표·결론·참고자료)
+- 계획 분배 예: \`1. @한서준: …조사\` → \`2. @박준호: 한서준 조사본을 삭제 없이 보고서 형식으로 통합·완성\``;
 }
 
 export function getRoleProjectPlaybookSnippet(role: AgentRole, agent: Agent): string {
@@ -122,7 +127,7 @@ const SUNEUNG_PDF_TEMPLATE: ProjectTemplateHint = {
   suggestedPlan: `1. @한서준: 평가원 suneung.re.kr 기출 게시판 URL·fileSeq 조사, 출처 신뢰도 표 작성
 2. @하정우: 조사 결과 기반 PDF 일괄 다운로드 Python 스크립트 구현, company/projects/{sessionId}/files/pdfs/ 저장
 3. @김윤하: 국어 PDF 메타(학년도·영역) 검증, 누락·중복 체크
-4. @박준호: 최종 보고서(\`{프로젝트명}_{날짜}_박준호.md\`) 작성 및 사장님 보고`,
+4. @박준호: @한서준 조사본을 삭제·요약 없이 보고서 형식(목차·Executive Summary·결론)으로 통합·완성 (\`{프로젝트명}_{날짜}_박준호.md\`)`,
 };
 
 /** 업무 키워드 → 검증된 Project 템플릿 */

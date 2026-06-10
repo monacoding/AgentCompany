@@ -61,10 +61,43 @@ export function resolvePrimaryReportBody(tasks: ProjectTask[], pmAgentId: string
   return primary.output!.trim();
 }
 
+function isResearcherTask(t: ProjectTask): boolean {
+  return (
+    (t.agentName?.includes('한서준') ?? false) ||
+    /리서치|조사|research/i.test(t.description)
+  );
+}
+
+/** PM 산출물이 리서치보다 현저히 짧으면 리서치 원문을 부록으로 병합 */
+function mergeResearchIfPmOverSummarized(
+  pmBody: string,
+  tasks: ProjectTask[]
+): string {
+  const researchBlocks = tasks
+    .filter((t) => t.output?.trim() && isResearcherTask(t))
+    .map((t) => `## @${t.agentName} — ${t.description}\n\n${t.output!.trim()}`);
+  if (researchBlocks.length === 0) return pmBody;
+
+  const researchCombined = researchBlocks.join('\n\n');
+  if (pmBody.length >= researchCombined.length * 0.65) return pmBody;
+
+  return [
+    pmBody,
+    '',
+    '---',
+    '',
+    '## 부록: @한서준 리서치 원문 (PM 통합본 보존)',
+    '',
+    researchCombined,
+  ].join('\n');
+}
+
 /** PM 통합 태스크 산출물 우선, 없으면 전체 태스크 산출물을 최종 보고서 본문으로 사용 */
 export function buildFullReportBody(tasks: ProjectTask[], pmAgentId: string): string {
   const primary = resolvePrimaryReportBody(tasks, pmAgentId);
-  if (primary) return primary;
+  if (primary) {
+    return mergeResearchIfPmOverSummarized(primary, tasks);
+  }
 
   const blocks = tasks
     .filter((t) => t.output?.trim())

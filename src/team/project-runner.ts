@@ -8,7 +8,10 @@ import {
   saveProjectSummaryArtifact,
   saveProjectTaskArtifact,
 } from './project-artifacts';
-import { buildPriorDeliverablesContext, PriorDeliverable } from './project-context';
+import {
+  buildPriorDeliverablesContextForWorker,
+  PriorDeliverable,
+} from './project-context';
 import {
   PROJECT_REVIEW_MAX_ITERATIONS,
   formatLoopExhaustedNote,
@@ -270,7 +273,7 @@ export async function runProjectSequential(
       continue;
     }
 
-    const priorContext = buildPriorDeliverablesContext(priorDeliverables);
+    const priorContext = buildPriorDeliverablesContextForWorker(agent, priorDeliverables);
 
     task.status = 'running';
     callbacks.onTaskStart(task, i, tasks.length);

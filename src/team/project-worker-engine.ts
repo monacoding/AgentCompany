@@ -35,12 +35,15 @@ function formatResearchProgress(step: ResearchPipelineStep): string {
   return `${prefix} ${step.step}: ${step.message}`;
 }
 
-function startLlmWaitTicker(onProgress: (message: string) => void): () => void {
+function startLlmWaitTicker(
+  onProgress: (message: string) => void,
+  hints: string[] = LLM_WAIT_HINTS
+): () => void {
   let idx = 0;
-  onProgress(LLM_WAIT_HINTS[0]!);
+  onProgress(hints[0]!);
   const timer = setInterval(() => {
-    idx = (idx + 1) % LLM_WAIT_HINTS.length;
-    onProgress(LLM_WAIT_HINTS[idx]!);
+    idx = (idx + 1) % hints.length;
+    onProgress(hints[idx]!);
   }, 3500);
   return () => clearInterval(timer);
 }
@@ -157,7 +160,21 @@ async function executeViaLlm(
     revision
   );
 
-  const stopTicker = onProgress ? startLlmWaitTicker(onProgress) : undefined;
+  const isPmFinalReport = agent.role === 'pm';
+  const pmRules = isPmFinalReport
+    ? `- **PM 최종 보고서:** @한서준 리서치 carry_data 본문을 **삭제·요약하지 말고 전량 보존**
+- 역할: 보고서 **형식 완성**(목차·섹션·표 정돈·Executive Summary·결론)만 수행
+- 리서치 내용을 짧게 다시 쓰지 말 것`
+    : `- Korean, concise, deliverable-focused`;
+
+  const stopTicker = onProgress
+    ? startLlmWaitTicker(
+        onProgress,
+        isPmFinalReport
+          ? ['리서치 본문 통합 중…', '보고서 목차·구조 정리 중…', '표·출처 형식 정돈 중…']
+          : undefined
+      )
+    : undefined;
   let response;
   try {
     response = await providers.chat(
@@ -169,7 +186,7 @@ async function executeViaLlm(
 ${folderContext}
 
 Rules:
-- Korean, concise, deliverable-focused
+${pmRules}
 - **프로그램·스크립트를 작성하면 자동 실행됩니다** — filepath 블록으로 .py/.sh 저장 필수
 - 다운로드·수집 업무는 실행 가능한 Python 스크립트를 반드시 포함
 - 완료 시 마지막 줄에 FINISHED`,
