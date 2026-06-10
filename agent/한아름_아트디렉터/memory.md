@@ -1,6 +1,6 @@
 # 한아름 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T10:32:39.356Z_
+_마지막 동기화: 2026-06-10T22:14:56.890Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -210,15 +210,6 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@9fcefa28]
 # 에이전트 간 파일 이동
 
@@ -278,3 +269,58 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 ### 주요 파일
 - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
 - `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르
+
+[KnowledgeLearned: project-playbook.md@24ad3a6b]
+# Project 협업 플레이북
+
+## AgentCompany Project 표준 절차 (필수)
+
+사장님이 PM에게 업무를 지시하면 아래 **5단계**를 따릅니다.
+
+### 1. 목표
+- 사장님 지시에서 **한 문장 목표** + 산출물·범위·제외 항목을 명확히 합니다.
+
+### 2. 계획
+- Phase 단위로 나눕니다 (리서치 → 구현/실행 → 검증 → PM 보고).
+- 각 태스크마다 **작업 → 검토 루프**(최대 5회, FINISHED 키워드)가 돌아갑니다.
+
+### 3. 작업 분배
+- 계획을 **번호 + @에이전트명: 할 일** 형식으로 작성합니다.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **실제 회사 에이전트 roster만** 사용 (가상 직함·외부 인력 금지).
+- role·title·capabilities로 매칭 (리서치→researcher, 자동화→backend, 도메인→전문가).
+
+### 5. 승인 후 Project 실행
+- PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
+- 승인 시: Project 채팅방 생성 → Projects 탭 등록 → 에이전트 순차 협업.
+- 산출물: `company/projects/{프로젝트폴더}/` (tasks/, files/, `{프로젝트명}_{날짜}_{작성자}.md` 최종 보고)
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

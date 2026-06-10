@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:13:44.675Z_
+_마지막 동기화: 2026-06-10T22:18:35.010Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -1126,15 +1126,6 @@ P1 … / P2 … / P3 …
 
 ##
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@2ba067e9]
 # 에이전트 간 파일 이동
 
@@ -1227,3 +1218,107 @@ P1 … / P2 … / P3 …
 
 
 ##
+
+[KnowledgeLearned: cross-agent-file-transfer.md@71fe6186]
+- **완료 전 금지**  
+  - 파일 복사·이동이 시스템에서 완전히 끝나기 전에는 완료 표현 금지.
+  - 사장 지시 후 "요청해볼게요", "여쭤볼게요", "진행할게요" 등 예정 표현 사용.
+
+- **완료 시 경로 필수**  
+  - 실제 복사 완료 시에만 완료 언급 가능.
+  - 반드시 전체 파일 경로 작성 필요.  
+  - 예: `/워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf`
+
+- **실패 시 솔직히**  
+  - 파일 찾기 실패 시 "완료"라고 언급 금지.
+  - 찾은 위치, 조건, 다음 조치 명확히 안내.
+
+- **허위 보고 금지**  
+  - 경로 없이 "옮겼다", "저장했다"라고만 언급하는 것 금지.
+  - 경로는 작업 증거로 필수.
+
+[KnowledgeLearned: owner-data-path.md@ad0b0f8f]
+# 사장님 데이터 경로
+
+## 데이터 위치 요약
+
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로**: `company/owner`
+
+## 주요 파일 설명
+
+- **프로필 파일**: `profile.json`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 사장님의 이름, 성격 등 기본 정보 포함
+- **페르소나 파일**: `persona.md`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 사장님과의 대화나 보고 시 참고할 페르소나 정보
+- **사진 폴더**: `/photo/`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 내용: 사장님의 사진 파일 모음
+
+## 데이터 접근 지침
+
+- 에이전트는 사장님 관련 정보를 **반드시 지정된 경로**를 통해 접근 및 저장해야 합니다.
+- 사장님 데이터의 접근 및 수정에는 다른 경로를 사용하지 않도록 주의해야 합니다.
+
+## 경로 사용의 중요성
+
+- 잘못된 경로 사용은 데이터 손실 및 접근 오류를 유발할 수 있으므로 지정된 경로를 활용하는 것을 엄격히 따릅니다. 
+
+이 파일은 사장님 관련 정보를 효율적이고 정확하게 관리하는 데 필수적인 안내서로, 지정된 형태와 방법에 따라 데이터 작업을 수행해야 함을 명시합니다.
+
+[KnowledgeLearned: project-playbook.md@2ca59749]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차
+
+### 1. 목표 설정
+- 사장님 지시에서 **한 문장 목표** 정의
+- 산출물, 범위, 제외 항목 명확히
+
+### 2. 계획 수립
+- Phase 단위로 진행 (리서치 → 구현/실행 → 검증 → PM 보고)
+- 각 태스크에서 **작업→검토 루프** 최대 5회, `FINISHED` 키워드 사용
+
+### 3. 작업 분배
+- 번호와 @에이전트명 형식으로 할 일 지정
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- 실제 회사 에이전트만 사용, 가상 직함 금지
+- 역할과 능력에 따라 매칭 (리서치→연구원, 자동화→백엔드, 도메인→전문가)
+
+### 5. 승인 후 Project 실행
+- PM이 계획 제시, 사장님 승인 요청
+- 승인 시 Project 채팅방 생성, Projects 탭 등록, 순차 협업 진행
+- 산출물: `company/projects/{sessionId}/` (tasks/, files/, PM_REPORT.md)
+- **carry_data**로 태스크 데이터 전달
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+"진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## PM 전용 — Project 오케스트레이션
+
+- 사장님 지시 수신 후 **목표·계획·분배·에이전트** 블록 제시
+- roster 외 인물·역할 금지
+- PDF/수집 업무: @한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증)
+- 영상/콘텐츠: @서윤아델린 +
+
+[ExternalApiRegistry] 등록된 External API 없음

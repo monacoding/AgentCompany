@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T09:33:43.144Z_
+_마지막 동기화: 2026-06-10T22:18:35.025Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1691,12 +1691,3 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 |--------|------|---------|
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
-
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
