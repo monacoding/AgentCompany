@@ -15,6 +15,7 @@ interface SettingsForm {
   telegramBotToken: string;
   telegramChatId: string;
   telegramInboundEnabled: boolean;
+  telegramSendMarkdownFiles: boolean;
   proactiveIdeasEnabled: boolean;
   proactiveIdeasIntervalMinutes: number;
 }
@@ -36,6 +37,7 @@ function fromSettings(settings: AppSettings): SettingsForm {
     telegramBotToken: '',
     telegramChatId: settings.telegramChatId,
     telegramInboundEnabled: settings.telegramInboundEnabled ?? true,
+    telegramSendMarkdownFiles: settings.telegramSendMarkdownFiles ?? true,
     proactiveIdeasEnabled: settings.proactiveIdeasEnabled ?? false,
     proactiveIdeasIntervalMinutes: settings.proactiveIdeasIntervalMinutes ?? 30,
   };
@@ -69,6 +71,7 @@ export function SettingsTab({ settings, version, availableModels }: SettingsTabP
       telegramEnabled: form.telegramEnabled,
       telegramChatId: form.telegramChatId,
       telegramInboundEnabled: form.telegramInboundEnabled,
+      telegramSendMarkdownFiles: form.telegramSendMarkdownFiles,
       proactiveIdeasEnabled: form.proactiveIdeasEnabled,
       proactiveIdeasIntervalMinutes: form.proactiveIdeasIntervalMinutes,
     };
@@ -228,6 +231,15 @@ export function SettingsTab({ settings, version, availableModels }: SettingsTabP
               type="checkbox"
               checked={form.telegramInboundEnabled}
               onChange={(e) => setForm({ ...form, telegramInboundEnabled: e.target.checked })}
+            />
+          </div>
+
+          <div className="toggle-row">
+            <label className="field-label">완성 MD 보고서 Telegram 전송</label>
+            <input
+              type="checkbox"
+              checked={form.telegramSendMarkdownFiles}
+              onChange={(e) => setForm({ ...form, telegramSendMarkdownFiles: e.target.checked })}
             />
           </div>
 

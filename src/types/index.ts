@@ -202,6 +202,7 @@ export interface AppSettings {
   proactiveIdeasEnabled: boolean;
   proactiveIdeasIntervalMinutes: number;
   telegramInboundEnabled: boolean;
+  telegramSendMarkdownFiles: boolean;
 }
 
 export type TeamSessionStatus = 'planning' | 'running' | 'done' | 'failed';

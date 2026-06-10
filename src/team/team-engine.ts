@@ -26,6 +26,7 @@ const PHASE_LABEL: Record<ProjectPhase, string> = {
 export interface TeamRunContext {
   workerDeps: ProjectWorkerDeps;
   templateScriptPath?: string;
+  onFinalReportSaved?: (relativePath: string, absolutePath: string) => void;
 }
 
 export class TeamEngine {
@@ -228,6 +229,9 @@ export class TeamEngine {
               'system',
               `📁 **산출물 저장** \`company/${relativePath}\``
             );
+          },
+          onFinalReportSaved: (relativePath, absolutePath) => {
+            this.runContext?.onFinalReportSaved?.(relativePath, absolutePath);
           },
         },
         {

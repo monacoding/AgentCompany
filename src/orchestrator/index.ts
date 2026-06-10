@@ -1547,6 +1547,10 @@ Complete this task. If code/files are needed, output them in the specified file 
       }
       if (result.reportPath) {
         resultSummary += `\n\n📄 Report: ${result.reportPath}`;
+        const abs = this.agentFolders.resolveDeliverablePath(result.reportPath);
+        if (abs) {
+          void this.notifications.deliverMarkdownFile(abs, `📄 Cline 보고서\n${prompt.slice(0, 120)}`);
+        }
       }
       resultSummary += `\n\nMode: ${result.mode} | Engine: ${result.usedCli ? 'Cline CLI' : 'Internal'}`;
 
@@ -1798,6 +1802,13 @@ ${templateBlock}
         })),
         knownSourceNote: report.knownSourceNote,
       });
+
+      if (report.reportPath) {
+        const abs = this.agentFolders.resolveDeliverablePath(report.reportPath);
+        if (abs) {
+          void this.notifications.deliverMarkdownFile(abs, `📄 리서치 보고서\n${query.slice(0, 120)}`);
+        }
+      }
 
       this.taskEngine.setResult(task.id, chatReply);
       this.memory.logActivity(agent.id, task.id, `${agent.name} research complete: ${report.sources.length} sources`);

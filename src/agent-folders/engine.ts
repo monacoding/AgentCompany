@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import fsSync from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { GeneratedAgentProfile } from './profile-generator';
@@ -96,6 +97,25 @@ export class AgentFolderEngine {
 
   getCompanyDir(): string {
     return path.join(this.getCompanyStorageRoot(), COMPANY_FOLDER_SLUG);
+  }
+
+  /** workspace·company 상대 경로 → 절대 경로 (파일 없으면 null) */
+  resolveDeliverablePath(pathHint: string): string | null {
+    const candidates = [
+      pathHint,
+      path.join(this.getCompanyDir(), pathHint),
+      path.join(this.getWorkspaceRoot(), pathHint),
+    ];
+    for (const candidate of candidates) {
+      try {
+        if (fsSync.existsSync(candidate) && fsSync.statSync(candidate).isFile()) {
+          return candidate;
+        }
+      } catch {
+        continue;
+      }
+    }
+    return null;
   }
 
   /** 워크스페이스 루트 또는 globalStorage (agent 폴더와 형제) */

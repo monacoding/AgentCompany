@@ -64,6 +64,7 @@ export interface AppSettings {
   proactiveIdeasEnabled?: boolean;
   proactiveIdeasIntervalMinutes?: number;
   telegramInboundEnabled?: boolean;
+  telegramSendMarkdownFiles?: boolean;
   telegramStatus?: { enabled: boolean; configured: boolean; ready: boolean };
   masked?: Record<string, string>;
 }

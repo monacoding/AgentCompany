@@ -5,6 +5,16 @@
 
 ---
 
+## [1.8.8] - 2026-06-10
+
+**파일:** `agent-company-1.8.8.vsix`
+
+### Added
+
+- Telegram으로 완성된 Markdown 보고서(.md) 자동 전송 (Project·리서치·Cline)
+
+---
+
 ## [1.8.7] - 2026-06-10
 
 **파일:** `agent-company-1.8.7.vsix`

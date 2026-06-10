@@ -43,6 +43,7 @@ export class SettingsService {
       proactiveIdeasEnabled: config.get<boolean>('proactiveIdeasEnabled', false),
       proactiveIdeasIntervalMinutes: config.get<number>('proactiveIdeasIntervalMinutes', 30),
       telegramInboundEnabled: config.get<boolean>('telegramInboundEnabled', true),
+      telegramSendMarkdownFiles: config.get<boolean>('telegramSendMarkdownFiles', true),
     };
   }
 
@@ -61,6 +62,7 @@ export class SettingsService {
       ['proactiveIdeasEnabled', 'proactiveIdeasEnabled'],
       ['proactiveIdeasIntervalMinutes', 'proactiveIdeasIntervalMinutes'],
       ['telegramInboundEnabled', 'telegramInboundEnabled'],
+      ['telegramSendMarkdownFiles', 'telegramSendMarkdownFiles'],
     ];
 
     for (const [field, configKey] of entries) {

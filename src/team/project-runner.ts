@@ -3,6 +3,7 @@ import { formatChatReply, formatLlmError } from '../chat/reply-format';
 import { ProviderEngine } from '../providers';
 import { Agent, ProjectPhase, ProjectTask } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
+import path from 'path';
 import {
   buildFullReportBody,
   saveProjectSummaryArtifact,
@@ -32,6 +33,8 @@ export interface ProjectRunCallbacks {
   onReviewStart?: (task: ProjectTask, reviewer: Agent, iteration: number, max: number) => void;
   onReviewDone?: (task: ProjectTask, reviewer: Agent, approved: boolean, iteration: number) => void;
   onArtifactSaved?: (relativePath: string) => void;
+  /** Project 최종 .md 보고서 저장 직후 */
+  onFinalReportSaved?: (relativePath: string, absolutePath: string) => void;
 }
 
 export interface ProjectRunOptions {
@@ -346,6 +349,7 @@ export async function runProjectSequential(
     authorName: pm.name,
   });
   callbacks.onArtifactSaved?.(summaryPath);
+  callbacks.onFinalReportSaved?.(summaryPath, path.join(companyDir, summaryPath));
 
   const doneCount = tasks.filter((t) => t.status === 'done').length;
   callbacks.onPhase('done', `${doneCount}/${tasks.length} 완료`);

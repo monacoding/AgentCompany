@@ -263,6 +263,12 @@ export class AgentCompanyService {
         context.extensionPath,
         'src/team/templates/download_suneung_pdfs.py'
       ),
+      onFinalReportSaved: (relativePath, absolutePath) => {
+        void this.notifications.deliverMarkdownFile(
+          absolutePath,
+          `📄 Project 최종 보고서\ncompany/${relativePath}`
+        );
+      },
     });
   }
   startKnowledgeWatcher(context: vscode.ExtensionContext): void {

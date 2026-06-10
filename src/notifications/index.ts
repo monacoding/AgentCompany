@@ -31,6 +31,16 @@ export class NotificationEngine {
     this.showInfo(`Task completed: ${taskTitle}`);
   }
 
+  /** 완성된 Markdown 파일을 Telegram으로 전송 (설정 켜져 있을 때만) */
+  async deliverMarkdownFile(absolutePath: string, caption?: string): Promise<void> {
+    if (!this.telegram.isMarkdownDeliveryEnabled()) return;
+
+    const result = await this.telegram.sendMarkdownFile(absolutePath, caption);
+    if (!result.success) {
+      vscode.window.showWarningMessage(`AgentCompany: Telegram MD 전송 실패 — ${result.message}`);
+    }
+  }
+
   getTelegram(): TelegramNotifier {
     return this.telegram;
   }

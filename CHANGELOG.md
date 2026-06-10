@@ -7,6 +7,15 @@
 
 ---
 
+## [1.8.8] - 2026-06-10
+
+### Added
+
+- **Telegram MD 파일 전송** — Project 최종 보고서·리서치·Cline 보고서(.md) 완성 시 Telegram으로 document 전송
+- Settings → **완성 MD 보고서 Telegram 전송** 토글 (기본 켜짐, Telegram 활성화 시)
+
+---
+
 ## [1.8.7] - 2026-06-10
 
 ### Fixed
