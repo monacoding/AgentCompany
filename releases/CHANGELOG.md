@@ -5,6 +5,21 @@
 
 ---
 
+## [1.8.7] - 2026-06-10
+
+**파일:** `agent-company-1.8.7.vsix`
+
+### Fixed
+
+- Project PM/워커 LLM 태스크 `gpt-5.x` API 파라미터 (`max_completion_tokens`)
+- PM carry_data 96k·리서치 우선 전달, 보고서 원문 보존 지침, 부록 자동 병합
+
+### Changed
+
+- 실시간 작업 상태 스트리밍 UI, PM 비용 승인 대기 제거
+
+---
+
 ## [1.7.85] - 2026-06-08
 
 **파일:** `agent-company-1.7.85.vsix`

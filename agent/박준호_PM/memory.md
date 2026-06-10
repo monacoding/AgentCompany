@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T00:43:56.975Z_
+_마지막 동기화: 2026-06-10T00:55:03.195Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -831,15 +831,6 @@ P4. 최종 보고서 작성: 조사 내용을 기반으로 보고서 작성 및 
 
 ##
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [PM 계획] 선박에 적용 되는 에어 컴프레서 조사해줘 (한서준이랑 둘이해)
 알겠습니다, 사장님. 선박에 적용되는 에어 컴프레서에 대한 조사를 진행하겠습니다. 아래와 같은 방식으로 진행하겠습니다.
 
@@ -859,3 +850,12 @@ P3. 결과 보고
 @박준호 · @한서준
 
 사장님, 이대로 진행할까요?
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
