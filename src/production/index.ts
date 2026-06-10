@@ -45,7 +45,7 @@ export class ProductionAgent {
       onStep?.({ step, status, message });
     };
     this.memory.logActivity(agent.id, taskId, `${agent.name} Production pipeline started: "${query}"`);
-    const folderContext = await this.agentFolders.buildPromptContext(agent);
+    const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: query });
     const slug = this.agentFolders.resolveSlug(agent);
     const datePrefix = now().slice(0, 10);
     const querySlug = slugifyQuery(query);

@@ -107,7 +107,9 @@ async function reviewWorkerOutput(
   providers: ProviderEngine,
   agentFolders: AgentFolderEngine
 ): Promise<string> {
-  const folderContext = await agentFolders.buildPromptContext(reviewer);
+  const folderContext = await agentFolders.buildPromptContext(reviewer, {
+    taskHint: [command, task.description, output].join('\n'),
+  });
   const userContent = buildReviewPhasePrompt(reviewer, worker, command, task.description, output);
 
   const response = await providers.chat(

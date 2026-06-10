@@ -148,7 +148,9 @@ async function executeViaLlm(
   revision?: { previousOutput: string; feedback: string },
   onProgress?: (message: string) => void
 ): Promise<string> {
-  const folderContext = await agentFolders.buildPromptContext(agent);
+  const folderContext = await agentFolders.buildPromptContext(agent, {
+    taskHint: [command, plan, task.description, priorContext].filter(Boolean).join('\n'),
+  });
   const toolingHint = buildWorkerToolingHint(agent);
   const userContent = buildWorkerPhasePrompt(
     agent,

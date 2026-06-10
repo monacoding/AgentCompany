@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:18:35.025Z_
+_마지막 동기화: 2026-06-10T22:26:15.357Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1691,3 +1691,97 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 |--------|------|---------|
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
+
+[ExternalApiRegistry] 등록된 External API 없음
+
+[KnowledgeLearned: cross-agent-file-transfer.md@8bb275ce]
+# 에이전트 간 파일 이동 규칙 요약
+
+- **완료 전 금지**
+  - 파일 복사·이동이 완료되지 않은 상태에서 "저장했어요", "옮겼어요" 등 완료 표현 사용 금지.
+  - 지시 직후에는 "요청해볼게요", "진행할게요" 등 예정 표현만 사용.
+
+- **완료 시 경로 필수**
+  - 실제 복사 완료 시에만 완료 선언 가능.
+  - 반드시 파일의 저장 경로를 정확하게 작성.
+  - 형식 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일을 찾지 못했거나 복사에 실패할 경우, "완료"라고 말하지 않음.
+  - 찾은 위치 및 조건, 다음 조치를 구체적으로 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것 금지.
+  - 경로 제시가 곧 완료의 증거임. 
+
+위의 규칙을 반복해 강조하여 준수하도록 권장.
+
+[KnowledgeLearned: owner-data-path.md@b829bd34]
+# 사장님 데이터 경로
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+## 주요 파일
+- **프로필 파일:** `profile.json`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 사장님의 이름, 성격 등 프로필 정보
+- **페르소나 파일:** `persona.md`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 사장님의 페르소나 정보 (대화 및 보고 시 참고)
+- **사진 폴더:** 
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 내용: 사장님 사진
+
+## 주의사항
+- 모든 사장님 관련 정보의 저장 및 조회는 반드시 위에 명시된 경로를 통해야 합니다.
+- 다른 위치를 사용하거나 경로를 추측하지 않습니다.
+
+[KnowledgeLearned: project-playbook.md@6368cbba]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차 (필수)
+
+- **1. 목표 설정**
+  - 사장님 지시에서 공통 목표와 범위 설정
+  - 산출물 및 제외 항목 명확히
+
+- **2. 계획 수립**
+  - 리서치 → 구현/실행 → 검증 → PM 보고의 순서로 Phase 구분
+  - 작업 검토 루프(최대 5회)
+
+- **3. 작업 분배**
+  - 번호 + @에이전트명: 수행할 작업 형태로 작성
+  - 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+- **4. 에이전트 선별**
+  - 실제 회사 에이전트만 사용(외부 인력 금지)
+  - 역할, 직함, 능력에 맞게 매칭
+
+- **5. Project 실행 승인**
+  - PM이 계획을 사장님께 제시하고 승인 요청
+  - 승인이 완료되면 Project 채팅방 생성 및 에이전트 협업 시작
+  - 산출물 전달 체계 확립: `company/projects/{sessionId}/`
+
+## PM 1:1 대화 형식 (권장)
+
+- 목표, 계획, 작업 분배, 참여 에이전트 블록 구성
+- 사장님 승인 시 "진행하세요" 키워드 사용
+
+## PM 전용 — Project 오케스트레이션
+
+- 사장님 지시 수신 후 '목표·계획·분배·에이전트' 제시
+- PDF/수집 업무: @한서준 → @하정우 → 전문가 검증
+- 영상/콘텐츠: @서윤아델린 + @하정우 콤비 검토
+- Project 계획 확정 전까지 채팅방 개설 금지
+- 승인의 키워드: "진행하세요", "시작하세요", "프로젝트 진행"
+
+---
+- 로스터에 없는 인물이나 역할 생성 금지
+- 인터넷/웹 PDF 다운로드는 외부 수집 프로젝트로 계획
+- @한서준 및 @하정우는 각각 리서치 및 스크립트 실행 담당

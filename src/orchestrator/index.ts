@@ -947,7 +947,9 @@ ${pmBlock}${devBlock}
 
         let parsed;
         try {
-          const managerContext = await this.agentFolders.buildPromptContext(manager);
+          const managerContext = await this.agentFolders.buildPromptContext(manager, {
+            taskHint: [command, rollingSummary].join('\n'),
+          });
           const fullReview = await runWithLlmAgent(manager.id, () =>
             reviewAndSummarizeForManager(
               manager,
@@ -1457,7 +1459,7 @@ ${pmBlock}${devBlock}
         ? await this.gatherProjectContext(task.title)
         : 'No workspace open';
 
-      const folderContext = await this.agentFolders.buildPromptContext(agent);
+      const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: command });
       const memorySnippet = agent.memory?.trim().slice(0, 2000);
 
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent.
@@ -1583,10 +1585,6 @@ Complete this task. If code/files are needed, output them in the specified file 
     resolved: ResolvedCommand
   ): Promise<void> {
     const allAgents = this.agentManager.getAll();
-    const folderContext = await this.agentFolders.buildPromptContext(agent);
-    const pmBlock = buildPmOrchestrationPromptBlock(allAgents, agent);
-    const memorySnippet = agent.memory?.trim().slice(0, 800);
-
     const recentCeoContext = this.chat
       .getMessages(agent.id)
       .filter((m) => m.type === 'ceo')
@@ -1594,6 +1592,9 @@ Complete this task. If code/files are needed, output them in the specified file 
       .map((m) => m.content)
       .join('\n');
     const fullContext = `${recentCeoContext}\n${command}`;
+    const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: fullContext });
+    const pmBlock = buildPmOrchestrationPromptBlock(allAgents, agent);
+    const memorySnippet = agent.memory?.trim().slice(0, 800);
     const matchHint = proposeTeamMembers(agent, fullContext, allAgents);
     const hintBlock =
       matchHint.length > 0

@@ -29,6 +29,12 @@ import {
   parseOwnerProfile,
 } from './owner-persona';
 import { buildOwnerDataPathPromptBlock } from './owner-path-knowledge';
+import {
+  KNOWLEDGE_FULL_FILE_GUARD,
+  KNOWLEDGE_PREVIEW_CHARS,
+  type KnowledgeFileMeta,
+  selectKnowledgeForTask,
+} from './selective-prompt-context';
 import { buildPlatformStructurePromptBlock, isDeveloperAgent } from '../platform';
 
 const SUBDIRS = [
@@ -678,13 +684,13 @@ ${displayTitle}
     return this.writeText(slug, relativePath, content);
   }
 
-  async loadKnowledge(slug: string): Promise<string> {
+  async buildKnowledgeCatalog(slug: string): Promise<KnowledgeFileMeta[]> {
     const knowledgeDir = this.getKnowledgeDir(slug);
     try {
       const files = (await fs.readdir(knowledgeDir))
         .filter((f) => !this.isInternalKnowledgeFile(f))
         .sort();
-      const chunks: string[] = [];
+      const catalog: KnowledgeFileMeta[] = [];
 
       for (const file of files) {
         const fullPath = path.join(knowledgeDir, file);
@@ -695,19 +701,45 @@ ${displayTitle}
         if (!['.md', '.txt', '.json'].includes(ext)) continue;
 
         const learnedSummary = await this.readLearnedSummary(knowledgeDir, file);
-        if (learnedSummary) {
-          chunks.push(`## ${file}\n${learnedSummary}`);
-          continue;
+        const fileRaw = (await fs.readFile(fullPath, 'utf-8')).trim();
+        const fullSize = fileRaw.length;
+        let content = learnedSummary ?? fileRaw;
+        if (!learnedSummary && fileRaw.length > KNOWLEDGE_FULL_FILE_GUARD) {
+          content =
+            `${fileRaw.slice(0, KNOWLEDGE_FULL_FILE_GUARD)}\n\n` +
+            `…(원문 ${fileRaw.length}자 — 선별 컨텍스트에서는 앞부분만 미리보기)`;
         }
 
-        const content = await fs.readFile(fullPath, 'utf-8');
-        chunks.push(`## ${file}\n${content.trim()}`);
+        catalog.push({
+          filename: file,
+          preview: content.slice(0, KNOWLEDGE_PREVIEW_CHARS),
+          content,
+          fullSize,
+          usedSummary: !!learnedSummary,
+        });
       }
 
-      return chunks.filter(Boolean).join('\n\n');
+      return catalog;
     } catch {
-      return '';
+      return [];
     }
+  }
+
+  /** 업무 맥락에 맞는 knowledge만 선별 (PM·Project 태스크용) */
+  async loadKnowledgeSelective(
+    slug: string,
+    taskHint: string,
+    agentRole: string
+  ): Promise<string> {
+    const catalog = await this.buildKnowledgeCatalog(slug);
+    if (catalog.length === 0) return '';
+    return selectKnowledgeForTask(catalog, taskHint, agentRole).body;
+  }
+
+  async loadKnowledge(slug: string): Promise<string> {
+    const catalog = await this.buildKnowledgeCatalog(slug);
+    if (catalog.length === 0) return '';
+    return catalog.map((m) => `## ${m.filename}\n${m.content.trim()}`).join('\n\n');
   }
 
   private isInternalKnowledgeFile(name: string): boolean {
@@ -745,8 +777,23 @@ ${displayTitle}
   }
 
   invalidatePromptContext(agentId: string): void {
-    this.promptContextCache.delete(agentId);
+    for (const key of [...this.promptContextCache.keys()]) {
+      if (key === agentId || key.startsWith(`${agentId}:`)) {
+        this.promptContextCache.delete(key);
+      }
+    }
     this.conversationalContextCache.delete(agentId);
+  }
+
+  private promptContextCacheKey(agentId: string, taskHint?: string): string {
+    const hint = taskHint?.trim();
+    if (!hint) return agentId;
+    return `${agentId}:${hint.slice(0, 120)}`;
+  }
+
+  private shouldUseSelectiveKnowledge(agent: Agent, taskHint?: string): boolean {
+    if (taskHint?.trim()) return true;
+    return agent.role === 'pm';
   }
 
   /** 일상 대화용 — persona·description + 개발자는 플랫폼 구조 블록 */
@@ -778,8 +825,12 @@ ${displayTitle}
     await this.buildConversationalPromptContext(agent);
   }
 
-  async buildPromptContext(agent: Agent, opts?: { force?: boolean }): Promise<string> {
-    const cached = this.promptContextCache.get(agent.id);
+  async buildPromptContext(
+    agent: Agent,
+    opts?: { force?: boolean; taskHint?: string }
+  ): Promise<string> {
+    const cacheKey = this.promptContextCacheKey(agent.id, opts?.taskHint);
+    const cached = this.promptContextCache.get(cacheKey);
     if (!opts?.force && cached && Date.now() - cached.at < PROMPT_CONTEXT_CACHE_MS) {
       return cached.value;
     }
@@ -794,16 +845,19 @@ ${displayTitle}
     if (ownerBlock) parts.push(ownerBlock);
 
     const persona = await this.loadPersona(slug);
-    if (persona) parts.push(`Persona:\n${persona}`);
+    if (persona) parts.push(`Persona:\n${persona.slice(0, 1200)}`);
 
     const description = await this.loadDescription(slug);
-    if (description) parts.push(`Description:\n${description}`);
+    if (description) parts.push(`Description:\n${description.slice(0, 800)}`);
 
-    const knowledge = await this.loadKnowledge(slug);
+    const taskHint = opts?.taskHint?.trim() ?? '';
+    const knowledge = this.shouldUseSelectiveKnowledge(agent, taskHint)
+      ? await this.loadKnowledgeSelective(slug, taskHint, agent.role)
+      : await this.loadKnowledge(slug);
     if (knowledge) parts.push(`Knowledge:\n${knowledge}`);
 
     const value = parts.join('\n\n');
-    this.promptContextCache.set(agent.id, { value, at: Date.now() });
+    this.promptContextCache.set(cacheKey, { value, at: Date.now() });
     return value;
   }
 
