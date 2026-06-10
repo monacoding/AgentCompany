@@ -395,6 +395,8 @@ export function selectMemoryForTask(
     return { body: '', picked: [], skipped: [] };
   }
 
+  const hint = taskHint.trim();
+
   const ranked = sections
     .map((section) => ({ section, score: scoreMemorySection(section, taskHint, agentRole) }))
     .sort((a, b) => b.score - a.score || b.section.fullSize - a.section.fullSize);
@@ -406,7 +408,6 @@ export function selectMemoryForTask(
 
   for (const { section, score } of ranked) {
     const baseline = isMemoryBaseline(section.title);
-    const hint = taskHint.trim();
 
     if (!baseline && score < 4 && hint) {
       skipped.push(section.title);
