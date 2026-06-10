@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:20:36.937Z_
+_마지막 동기화: 2026-06-10T22:37:20.980Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -3202,8 +3202,6 @@ P1 … / P2 … / P3 …
 
 ##
 
-[ExternalApiRegistry] 등록된 External API 없음
-
 [KnowledgeLearned: cross-agent-file-transfer.md@8bb275ce]
 # 에이전트 간 파일 이동 규칙
 
@@ -3269,3 +3267,85 @@ P1 … / P2 … / P3 …
 - Python urllib/curl 등 사용.
 
 이 절차는 프로젝트의 효율적인 관리와 산출물의 질적 향상을 목표로 함. 각 단계별 명확한 역할과 책임을 통해 협업의 원활한 진행을 도모.
+
+[ExternalApiRegistry] 등록된 External API 없음
+
+[KnowledgeLearned: cross-agent-file-transfer.md@a5cfa044]
+# 에이전트 간 파일 이동 규칙
+
+- **완료 전 금지**  
+  - 파일 복사·이동이 실제로 완료되기 전에는 절대 "완료" 표현 사용 금지.
+  - 사전 지시 단계에서는 "진행할게요", "요청해볼게요" 등의 **예정** 표현만 사용.
+
+- **완료 시 경로 필수**  
+  - 복사가 확인된 경우에만 "완료"를 발표.
+  - 파일의 **저장 경로**를 정확히 기입.
+  - 형식 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**  
+  - 파일 복사 실패 시 "완료"라고 하지 않음.
+  - **찾은 위치**와 **조건**, **다음 조치 계획**을 명확히 설명.
+
+- **허위 보고 금지**  
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것 금지.
+  - 경로 기입은 **증거**로서 필요.
+
+[KnowledgeLearned: owner-data-path.md@117d2fdb]
+- **사장님 데이터 위치**: 사장님의 프로필, 페르소나, 사진은 특정 경로에 저장되어 있으며, 에이전트가 이 정보를 처리할 때 반드시 이 경로를 사용해야 합니다.
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로**: `company/owner`
+  
+### 주요 파일
+- **프로필 파일**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 사장님의 이름, 성격 등이 담긴 프로필 정보
+  
+- **페르소나 파일**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 사장님의 대화 스타일 및 보고 시 참고할 페르소나 정보
+  
+- **사진 폴더**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 사장님 사진이 저장된 디렉토리
+
+- **경로 사용 중요성**: 에이전트는 사장님 데이터에 접근할 때 반드시 지정된 경로를 사용해야 하며, 다른 경로를 추측하거나 사용해서는 안 됩니다.
+
+[KnowledgeLearned: project-playbook.md@4f1ca9e0]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차
+
+- Project는 사장님 지시로 시작, **5단계** 절차 따름.
+
+### 1. 목표 설정
+- 한 문장으로 목표 정의.
+- 산출물, 범위, 제외 항목 명시.
+
+### 2. 계획 수립
+- Phase: 리서치 → 구현/실행 → 검증 → PM 보고.
+- 최대 5회까지 가능한 작업→검토 루프 사용.
+
+### 3. 작업 분배
+- **번호 @에이전트명: 할 일** 형식.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`.
+
+### 4. 에이전트 선별
+- 회사 에이전트 roster 사용.
+- role, title, capabilities로 매칭.
+
+### 5. 승인 후 실행
+- PM이 계획을 사장에게 제출, "진행하세요" 요청.
+- 승인 시: Project 채팅방 생성, Projects 탭 등록, 순차 협업.
+- 산출물 저장: `company/projects/{sessionId}/`.
+- 이전 태스크 산출물은 **carry_data**로 전달.
+
+## PM 1:1 대화 출력 형식
+- 목표, 계획, 작업 분배, 참여 에이전트 정보 명시.
+- 최종 확정 시 "진행하세요" 응답 요청.
+
+## 하정우 — Project 자동화 역할
+- 이전 태스크의 URL·fileSeq 기반 스크립트 구현.
+- 산출물 저장: `company/projects/{sessionId}/files/`.
+- Python urllib/curl 활용하여 PDF 다운로드 및 검증.

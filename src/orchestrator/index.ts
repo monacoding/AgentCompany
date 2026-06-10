@@ -805,12 +805,13 @@ export class Orchestrator {
     this.agentWorking(agent, '답변 준비 중…', undefined, workingDetail);
 
     try {
-      const folderContext = await this.agentFolders.buildConversationalPromptContext(agent);
+      const folderContext = await this.agentFolders.buildConversationalPromptContext(agent, {
+        taskHint: command,
+      });
       const history = buildChatMessagesForLlm(this.chat.getMessages(agent.id), {
         excludeLastCeo: true,
         limit: isPmAgent(agent) ? 20 : 12,
       });
-      const memorySnippet = agent.memory?.trim().slice(0, 600);
       const pmBlock = isPmAgent(agent)
         ? buildPmOrchestrationPromptBlock(this.agentManager.getAll(), agent)
         : '';
@@ -821,7 +822,6 @@ export class Orchestrator {
         : '';
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 ${pmBlock}${devBlock}
 
 사장님과 자연스럽게 대화하세요. 사장을 부를 때는 항상 "사장님"이라고 하세요. "CEO", "대표님", 실명은 쓰지 마세요. 한국어로 간결하게 답변하고, 불필요한 보고서 형식·메타 정보는 쓰지 마세요.
@@ -1460,11 +1460,9 @@ ${pmBlock}${devBlock}
         : 'No workspace open';
 
       const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: command });
-      const memorySnippet = agent.memory?.trim().slice(0, 2000);
 
       const systemPrompt = `You are ${agent.name}, a ${agent.role} agent.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 ${this.externalApiExecutor.getRegistryPrompt()}
 ${buildWorkspacePrompt(agent.role)}`;
 
@@ -1594,7 +1592,6 @@ Complete this task. If code/files are needed, output them in the specified file 
     const fullContext = `${recentCeoContext}\n${command}`;
     const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: fullContext });
     const pmBlock = buildPmOrchestrationPromptBlock(allAgents, agent);
-    const memorySnippet = agent.memory?.trim().slice(0, 800);
     const matchHint = proposeTeamMembers(agent, fullContext, allAgents);
     const hintBlock =
       matchHint.length > 0
@@ -1609,7 +1606,6 @@ Complete this task. If code/files are needed, output them in the specified file 
 
     const systemPrompt = `You are ${formatAgentLabel(agent)}, PM in AgentCompany.
 ${folderContext || agent.description || ROLE_DESCRIPTIONS[agent.role]}
-${memorySnippet ? `\nMemory:\n${memorySnippet}` : ''}
 ${pmBlock}
 ${hintBlock}
 ${templateBlock}

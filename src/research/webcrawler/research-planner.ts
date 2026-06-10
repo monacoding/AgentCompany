@@ -12,7 +12,6 @@ export interface ResearchPlan {
 }
 
 const MAX_QUERIES = 8;
-const KNOWLEDGE_SLICE = 6000;
 
 export class ResearchPlanner {
   constructor(
@@ -21,7 +20,7 @@ export class ResearchPlanner {
   ) {}
 
   async plan(query: string, agent: Agent): Promise<ResearchPlan> {
-    const knowledge = await this.loadAgentKnowledge(agent);
+    const knowledge = await this.loadAgentKnowledge(agent, query);
     try {
       const llmPlan = await this.planWithLlm(query, agent, knowledge);
       if (llmPlan.searchQueries.length > 0) {
@@ -33,11 +32,11 @@ export class ResearchPlanner {
     return this.planHeuristic(query, knowledge);
   }
 
-  private async loadAgentKnowledge(agent: Agent): Promise<string> {
+  private async loadAgentKnowledge(agent: Agent, query: string): Promise<string> {
     if (!this.agentFolders) return '';
     const slug = this.agentFolders.resolveSlug(agent);
-    const raw = await this.agentFolders.loadKnowledge(slug);
-    return raw.slice(0, KNOWLEDGE_SLICE);
+    const raw = await this.agentFolders.loadKnowledgeSelective(slug, query, agent.role);
+    return raw;
   }
 
   private async planWithLlm(

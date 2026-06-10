@@ -2,8 +2,15 @@ export { AgentFolderEngine } from './engine';
 export {
   selectKnowledgeForTask,
   scoreKnowledgeFile,
+  scoreKnowledgeTitle,
+  pickKnowledgeFilenames,
+  parseMemorySections,
+  selectMemoryForTask,
   SELECTIVE_KNOWLEDGE_MAX_CHARS,
+  SELECTIVE_MEMORY_MAX_CHARS,
   type KnowledgeFileMeta,
+  type KnowledgeTitleMeta,
+  type MemorySectionMeta,
 } from './selective-prompt-context';
 export {
   transferFilesBetweenAgents,

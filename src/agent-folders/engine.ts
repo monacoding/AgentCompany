@@ -33,7 +33,11 @@ import {
   KNOWLEDGE_FULL_FILE_GUARD,
   KNOWLEDGE_PREVIEW_CHARS,
   type KnowledgeFileMeta,
+  type KnowledgeTitleMeta,
+  parseMemorySections,
+  pickKnowledgeFilenames,
   selectKnowledgeForTask,
+  selectMemoryForTask,
 } from './selective-prompt-context';
 import { buildPlatformStructurePromptBlock, isDeveloperAgent } from '../platform';
 
@@ -684,62 +688,110 @@ ${displayTitle}
     return this.writeText(slug, relativePath, content);
   }
 
-  async buildKnowledgeCatalog(slug: string): Promise<KnowledgeFileMeta[]> {
+  /** 1단계: knowledge 파일 제목(이름)만 나열 — 본문 읽지 않음 */
+  async listKnowledgeTitles(slug: string): Promise<KnowledgeTitleMeta[]> {
     const knowledgeDir = this.getKnowledgeDir(slug);
     try {
       const files = (await fs.readdir(knowledgeDir))
         .filter((f) => !this.isInternalKnowledgeFile(f))
         .sort();
-      const catalog: KnowledgeFileMeta[] = [];
 
+      const titles: KnowledgeTitleMeta[] = [];
       for (const file of files) {
         const fullPath = path.join(knowledgeDir, file);
         const stat = await fs.stat(fullPath).catch(() => null);
         if (!stat?.isFile()) continue;
-
         const ext = path.extname(file).toLowerCase();
         if (!['.md', '.txt', '.json'].includes(ext)) continue;
-
-        const learnedSummary = await this.readLearnedSummary(knowledgeDir, file);
-        const fileRaw = (await fs.readFile(fullPath, 'utf-8')).trim();
-        const fullSize = fileRaw.length;
-        let content = learnedSummary ?? fileRaw;
-        if (!learnedSummary && fileRaw.length > KNOWLEDGE_FULL_FILE_GUARD) {
-          content =
-            `${fileRaw.slice(0, KNOWLEDGE_FULL_FILE_GUARD)}\n\n` +
-            `…(원문 ${fileRaw.length}자 — 선별 컨텍스트에서는 앞부분만 미리보기)`;
-        }
-
-        catalog.push({
-          filename: file,
-          preview: content.slice(0, KNOWLEDGE_PREVIEW_CHARS),
-          content,
-          fullSize,
-          usedSummary: !!learnedSummary,
-        });
+        titles.push({ filename: file });
       }
-
-      return catalog;
+      return titles;
     } catch {
       return [];
     }
   }
 
-  /** 업무 맥락에 맞는 knowledge만 선별 (PM·Project 태스크용) */
+  /** 2단계: 선별된 파일만 본문 로드 */
+  async loadKnowledgeFileContents(
+    slug: string,
+    filenames: string[]
+  ): Promise<KnowledgeFileMeta[]> {
+    const knowledgeDir = this.getKnowledgeDir(slug);
+    const catalog: KnowledgeFileMeta[] = [];
+
+    for (const file of filenames) {
+      const fullPath = path.join(knowledgeDir, file);
+      const stat = await fs.stat(fullPath).catch(() => null);
+      if (!stat?.isFile()) continue;
+
+      const ext = path.extname(file).toLowerCase();
+      if (!['.md', '.txt', '.json'].includes(ext)) continue;
+
+      const learnedSummary = await this.readLearnedSummary(knowledgeDir, file);
+      const fileRaw = (await fs.readFile(fullPath, 'utf-8')).trim();
+      const fullSize = fileRaw.length;
+      let content = learnedSummary ?? fileRaw;
+      if (!learnedSummary && fileRaw.length > KNOWLEDGE_FULL_FILE_GUARD) {
+        content =
+          `${fileRaw.slice(0, KNOWLEDGE_FULL_FILE_GUARD)}\n\n` +
+          `…(원문 ${fileRaw.length}자 — 선별 컨텍스트에서는 앞부분만 미리보기)`;
+      }
+
+      catalog.push({
+        filename: file,
+        preview: content.slice(0, KNOWLEDGE_PREVIEW_CHARS),
+        content,
+        fullSize,
+        usedSummary: !!learnedSummary,
+      });
+    }
+
+    return catalog;
+  }
+
+  async buildKnowledgeCatalog(slug: string): Promise<KnowledgeFileMeta[]> {
+    const titles = await this.listKnowledgeTitles(slug);
+    return this.loadKnowledgeFileContents(
+      slug,
+      titles.map((t) => t.filename)
+    );
+  }
+
+  /** 제목 선별 → 필요 파일만 본문 로드 */
   async loadKnowledgeSelective(
     slug: string,
     taskHint: string,
     agentRole: string
   ): Promise<string> {
-    const catalog = await this.buildKnowledgeCatalog(slug);
-    if (catalog.length === 0) return '';
-    return selectKnowledgeForTask(catalog, taskHint, agentRole).body;
+    const titles = await this.listKnowledgeTitles(slug);
+    if (titles.length === 0) return '';
+
+    const { picked } = pickKnowledgeFilenames(titles, taskHint, agentRole);
+    if (picked.length === 0) return '';
+
+    const metas = await this.loadKnowledgeFileContents(slug, picked);
+    return selectKnowledgeForTask(metas, taskHint, agentRole).body;
   }
 
-  async loadKnowledge(slug: string): Promise<string> {
+  async loadKnowledge(slug: string, taskHint?: string, agentRole?: string): Promise<string> {
+    if (taskHint !== undefined && agentRole !== undefined) {
+      return this.loadKnowledgeSelective(slug, taskHint, agentRole);
+    }
     const catalog = await this.buildKnowledgeCatalog(slug);
     if (catalog.length === 0) return '';
     return catalog.map((m) => `## ${m.filename}\n${m.content.trim()}`).join('\n\n');
+  }
+
+  /** memory.md — 섹션 제목 선별 후 필요 구간만 로드 */
+  async loadMemorySelective(
+    slug: string,
+    taskHint: string,
+    agentRole: string
+  ): Promise<string> {
+    const raw = await this.readText(slug, AGENT_FOLDER_LAYOUT.memory);
+    if (!raw?.trim()) return '';
+    const sections = parseMemorySections(raw);
+    return selectMemoryForTask(sections, taskHint, agentRole).body;
   }
 
   private isInternalKnowledgeFile(name: string): boolean {
@@ -782,7 +834,11 @@ ${displayTitle}
         this.promptContextCache.delete(key);
       }
     }
-    this.conversationalContextCache.delete(agentId);
+    for (const key of [...this.conversationalContextCache.keys()]) {
+      if (key === agentId || key.startsWith(`${agentId}:`)) {
+        this.conversationalContextCache.delete(key);
+      }
+    }
   }
 
   private promptContextCacheKey(agentId: string, taskHint?: string): string {
@@ -791,14 +847,14 @@ ${displayTitle}
     return `${agentId}:${hint.slice(0, 120)}`;
   }
 
-  private shouldUseSelectiveKnowledge(agent: Agent, taskHint?: string): boolean {
-    if (taskHint?.trim()) return true;
-    return agent.role === 'pm';
-  }
-
-  /** 일상 대화용 — persona·description + 개발자는 플랫폼 구조 블록 */
-  async buildConversationalPromptContext(agent: Agent): Promise<string> {
-    const cached = this.conversationalContextCache.get(agent.id);
+  /** 일상 대화용 — persona·description + 선별 memory/knowledge */
+  async buildConversationalPromptContext(
+    agent: Agent,
+    opts?: { taskHint?: string }
+  ): Promise<string> {
+    const hint = opts?.taskHint?.trim() ?? '';
+    const cacheKey = hint ? `${agent.id}:conv:${hint.slice(0, 80)}` : agent.id;
+    const cached = this.conversationalContextCache.get(cacheKey);
     if (cached && Date.now() - cached.at < CONVERSATIONAL_CONTEXT_CACHE_MS) {
       return cached.value;
     }
@@ -816,8 +872,14 @@ ${displayTitle}
     const description = await this.loadDescription(slug);
     if (description) parts.push(`Description:\n${description.slice(0, 800)}`);
 
+    const memory = await this.loadMemorySelective(slug, hint, agent.role);
+    if (memory) parts.push(`Memory:\n${memory}`);
+
+    const knowledge = await this.loadKnowledgeSelective(slug, hint, agent.role);
+    if (knowledge) parts.push(`Knowledge:\n${knowledge}`);
+
     const value = parts.join('\n\n');
-    this.conversationalContextCache.set(agent.id, { value, at: Date.now() });
+    this.conversationalContextCache.set(cacheKey, { value, at: Date.now() });
     return value;
   }
 
@@ -851,9 +913,10 @@ ${displayTitle}
     if (description) parts.push(`Description:\n${description.slice(0, 800)}`);
 
     const taskHint = opts?.taskHint?.trim() ?? '';
-    const knowledge = this.shouldUseSelectiveKnowledge(agent, taskHint)
-      ? await this.loadKnowledgeSelective(slug, taskHint, agent.role)
-      : await this.loadKnowledge(slug);
+    const memory = await this.loadMemorySelective(slug, taskHint, agent.role);
+    if (memory) parts.push(`Memory:\n${memory}`);
+
+    const knowledge = await this.loadKnowledgeSelective(slug, taskHint, agent.role);
     if (knowledge) parts.push(`Knowledge:\n${knowledge}`);
 
     const value = parts.join('\n\n');

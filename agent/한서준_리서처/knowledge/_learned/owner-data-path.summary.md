@@ -1,27 +1,29 @@
 # Learned: owner-data-path.md
 
-_hash: b829bd347c186d6a_  
-_learned: 2026-06-10T22:20:32.184Z_
+_hash: 117d2fdbb40695d7_  
+_learned: 2026-06-10T22:37:06.592Z_
 
-# 사장님 데이터 경로
+# 사장님 데이터 경로 요약
 
-## 데이터 위치
+## 데이터 위치 개요
+
+사장님의 프로필, 페르소나, 사진은 특정 폴더에 저장됩니다. 이는 에이전트가 관련 정보를 정확하게 찾고 저장하기 위한 필수 경로입니다.
 
 - **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준 경로:** `company/owner`
+- **워크스페이스 기준:** `company/owner`
 
-## 주요 파일
+## 주요 파일 경로
 
-- **사장님 프로필:** 
-  - 파일 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
-  - 포함 정보: 이름, 성격 등
-- **사장님 페르소나:** 
-  - 파일 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
-  - 기능: 대화 및 보고 시 참고
-- **사장님 사진:** 
-  - 폴더 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+- **프로필 파일:** `profile.json`
+  - 사장님의 이름, 성격 등의 기본 정보 포함
+- **페르소나 파일:** `persona.md`
+  - 대화 및 보고 시 필요한 페르소나 정보 포함
+- **사진 디렉토리:** `photo/`
+  - 사장님의 사진 저장
 
-## 중요 사항
+## 에이전트 주의사항
 
-- 에이전트는 **반드시 지정된 경로**를 사용하여 사장님 관련 정보를 찾거나 저장해야 합니다.
-- 경로를 추측하거나 다른 위치를 사용하지 않도록 합니다.
+- 사장님 관련 정보를 검색하거나 저장할 때 반드시 상기 경로를 사용해야 함
+- 다른 경로를 추측하거나 사용하지 않음
+
+이 경로 정보를 지키는 것은 정보의 일관성을 유지하는 데 중요합니다.

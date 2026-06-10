@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:26:15.357Z_
+_마지막 동기화: 2026-06-10T22:34:53.499Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1692,8 +1692,6 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 | 2026 | 국어 | 60defdef6d83db1b756f841089563c5a |
 | 2026 | 수학 | f9055b3484e917
 
-[ExternalApiRegistry] 등록된 External API 없음
-
 [KnowledgeLearned: cross-agent-file-transfer.md@8bb275ce]
 # 에이전트 간 파일 이동 규칙 요약
 
@@ -1785,3 +1783,5 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 - 로스터에 없는 인물이나 역할 생성 금지
 - 인터넷/웹 PDF 다운로드는 외부 수집 프로젝트로 계획
 - @한서준 및 @하정우는 각각 리서치 및 스크립트 실행 담당
+
+[ExternalApiRegistry] 등록된 External API 없음
