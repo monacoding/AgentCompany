@@ -9,10 +9,10 @@ export interface PriorDeliverable {
 }
 
 /** 일반 워커 carry_data 상한 */
-export const PRIOR_CONTEXT_MAX_DEFAULT = 6_000;
+export const PRIOR_CONTEXT_MAX_DEFAULT = 3000;
 
 /** PM 최종 통합 — @한서준 리서치 본문 전량 전달 */
-export const PRIOR_CONTEXT_MAX_PM = 96_000;
+export const PRIOR_CONTEXT_MAX_PM = 5000;
 
 function isResearcherDeliverable(d: PriorDeliverable): boolean {
   return d.agent.includes('한서준') || /리서치|조사|research/i.test(d.description);

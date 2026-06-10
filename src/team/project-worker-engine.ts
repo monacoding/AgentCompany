@@ -21,7 +21,7 @@ import {
 } from './script-runner';
 
 /** Project 태스크 LLM 출력 상한 — 최종 보고서에 전체 산출물이 들어가도록 충분히 크게 설정 */
-export const PROJECT_TASK_MAX_OUTPUT_TOKENS = 16_384;
+export const PROJECT_TASK_MAX_OUTPUT_TOKENS = 5000;
 
 const LLM_WAIT_HINTS = [
   '내용 분석 중…',

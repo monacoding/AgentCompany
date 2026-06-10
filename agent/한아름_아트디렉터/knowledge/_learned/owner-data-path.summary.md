@@ -1,7 +1,7 @@
 # Learned: owner-data-path.md
 
-_hash: 5d7416c107d95ecf_  
-_learned: 2026-06-10T05:35:01.089Z_
+_hash: d39bbd8eafae2d5f_  
+_learned: 2026-06-10T10:32:39.324Z_
 
 # 사장님 데이터 경로
 

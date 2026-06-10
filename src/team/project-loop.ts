@@ -1,7 +1,7 @@
 import { Agent } from '../types';
 
-/** ChatDev Code Review Phase loop_counter 기본값 참고 */
-export const PROJECT_REVIEW_MAX_ITERATIONS = 5;
+/** ChatDev Code Review Phase — 워커 1회 실행 + 검토 1회 (재수정 루프 없음) */
+export const PROJECT_REVIEW_MAX_ITERATIONS = 1;
 
 /** ChatDev Test Phase loop_counter 기본값 참고 */
 export const PROJECT_TEST_MAX_ITERATIONS = 3;
