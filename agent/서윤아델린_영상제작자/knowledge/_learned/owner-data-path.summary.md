@@ -1,24 +1,103 @@
 # Learned: owner-data-path.md
 
-_hash: 34d70a054b91c977_  
-_learned: 2026-06-06T18:07:59.807Z_
+_hash: c5b896375a669ab8_  
+_learned: 2026-06-10T05:35:59.682Z_
 
-# 사장님 데이터 경로 요약
+# 사장님 데이터 경로
 
-## 데이터 위치
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
 - **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
 - **워크스페이스 기준:** `company/owner`
 
-## 주요 파일
-- **프로필:** `profile.json`
-  - 내용: 사장님의 이름, 성격 등 기본 정보
-- **페르소나:** `persona.md`
-  - 내용: 대화 및 보고 시 참고할 사항
-- **사진:** `photo/`
-  - 내용: 사장님의 사진 파일 저장
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
 
-## 에이전트 지침
-- 사장님 데이터 관련 정보 검색 및 저장 시 **지정된 경로**를 사용
-- 다른 위치를 추측하거나 사용하지 않음
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
 
-이 경로는 에이전트의 사장님 데이터 처리에 필수적입니다.
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/o
+
+...(truncated)
