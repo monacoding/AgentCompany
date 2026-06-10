@@ -1,6 +1,6 @@
 # 최현석 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T00:27:09.007Z_
+_마지막 동기화: 2026-06-10T00:34:42.701Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -99,15 +99,6 @@ _마지막 동기화: 2026-06-10T00:27:09.007Z_
 - 수학 영역 PDF 메타·분류 검증
 - 2차 Project에서 수학 확장 담당
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [[최현석] 응 계획 세워서 말해줘]
 Given the task requirements and context, I will create a comprehensive plan for 최현석 to help students excel in 수능 수학 (Korean College Scholastic Ability Test Mathematics). The plan will be based on 최현석's strengths, integrating modern educational tools and addressing individual student needs. Here’s a structured plan:
 
@@ -160,3 +151,12 @@ Given the task requirements and context, I will create a comprehensive plan for 
 Implementing this plan will require collaboration with educational stakeholders and possibly the utilization of digital platforms for resource sharing and communication. This plan aligns with 최현석's expertise and the company's mission of providing unparalleled educational support to students.
 
 If code/files are needed to create study materials or assessment tools, please specify, and I can assist with creating those assets within the workspace mentioned.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

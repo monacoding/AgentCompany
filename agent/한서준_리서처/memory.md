@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T00:29:30.827Z_
+_마지막 동기화: 2026-06-10T00:34:43.266Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -3137,15 +3137,6 @@ PM 관점에서 문서 흐름, 실무성, 교육 자료 활용 가능성을 검�
 - 선급·규정 자료는 공기압축기 단품보다 **시동공기 계통, 공기병/압력용기, 안전밸브, 드레인, 압력계, 배관 안전**을 중심으로 요구사항을 다루는 경향이 있다. 출처: https://www.ecfr.gov/current/title-46/section-58.10-15, https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.169  
 - 실무 보고서는 왕복동식
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [Research: ## 사장님 지시
 
 @박준호 선박에 적용 되는 에어컴프레서 종류 조사 보고서
@@ -3268,3 +3259,12 @@ P4. 최종 보고서 작성: 조사 내용을 기반으로 보고서 작성 및 
   - **로터리 스크류형**: 지속적인 공기 흐름을 제공하여 산업 현장에서 널리 사용됨.
   - **피스톤형**: 왕복 동작을 통해 공기를 압축하는 방식.
   - **원심형(터보식)**: 고속 회전 임펠러를 사
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
