@@ -1,15 +1,6 @@
 # 한아름 — 누적 메모리
 
-_마지막 동기화: 2026-06-09T22:45:19.922Z_
-
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
+_마지막 동기화: 2026-06-09T22:54:13.682Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -93,3 +84,12 @@ P1 … / P2 … / P3 …
 
 확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
 ```
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

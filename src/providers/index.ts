@@ -9,6 +9,18 @@ export { LlmUsageTracker } from './llm-usage-tracker';
 
 const BILLABLE_LLM_PROVIDERS = new Set<ProviderType>(['openai', 'anthropic', 'ollama']);
 
+/** gpt-5 / o-series 등 — max_tokens 대신 max_completion_tokens 사용 */
+function usesMaxCompletionTokens(model: string): boolean {
+  return /^(gpt-5|o[0-9]|chatgpt-)/i.test(model.trim());
+}
+
+function openAiTokenLimitFields(model: string, maxTokens?: number): Record<string, number> {
+  if (!maxTokens) return {};
+  return usesMaxCompletionTokens(model)
+    ? { max_completion_tokens: maxTokens }
+    : { max_tokens: maxTokens };
+}
+
 class OpenAIProvider extends BaseProvider {
   readonly type: ProviderType = 'openai';
 
@@ -35,7 +47,7 @@ class OpenAIProvider extends BaseProvider {
         body: JSON.stringify({
           model: config.model,
           messages,
-          ...(config.maxTokens ? { max_tokens: config.maxTokens } : {}),
+          ...openAiTokenLimitFields(config.model, config.maxTokens),
         }),
       });
 
@@ -95,6 +107,7 @@ class OpenAIProvider extends BaseProvider {
         messages,
         stream: true,
         stream_options: { include_usage: true },
+        ...openAiTokenLimitFields(config.model, config.maxTokens),
       }),
     });
 

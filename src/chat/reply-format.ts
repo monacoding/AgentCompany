@@ -160,6 +160,9 @@ export function formatLlmError(error: unknown): string {
     }
     return 'API 사용량 한도에 걸렸어요. 잠시 후 다시 말씀해 주세요.';
   }
+  if (/unsupported parameter.*max_tokens|max_completion_tokens instead/i.test(raw)) {
+    return '모델 API 설정 오류가 발생했어요. Reload Window 후 다시 시도해 주세요.';
+  }
   if (raw.length > 180 || raw.includes('OpenAI API error')) {
     return 'AI 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
   }
