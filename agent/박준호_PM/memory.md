@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T09:27:40.808Z_
+_마지막 동기화: 2026-06-10T09:32:30.220Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -1027,15 +1027,6 @@ P1 … / P2 … / P3 …
 
 ##
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@c85169e9]
 # 에이전트 간 파일 이동
 
@@ -1134,3 +1125,12 @@ P1 … / P2 … / P3 …
 
 
 ##
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)

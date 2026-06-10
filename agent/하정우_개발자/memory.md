@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T09:28:56.020Z_
+_마지막 동기화: 2026-06-10T09:32:30.375Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -2924,15 +2924,6 @@ P1 … / P2 … / P3 …
 1. **목표 설정** : 사장님 지시를 토대로 한 문장 목표, 산출물·범위·제외 항목을 선정.
 2. **계획 수립** : 전체 계획을 Phase 별로 순차적으로 작성. 세부 태스크는 최대 5회의 작업 검토루
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **날씨예보** (id: 1780730812068-zzj5ynu)
-   - URL: https://api.openweathermap.org/data/2.5
-   - 설명: 날씨 관련 API
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@67761abc]
 # 에이전트 간 파일 이동
 
@@ -3030,3 +3021,12 @@ P1 … / P2 … / P3 …
 
 
 ##
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **날씨예보** (id: 1780730812068-zzj5ynu)
+   - URL: https://api.openweathermap.org/data/2.5
+   - 설명: 날씨 관련 API
+   - 인증: query-param (appid)
