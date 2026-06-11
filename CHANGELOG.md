@@ -7,6 +7,17 @@
 
 ---
 
+## [1.8.15] - 2026-06-11
+
+### Fixed
+
+- **하정우 업무 미수행** — 구현·스크립트 지시가 파일 전달로 잘못 분류되어 Cline 없이 빈 결과로 완료되던 문제
+- **라우팅 우선순위** — `isImplementationTask`·`shouldPrioritizeDevWork`로 개발 업무 시 파일 전달 가로채기 차단, Cline 실행을 파일 전달보다 앞에 배치
+- **cross-agent 버그** — 에이전트 간 파일 전달 매칭 시 `offerCrossAgentFileTransfer` 미호출로 UI·작업이 생략되던 문제 수정
+- **`isClineDevTask` 과민** — 단독 `파일` 키워드로 개발 업무가 파일 전달과 겹치던 패턴 정리
+
+---
+
 ## [1.8.14] - 2026-06-11
 
 ### Fixed

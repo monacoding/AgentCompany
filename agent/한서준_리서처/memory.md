@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T01:58:32.415Z_
+_마지막 동기화: 2026-06-11T02:10:08.175Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -4937,15 +4937,6 @@ P1 … / P2 … / P3 …
 - **인터넷·웹 PDF 다운로드** 요청 시 로컬 폴더 검색 금지 — 외부 수집 Project로 계획.
 - 영상/콘텐츠
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
-   - URL: https://opendart.fss.or.kr/api
-   - 설명: (없음)
-   - 인증: query-param (crtfc_key)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@24895cab]
 # 에이전트 간 파일 이동 규칙
 
@@ -5046,3 +5037,107 @@ P1 … / P2 … / P3 …
 - 인터넷, 웹 PDF 다운로드 요청 시 외부 수집 프로젝트로 계획.
 - PDF/수집 시 @한서준(출처 조사), @하정우(스크립트), 도메인 전문가(검증) 순으로 절차 진행.
 - 계획 확정 전에는 프로젝트 채팅방을 열지
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (crtfc_key)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@f548ce58]
+# 에이전트 간 파일 이동 규칙
+
+- **완료 전 표현 금지**
+  - 파일 이동이 완전히 끝난 후에만 완료 표현 사용.
+  - 지시 직후에는 "요청해볼게요", "진행할게요" 같은 예정 표현만 사용.
+
+- **완료 시 경로 필수**
+  - 복사가 완료된 경우에만 완료 보고.
+  - 반드시 자세한 파일 경로를 포함.
+  - 예시 포맷:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히 보고**
+  - 실패 시에는 "완료" 표현을 사용하지 않고, 찾은 위치, 조건 및 다음 조치에 대한 설명을 포함.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"는 표현 사용 금지.
+  - 경로가 증거 역할을 하므로 반드시 명시.
+
+이 규칙들은 모든 단계에서 파일 이동의 정확성을 보장하기 위한 의도입니다. 각종 파일 이동 작업 시 항시 유념해야 합니다.
+
+[KnowledgeLearned: owner-data-path.md@fd79480b]
+# 사장님 데이터 경로
+
+## 데이터 위치
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준경로:** `company/owner`
+
+## 주요 파일
+
+- **프로필 파일:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 사장님의 이름, 성격 등의 정보 포함
+  
+- **페르소나 파일:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 대화 및 보고 시 참고할 사장님의 페르소나 정보
+  
+- **사진 폴더:**  
+  - 경로: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 내용: 사장님의 사진 저장
+
+## 경로 사용 지침
+
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용해야 합니다.
+- 다른 위치를 추측하거나 사용하지 않습니다. 
+
+이 정보는 여러 번 반복되어 강조되었으며, 경로와 사용 방법에 대한 확실한 이해가 필요합니다.
+
+[KnowledgeLearned: project-playbook.md@959eee0a]
+# 프로젝트 협업 플레이북 요약
+
+## AgentCompany 프로젝트 표준 절차
+
+### 5단계 절차
+1. **목표 설정**
+   - 사장님의 지시를 바탕으로 한 문장 목표와 명확한 산출물·범위·제외 항목 정의.
+
+2. **계획 수립**
+   - 프로젝트를 리서치, 구현/실행, 검증, PM 보고 등 단계로 나눔.
+   - 각 태스크는 **작업 → 검토 루프**(최대 5회)로 진행.
+
+3. **작업 분배**
+   - 형태: 번호 + @에이전트명: 할 일 (예: `1. @한서준: 공식 PDF 출처 URL 조사`).
+
+4. **에이전트 선별**
+   - 실제 회사 에이전트 roster 사용.
+   - Role, title, capabilities에 따라 매칭.
+
+5. **승인 후 프로젝트 실행**
+   - 계획을 사장님께 제시 후 "진행하세요" 승인 요청.
+   - 승인 시: 채팅방 생성 → Projects 탭 등록 → 에이전트 순차 협업.
+   - 산출물 저장: `company/projects/{sessionId}/`.
+
+## PM 1:1 대화 권장 형식
+- 목표, 계획, 작업 분배, 참여 에이전트를 구조화하여 제시.
+
+## PM 전용 — 프로젝트 오케스트레이션
+- 사장님 지시 후 목표, 계획, 분배, 에이전트를 우선 제시.
+- Internet·web PDF 다운로드 요청 시 로컬 파일 검색 금지.
+- PDF/수집: @한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증).
+- 영상/콘텐츠: @서윤아델린 + @하정우 조합 검토.
+- 계획 확정 전 채팅방 개설 금지.
+- 승인 키워드: "진행하세요", "시작하세요", "프로젝트 진행".
+
+## 주의사항
+- 가상 직함이나 외부 인력 사용 금지.
+- 이전 태스크 산출물은 carry_data로 전달.
