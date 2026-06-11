@@ -105,6 +105,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [llmChecking, setLlmChecking] = useState(false);
   const [releasing, setReleasing] = useState(false);
+  const [releaseMessage, setReleaseMessage] = useState('');
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [newAgent, setNewAgent] = useState<AgentForm>(emptyAgentForm());
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
@@ -184,9 +185,26 @@ export default function App() {
         if (detail) setProjectDetail(detail);
       }
       if (event.data.type === 'releaseStatus') {
-        const { status } = event.data.payload as { status: string };
-        if (status === 'running') setReleasing(true);
-        if (status === 'failed') setReleasing(false);
+        const payload = event.data.payload as {
+          status: string;
+          version?: string;
+          message?: string;
+          step?: string;
+        };
+        if (payload.status === 'running') {
+          setReleasing(true);
+          if (payload.message) setReleaseMessage(payload.message);
+          if (payload.version) {
+            setData((prev) => ({ ...prev, version: payload.version! }));
+          }
+        }
+        if (payload.status === 'failed') {
+          setReleasing(false);
+          setReleaseMessage('');
+          if (payload.version) {
+            setData((prev) => ({ ...prev, version: payload.version! }));
+          }
+        }
       }
     };
     window.addEventListener('message', handler);
@@ -281,7 +299,10 @@ export default function App() {
           <div>
             <div className="header-heading-row">
               <h1>{data.companyInfo?.companyName?.trim() || 'AgentCompany'}</h1>
-              <span className="header-version-badge">v{data.version}</span>
+              <span className="header-version-badge" title={releasing ? releaseMessage : undefined}>
+                v{data.version}
+                {releasing ? ' …' : ''}
+              </span>
               <button
                 type="button"
                 className="header-company-btn"
@@ -317,7 +338,7 @@ export default function App() {
           <button
             className={`btn-icon${releasing ? ' btn-icon--spin' : ''}`}
             onClick={() => postMessage('refresh')}
-            title="릴리스 (npm run release) & Reload"
+            title="패치 버전 +1 → CHANGELOG → npm run release → Reload"
             disabled={releasing}
             aria-busy={releasing}
           >

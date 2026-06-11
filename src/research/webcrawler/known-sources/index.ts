@@ -101,9 +101,56 @@ class HoraengMirrorConnector implements KnownSourceConnector {
   }
 }
 
+class StockMarketConnector implements KnownSourceConnector {
+  id = 'stock-market';
+  name = '주가·증시 (네이버·Investing)';
+  priority = 'official' as const;
+
+  matches(query: string): boolean {
+    if (/dart|다트|opendart|elestock|임원|주요주주|소유보고|전자공시/i.test(query)) return false;
+    return /주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장\s*상황|장\s*마감/i.test(query);
+  }
+
+  async resolve(
+    query: string,
+    _browserEngine: BrowserEngine,
+    _fileDownloader: FileDownloader
+  ): Promise<string[]> {
+    const term = extractStockSearchTerm(query);
+    const urls: string[] = [];
+
+    if (term) {
+      urls.push(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(term)}`);
+      urls.push(`https://kr.investing.com/search/?q=${encodeURIComponent(term)}`);
+    }
+    if (/미국|나스닥|nasdaq|s&p|dow|장\s*마감/i.test(query)) {
+      urls.push('https://finance.yahoo.com/markets/');
+      urls.push('https://www.marketwatch.com/');
+    }
+    if (/코스피|코스닥|국내|한국/i.test(query)) {
+      urls.push('https://finance.naver.com/sise/');
+    }
+
+    return [...new Set(urls)];
+  }
+}
+
+function extractStockSearchTerm(query: string): string {
+  const cleaned = query
+    .replace(/@[\uAC00-\uD7A3\w]+/g, '')
+    .replace(
+      /(?:주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장|상황|조사|알려(?:줘|주(?:세요)?)|말해(?:줘|주(?:세요)?)|확인(?:해(?:줘|주(?:세요)?)?)?)/gi,
+      ' '
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.slice(0, 40);
+}
+
 const CONNECTORS: KnownSourceConnector[] = [
   new SuneungOfficialConnector(),
   new HoraengMirrorConnector(),
+  new StockMarketConnector(),
 ];
 
 export async function resolveKnownSources(

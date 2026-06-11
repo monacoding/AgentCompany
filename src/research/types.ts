@@ -71,13 +71,14 @@ export function isResearchAgent(agent: {
   );
 }
 
-/** 검색·조사·다운로드 등 실제 리서치 파이프라인이 필요한 명령 */
+/** 검색·조사·다운로드·주가 조회 등 실제 리서치 파이프라인이 필요한 명령 */
 export function isResearchTaskQuery(query: string): boolean {
   const text = query.trim();
   if (!text) return false;
   return (
     /다운|download|받아|저장해|save|내려받|\.pdf|pdf|파일\s*(?:받|저장|다운)/i.test(text) ||
     /찾|검색|조사|수집|알아봐|확인해|리서치|크롤|탐색|추적|출처|url|https?:\/\//i.test(text) ||
-    /수능|기출|논문|github|site:/i.test(text)
+    /수능|기출|논문|github|site:/i.test(text) ||
+    /주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장\s*상황|장\s*마감/i.test(text)
   );
 }

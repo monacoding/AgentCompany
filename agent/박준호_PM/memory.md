@@ -1,6 +1,6 @@
 # 박준호 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T01:11:02.585Z_
+_마지막 동기화: 2026-06-11T01:20:00.545Z_
 
 [CrossAgentFileTransfer v1]
 
@@ -1399,12 +1399,3 @@ P2. 각 주식의 이슈 및 관련 배경 조사
 @박준호 · @한서준
 
 사장님, 이대로 진행할까요?
-
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
-   - URL: https://opendart.fss.or.kr/api
-   - 설명: (없음)
-   - 인증: query-param (appid)

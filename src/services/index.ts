@@ -20,7 +20,7 @@ import { inferRoleFromTitle } from '../agent-folders/title-inference';
 import { AgentManager, isInProgressTask, isReviewReadyTask, resolveAgentDisplayStatus } from '../agents';
 import { AgentDescriptionRequiredError, AgentDuplicateNameError } from '../agents/errors';
 import { ChatService, detectSpeakerEmotion, resolveThreadForCommand } from '../chat';
-import { Database } from '../database';
+import { prepareRelease, readWorkspacePackageVersion, type ReleaseProgress } from './release-pipeline';
 import { ExternalApiRegistrySync } from '../external-api/registry';
 import { AgentGramEngine, AgentGramService } from '../agentgram';
 import { IdeaEngine } from '../ideas/idea-engine';
@@ -590,8 +590,10 @@ export class AgentCompanyService {
     this.cachedLlmStatus = await this.llmStatus.getStatus(false);
   }
 
-  /** 대시보드 ↻ — npm run release 후 Reload Window */
-  async runReleaseAndReload(): Promise<{ success: boolean; message: string }> {
+  /** 대시보드 ↻ — 패치 버전 증가 → CHANGELOG → npm run release → Reload */
+  async runReleaseAndReload(
+    onProgress?: (progress: ReleaseProgress) => void
+  ): Promise<{ success: boolean; message: string; newVersion?: string }> {
     const root = this.workspace.getWorkspaceRoot();
     if (!root) {
       return { success: false, message: '워크스페이스 폴더를 열어 주세요.' };
@@ -604,7 +606,34 @@ export class AgentCompanyService {
       return { success: false, message: 'package.json이 없는 워크스페이스입니다.' };
     }
 
-    this.notifications.showInfo('릴리스 시작 — 빌드·VSIX·GitHub 푸시·확장 설치 후 Reload 합니다.');
+    let prepared;
+    try {
+      onProgress?.({ step: 'bump', message: '패치 버전 증가 중…' });
+      prepared = await prepareRelease(root);
+      onProgress?.({
+        step: 'bump',
+        message: `v${prepared.previousVersion} → v${prepared.newVersion}`,
+        version: prepared.newVersion,
+      });
+      onProgress?.({
+        step: 'changelog',
+        message: `CHANGELOG 갱신 (${prepared.changedFiles.join(', ')})`,
+        version: prepared.newVersion,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, message: `버전 준비 실패: ${message}` };
+    }
+
+    this.notifications.showInfo(
+      `릴리스 v${prepared.newVersion} — 빌드·VSIX·GitHub·설치 후 Reload 합니다.`
+    );
+
+    onProgress?.({
+      step: 'release',
+      message: 'npm run release 실행 중… (수 분 소요)',
+      version: prepared.newVersion,
+    });
 
     const result = await this.workspace.executeTerminal('npm run release', 600_000);
     if (result.exitCode !== 0) {
@@ -612,11 +641,22 @@ export class AgentCompanyService {
       return {
         success: false,
         message: `릴리스 실패 (exit ${result.exitCode})${detail ? `\n${detail}` : ''}`,
+        newVersion: prepared.newVersion,
       };
     }
 
+    onProgress?.({
+      step: 'reload',
+      message: 'Reload Window…',
+      version: prepared.newVersion,
+    });
+
     await vscode.commands.executeCommand('workbench.action.reloadWindow');
-    return { success: true, message: '릴리스 완료 — Reload 중…' };
+    return {
+      success: true,
+      message: `릴리스 v${prepared.newVersion} 완료 — Reload 중…`,
+      newVersion: prepared.newVersion,
+    };
   }
   /** 대시보드 연결 표시와 채팅 LLM 호출이 같은 키를 쓰도록 보장 */
   async ensureEnvForLlm(): Promise<void> {
@@ -1271,7 +1311,18 @@ ${roleSnippet}
     const data = this.getDashboardData();
     data.companyInfo = await this.agentFolders.loadCompanyInfo();
     data.ownerInfo = await this.agentFolders.loadOwnerInfo();
+    data.version = await this.resolveDisplayVersion();
     return data;
+  }
+
+  /** 워크스페이스 package.json 우선 — 릴리스 직후·개발 중 버전 표시 */
+  private async resolveDisplayVersion(): Promise<string> {
+    const root = this.workspace.getWorkspaceRoot();
+    if (root) {
+      const workspaceVersion = await readWorkspacePackageVersion(root);
+      if (workspaceVersion) return workspaceVersion;
+    }
+    return (this.context.extension.packageJSON.version as string | undefined) ?? '0.0.0';
   }
   async getOwnerDisplayName(): Promise<string> {
     const info = await this.agentFolders.loadOwnerInfo();

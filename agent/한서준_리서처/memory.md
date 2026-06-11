@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T01:12:23.326Z_
+_마지막 동기화: 2026-06-11T01:32:58.394Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -4608,15 +4608,6 @@ P2. 각 주식의 이슈 및 관련 배경 조사
 - 계획 확정 전까지 프로젝트 채팅방 개설 금지.
 - 프로젝트 승인은 "진행하세요", "시작하세요", "프로젝트 진행"이라는 키워드로 확인.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
-   - URL: https://opendart.fss.or.kr/api
-   - 설명: (없음)
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@1bcddcbe]
 # 에이전트 간 파일 이동
 
@@ -4719,3 +4710,134 @@ P1 … / P2 … / P3 …
 - @서윤아델린 + @하정우 조합으로 검토.
 
 이 문서는 프로젝트 관리를 위한 표준 절차와 권장 지침을 제공하며, PM은 이 지침을 따라 프로젝트 효율성을 극대화해야 합니다.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (crtfc_key)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@ef132c3f]
+# 에이전트 간 파일 이동 규칙 요약
+
+- **완료 전 금지**
+  - 파일 복사·이동이 끝나기 전까지 "저장했어요", "옮겼어요" 등 완료 표현 사용 금지.
+  - 대신 "요청해볼게요", "진행할게요" 등 예정 표현만 사용.
+
+- **완료 시 경로 필수**
+  - 파일 복사 확인 후에만 완료 사용 가능.
+  - 반드시 경로를 명시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일 이동 실패 시 "완료"라고 말하지 않음.
+  - 현 위치, 조건, 다음 조치 안내 필수.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"고만 말하는 것 금지.
+  - 경로가 필수 증거 역할.
+
+[KnowledgeLearned: owner-data-path.md@d32f641f]
+# 사장님 데이터 경로 요약
+
+## 필수 경로 정보
+
+사장님의 프로필, 페르소나 및 사진 자료는 다음 경로에 저장되어 있습니다.
+
+- **절대 경로:**  
+  `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:**  
+  `company/owner`
+
+### 주요 파일
+
+- **프로필 파일:**  
+  `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`  
+  - 사장님의 이름, 성격 등을 포함합니다.
+
+- **페르소나 파일:**  
+  `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`  
+  - 대화 및 보고 시 참고 자료입니다.
+
+- **사진 폴더:**  
+  `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`  
+  - 사장님 사진이 저장되어 있습니다.
+
+## 에이전트 지침
+
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **항상 위 경로를 사용**해야 합니다.
+- 다른 위치를 추측하거나 시도하지 않습니다.
+
+## 참고
+
+반복적인 경로 강조로 인해 다른 문장이나 추가 정보는 제공되지 않았고, 경로 및 파일 중요성만 강조되었습니다.
+
+[KnowledgeLearned: project-playbook.md@9e9b2b23]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차
+
+- 프로젝트 진행은 5단계로 진행:
+  1. **목표**: 사장님의 지시에서 한 문장의 목표 및 범위, 제외 항목 명확화.
+  2. **계획**: 리서치, 구현/실행, 검증, PM 보고의 단계로 구분.
+  3. **작업 분배**: `번호 + @에이전트명: 할 일` 형식으로 작성.
+  4. **에이전트 선별**: 회사 에이전트 명단 기반으로 매칭.
+  5. **승인 후 Project 실행**: 사장님 승인을 통해 프로젝트 채팅방 생성 및 진행.
+  
+- 산출물은 `company/projects/{sessionId}/` 구조로 저장.
+  
+- PM 보고 형식:
+  - 목표, 계획, 작업 분배, 참여 에이전트를 명확히 제시.
+  - 사장님이 "진행하세요"라고 확인하면 프로젝트 시작.
+  
+## PM 전용 — Project 오케스트레이션 가이드라인
+
+- 사장님 지시 수신 후 목표, 계획, 분배, 에이전트 4블록 우선 제시.
+- 인터넷·웹 PDF는 외부 수집 프로젝트로 계획; 로컬 검색 금지.
+- PDF/수집: `@한서준(출처) → @하정우(스크립트) → 도메인 전문가(검증)`.
+- 영상/콘텐츠: `@서윤아델린 + @하정우` 조합 검토.
+- 승인 이전에는 프로젝트 채팅방 생성 금지.  
+- 승인 키워드: "진행하세요", "시작하세요", "프로젝트 진행".
+
+이 가이드라인은 프로젝트의 효율적인 관리와 협업을 위한 기본적인 과정을 제시하고, 에이전트의 역할과 책임을 명확히 하여 원활한 작업 분배를 돕습니다.
+
+[KnowledgeLearned: stock-research.md@b6376dab]
+# 주가·증시 리서치 Playbook
+
+[StockResearchPlaybook v1]
+
+## 핵심 원칙
+
+- **Open DART(opendart.fss.or.kr)는 실시간 주가 API가 아닙니다.** 전자공시·elestock(임원·주요주주 소유보고) 전용입니다.
+- 주가·지수·티커 조회는 **금융 포털 웹 리서치**로 처리합니다.
+- SEC.gov는 기업 공시·파일링용이며, **당일 시세·지수**에는 finance.yahoo.com·marketwatch.com 등을 함께 사용합니다.
+
+## 1순위 출처 (실시간 시세·지수)
+
+| 용도 | URL 패턴 |
+|------|----------|
+| 국내 종목 검색 | `https://finance.naver.com/search/search.naver?query={종목명}` |
+| 국내 지수·시세 | `https://finance.naver.com/sise/` |
+| 글로벌 종목 | `https://kr.investing.com/search/?q={티커 또는 종목명}` |
+| 미국 시장·지수 | `https://finance.yahoo.com/markets/` |
+| 미국 시장 뉴스·마감 | `https://www.marketwatch.com/` |
+
+## 검색 쿼리 예시
+
+- `{종목명} 주가 site:finance.naver.com`
+- `{티커} stock price site:finance.yahoo.com`
+- `{종목명} site:kr.investing.com`
+- `nasdaq s&p dow jones today` (미국 시장 전반)
+- `코스피 코스닥 지수 site:finance.naver.com`
+
+## 보고 형식
+
+1. **요청 종목/지수** — 현재가·등락률·거래량 (출처 URL 명시)
+2. **시장 맥락** — 같은

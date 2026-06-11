@@ -1,5 +1,35 @@
 import { CreateExternalApiInput, ExternalApi, ExternalApiAuthType } from '../types/external-api';
+import { isOpenDartApi } from './url-normalize';
 import { normalizeApiInput, normalizeBaseUrl } from './url-normalize';
+
+/** Open DART 전자공시·elestock 전용 (실시간 주가 API 아님) */
+export function isOpenDartDisclosureQuery(command: string): boolean {
+  return /dart|다트|opendart|elestock|임원.*주요주주|주요주주.*(소유|보고)|전자공시|공시.*pdf|corp_code|고유번호|crtfc_key/i.test(
+    command
+  );
+}
+
+/** 실시간 주가·증시·티커 조회 (웹 리서치 또는 주가 전용 External API) */
+export function isStockMarketQuery(command: string): boolean {
+  const text = command.trim();
+  if (!text) return false;
+  if (isOpenDartDisclosureQuery(text)) return false;
+
+  return /주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|dow\s*jones|s&p\s*500|snp500|장\s*마감|미국\s*시장|국내\s*시장|종목|상장주|equity|share\s*price|ticker|시장\s*상황|지수/i.test(
+    text
+  );
+}
+
+/** Alpha Vantage·Finnhub 등 실시간 시세 External API */
+export function isStockQuoteApi(
+  api: Pick<ExternalApi, 'name' | 'baseUrl'> & { description?: string }
+): boolean {
+  const hint = `${api.name} ${api.description ?? ''} ${api.baseUrl}`.toLowerCase();
+  if (/opendart|dart\.fss|elestock|전자공시|다트/.test(hint)) return false;
+  return /alphavantage|finnhub|polygon\.io|twelve\s*data|iexcloud|marketstack|stock|주가|시세|증권|quote/.test(
+    hint
+  );
+}
 
 /** URL·이름 기반 인증 방식 자동 감지 */
 export function autoDetectAuth(input: CreateExternalApiInput): {
@@ -125,12 +155,28 @@ export function isInquiryOrApiCommand(command: string): boolean {
 }
 
 export function shouldTryExternalApi(command: string, apis: ExternalApi[]): boolean {
-  if (apis.length === 0) return false;
+  const enabled = apis.filter((a) => a.enabled);
+  if (enabled.length === 0) return false;
   if (isCodeDevTask(command) || isResearchPipelineTask(command)) return false;
+
+  if (isStockMarketQuery(command) && !enabled.some(isStockQuoteApi)) {
+    return false;
+  }
+
+  if (isStockMarketQuery(command) && enabled.some(isStockQuoteApi)) {
+    return true;
+  }
+
+  if (isOpenDartDisclosureQuery(command)) {
+    return enabled.some(isOpenDartApi);
+  }
+
+  const onlyDart = enabled.length === 1 && isOpenDartApi(enabled[0]);
+  if (onlyDart) return false;
 
   const lower = command.toLowerCase();
 
-  if (apis.some((a) => lower.includes(a.name.toLowerCase()))) return true;
+  if (enabled.some((a) => lower.includes(a.name.toLowerCase()))) return true;
 
   if (
     /확인|조회|알려|검색|가져|보여|체크|알아봐|알려줘|날씨|weather|환율|주가|뉴스|번역|조회해|불러/.test(

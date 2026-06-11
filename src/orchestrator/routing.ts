@@ -54,6 +54,11 @@ export function isConversationalCommand(command: string): boolean {
   }
   if (isContextDependentCommand(text)) return false;
   if (
+    /주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장\s*상황|장\s*마감/i.test(text)
+  ) {
+    return false;
+  }
+  if (
     /```|\.(ts|tsx|js|py|md|json)|create|implement|fix|build|deploy|write|research|refactor|조사|구현|작성|수정|배포|리팩터|파일|코드|버그|찾|검색|다운|pdf|크롤|리서치|수집|확인|알아봐|수능|기출|제작|만들|쇼츠|숏폼|대본|기획해|스토리보드|썸네일|브리프/i.test(
       text
     )

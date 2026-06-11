@@ -48,6 +48,18 @@ export function routeCommand(command: string, agents: Agent[]): SecretaryRouteRe
     }
   }
 
+  if (/주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장\s*상황|장\s*마감/.test(lower)) {
+    const agent = active.find((a) => isResearchAgent(a) || a.name.includes('원영'));
+    if (agent) {
+      return {
+        agentId: agent.id,
+        agentName: agent.name,
+        confidence: 0.9,
+        reason: '주가·증시 조회는 웹 리서치 파이프라인으로 처리합니다',
+      };
+    }
+  }
+
   if (/api|backend|코드|구현|버그|fix|debug|개발|refactor|cline/.test(lower)) {
     const agent = active.find((a) => isClineAgent(a) || a.name.includes('하정우') || a.role === 'backend');
     if (agent) {

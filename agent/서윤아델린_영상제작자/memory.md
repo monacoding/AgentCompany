@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T01:11:02.641Z_
+_마지막 동기화: 2026-06-11T01:20:01.068Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1791,4 +1791,4 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
 1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
    - URL: https://opendart.fss.or.kr/api
    - 설명: (없음)
-   - 인증: query-param (appid)
+   - 인증: query-param (crtfc_key)

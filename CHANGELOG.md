@@ -7,6 +7,24 @@
 
 ---
 
+## [1.8.11] - 2026-06-11
+
+### Fixed
+
+- **주가·증시 조회 오동작** — DART(전자공시)만 등록된 상태에서 주식 조회가 External API로 잘못 라우팅되던 문제. 주가·증시는 한서준 웹 리서치 파이프라인으로 처리
+- **한서준 대화형 우회** — "주가 알려줘" 등이 리서치 파이프라인 없이 LLM 단답으로 처리되던 문제
+
+### Added
+
+- **주가 리서치** — `stock-research.md` playbook, 네이버·Investing·Yahoo Finance known source, Research Planner 휴리스틱
+- **비서 라우팅** — 주가·증시 명령 시 한서준 리서처 자동 위임
+
+### Changed
+
+- External API: Open DART는 elestock·공시 전용, 실시간 시세 API(Alpha Vantage·Finnhub 등)와 분리
+
+---
+
 ## [1.8.10] - 2026-06-11
 
 ### Fixed

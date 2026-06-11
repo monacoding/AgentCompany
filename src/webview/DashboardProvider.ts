@@ -72,7 +72,10 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
   }
 
   private async handleReleaseRefresh(): Promise<void> {
-    this.view?.webview.postMessage({ type: 'releaseStatus', payload: { status: 'running' } });
+    this.view?.webview.postMessage({
+      type: 'releaseStatus',
+      payload: { status: 'running', step: 'bump', message: '릴리스 준비…' },
+    });
 
     try {
       await vscode.window.withProgress(
@@ -81,17 +84,28 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
           title: 'AgentCompany 릴리스',
           cancellable: false,
         },
-        async () => {
-          const result = await this.service.runReleaseAndReload();
+        async (progress) => {
+          const result = await this.service.runReleaseAndReload((p) => {
+            progress.report({ message: p.message });
+            this.view?.webview.postMessage({
+              type: 'releaseStatus',
+              payload: { status: 'running', ...p },
+            });
+          });
+
           if (!result.success) {
             this.view?.webview.postMessage({
               type: 'releaseStatus',
-              payload: { status: 'failed', message: result.message },
+              payload: {
+                status: 'failed',
+                message: result.message,
+                version: result.newVersion,
+              },
             });
             void vscode.window.showErrorMessage(result.message.slice(0, 500));
             await this.service.reloadEnv();
             await this.service.refreshLlmConnection();
-            this.refresh();
+            await this.refreshAsync();
           }
         }
       );
@@ -102,7 +116,7 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
         payload: { status: 'failed', message },
       });
       void vscode.window.showErrorMessage(`릴리스 오류: ${message}`);
-      this.refresh();
+      await this.refreshAsync();
     }
   }
 

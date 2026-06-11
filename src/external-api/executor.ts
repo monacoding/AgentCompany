@@ -5,7 +5,8 @@ import { AgentFolderEngine } from '../agent-folders';
 import { isSecretaryAgent, SECRETARY_SYSTEM_PERSONA } from '../secretary';
 import { Agent, Task } from '../types';
 import { ExternalApi } from '../types/external-api';
-import { shouldTryExternalApi } from './auto-detect';
+import { shouldTryExternalApi, isStockMarketQuery, isStockQuoteApi, isOpenDartDisclosureQuery } from './auto-detect';
+import { isOpenDartApi } from './url-normalize';
 
 const CITY_MAP: Record<string, string> = {
   서울: 'Seoul,KR',
@@ -108,6 +109,14 @@ export function matchExternalApi(command: string, apis: ExternalApi[]): External
     if (lower.includes(api.name.toLowerCase())) return api;
   }
 
+  if (isStockMarketQuery(command)) {
+    return enabled.find(isStockQuoteApi);
+  }
+
+  if (isOpenDartDisclosureQuery(command)) {
+    return enabled.find(isOpenDartApi);
+  }
+
   if (/날씨|weather|기온/.test(lower)) {
     const weatherApi = enabled.find((a) =>
       /weather|openweather|날씨|기상/i.test(`${a.name} ${a.baseUrl} ${a.description}`)
@@ -115,7 +124,11 @@ export function matchExternalApi(command: string, apis: ExternalApi[]): External
     if (weatherApi) return weatherApi;
   }
 
-  if (enabled.length === 1) return enabled[0];
+  if (enabled.length === 1) {
+    const only = enabled[0];
+    if (isOpenDartApi(only)) return undefined;
+    return only;
+  }
 
   return enabled.find((a) => /weather|openweather/i.test(a.baseUrl)) ?? enabled[0];
 }
@@ -142,9 +155,12 @@ export class ExternalApiExecutor {
     return (
       `\n\n## 등록된 External API (자동 연동)\n` +
       apis
-        .map((a) => `- ${a.name}: ${a.baseUrl} — ${a.description || '설명 없음'}`)
+        .map((a) => {
+          const dartNote = isOpenDartApi(a) ? ' (전자공시·elestock 전용, 실시간 주가 아님)' : '';
+          return `- ${a.name}: ${a.baseUrl} — ${a.description || '설명 없음'}${dartNote}`;
+        })
         .join('\n') +
-      `\n데이터 조회·확인 요청은 External API 자동 호출 파이프라인이 처리합니다.`
+      `\n주가·증시 조회는 웹 리서치(한서준) 또는 Alpha Vantage·Finnhub 등 시세 API로 처리합니다. Open DART는 공시·elestock 전용입니다.`
     );
   }
 
@@ -195,6 +211,9 @@ export class ExternalApiExecutor {
 
     if (apis.length === 1) {
       const api = apis[0];
+      if (isStockMarketQuery(command) && isOpenDartApi(api)) {
+        return { useApi: false, reason: 'Open DART is not a stock quote API' };
+      }
       let path: string | null = null;
       if (isWeatherApi(api) && isWeatherCommand(command)) {
         path = buildWeatherPath(command);
@@ -251,8 +270,9 @@ Output ONLY valid JSON:
 or {"useApi":false,"reason":"..."}
 
 Rules:
-- useApi:true for data lookup (weather, news, stocks, translation, status checks)
-- useApi:false for coding, file editing, research crawl, pdf download
+- useApi:true for data lookup (weather, news, translation, status checks, stock quotes when a stock API is registered)
+- useApi:false for coding, file editing, research crawl, pdf download, stock/market queries when only Open DART is registered
+- Open DART (opendart.fss.or.kr): elestock/disclosure ONLY — never for live stock prices or market indices
 - path is relative to baseUrl (auth key injected automatically — omit appid/apiKey)
 - OpenWeather: /weather?q=Seoul,KR&units=metric&lang=kr
 - Extract city from the CURRENT command only (ignore previous cities in chat unless the current message is ambiguous)`,

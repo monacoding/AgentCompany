@@ -71,7 +71,7 @@ import { ResearchAgent, isResearchAgent, isResearchTaskQuery } from '../research
 import { Crawl4AiDockerService } from '../research/docker/crawl4ai-docker';
 import { getAutoAssignThreshold, routeCommand, SECRETARY_AGENT, SecretaryMessages, isSecretaryAgent } from '../secretary';
 import { ExternalApiExecutor } from '../external-api/executor';
-import { shouldTryExternalApi, isInquiryOrApiCommand } from '../external-api/auto-detect';
+import { shouldTryExternalApi, isInquiryOrApiCommand, isStockMarketQuery } from '../external-api/auto-detect';
 import { ExternalApiService } from '../services/external-api';
 import { LlmStatusService } from '../services/llm-status';
 import { TaskEngine } from '../tasks';
@@ -368,6 +368,23 @@ export class Orchestrator {
 
   private async executeViaSecretary(command: string): Promise<OrchestratorResult> {
     const secretary = this.getSecretary();
+
+    if (isStockMarketQuery(command)) {
+      const researcher = this.agentManager
+        .getAll()
+        .find((a) => a.status !== 'offline' && isResearchAgent(a));
+      if (researcher) {
+        if (secretary) {
+          this.agentSay(
+            secretary,
+            `${SecretaryMessages.acknowledgeCommand()}\n주가·증시는 ${researcher.name} 리서처에게 조사를 맡길게요~ 📊`,
+            'agent',
+            'done'
+          );
+        }
+        return this.executeDirectCommand(researcher, command, command);
+      }
+    }
 
     if (shouldTryExternalApi(command, this.externalApis.getEnabled()) && secretary) {
       this.agentWorking(

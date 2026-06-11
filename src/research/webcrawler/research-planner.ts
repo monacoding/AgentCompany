@@ -61,6 +61,7 @@ Schema:
 Rules:
 - Prefer official government/academic sources (go.kr, re.kr, ac.kr, arxiv.org, github.com).
 - For 수능/기출: include site:suneung.re.kr and legacy subject names (언어, 수리).
+- For 주가/증시/티커: use finance.naver.com, kr.investing.com, finance.yahoo.com, marketwatch.com — NOT sec.gov alone for live prices.
 - For PDF tasks: include filetype:pdf variants.
 - Never repeat the same query twice.`,
         },
@@ -117,6 +118,23 @@ ${knowledge || '(none)'}`,
       );
     }
 
+    if (/주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장/i.test(query)) {
+      const term = extractStockSearchTerm(query);
+      if (term) {
+        trusted.push(
+          `https://finance.naver.com/search/search.naver?query=${encodeURIComponent(term)}`,
+          `https://kr.investing.com/search/?q=${encodeURIComponent(term)}`
+        );
+      }
+      if (/미국|나스닥|nasdaq|s&p|dow|장\s*마감/i.test(query)) {
+        trusted.push('https://finance.yahoo.com/markets/');
+        trusted.push('https://www.marketwatch.com/');
+      }
+      if (/코스피|코스닥|국내|한국/i.test(query)) {
+        trusted.push('https://finance.naver.com/sise/');
+      }
+    }
+
     const filtered = plan.officialUrls.filter((url) => !/boardID=147|menuID=247/i.test(url));
     const merged = [...new Set([...trusted, ...filtered])];
     return { ...plan, officialUrls: merged.slice(0, 8) };
@@ -159,6 +177,21 @@ ${knowledge || '(none)'}`,
       queries.add(`site:github.com ${query}`);
     }
 
+    if (/주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장/i.test(query)) {
+      const term = extractStockSearchTerm(query) || query.replace(/[@#].*$/, '').trim();
+      queries.add(`${term} 주가 site:finance.naver.com`);
+      queries.add(`${term} stock price site:finance.yahoo.com`);
+      queries.add(`${term} site:kr.investing.com`);
+      if (/미국|나스닥|nasdaq|s&p|dow|장\s*마감/i.test(query)) {
+        queries.add('US stock market today site:marketwatch.com');
+        queries.add('nasdaq s&p dow jones today');
+      }
+      if (/코스피|코스닥|국내|한국/i.test(query)) {
+        queries.add('코스피 코스닥 지수 site:finance.naver.com');
+      }
+      officialUrls.push(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(term)}`);
+    }
+
     if (/통계|kosis|e나라/i.test(query)) {
       queries.add(`site:kosis.kr ${query}`);
       queries.add(`site:index.go.kr ${query}`);
@@ -179,4 +212,16 @@ ${knowledge || '(none)'}`,
     };
     return this.mergeTrustedOfficialUrls(plan, query);
   }
+}
+
+function extractStockSearchTerm(query: string): string {
+  const cleaned = query
+    .replace(/@[\uAC00-\uD7A3\w]+/g, '')
+    .replace(
+      /(?:주식|주가|코스피|코스닥|나스닥|증시|시세|티커|stock|nasdaq|지수|시장|상황|조사|알려(?:줘|주(?:세요)?)|말해(?:줘|주(?:세요)?)|확인(?:해(?:줘|주(?:세요)?)?)?)/gi,
+      ' '
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned.slice(0, 40);
 }

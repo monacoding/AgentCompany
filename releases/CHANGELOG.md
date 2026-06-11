@@ -5,6 +5,21 @@
 
 ---
 
+## [1.8.11] - 2026-06-11
+
+**파일:** `agent-company-1.8.11.vsix`
+
+### Fixed
+
+- 주가·증시 조회가 DART External API로 잘못 라우팅되던 문제 → 한서준 웹 리서치 파이프라인
+- "주가 알려줘" 등 대화형 우회로 리서치가 실행되지 않던 문제
+
+### Added
+
+- stock-research playbook, 금융 포털 known source, 비서→한서준 자동 위임
+
+---
+
 ## [1.8.10] - 2026-06-11
 
 **파일:** `agent-company-1.8.10.vsix`

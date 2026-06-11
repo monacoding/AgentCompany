@@ -76,8 +76,8 @@ const DOMAIN_FILE_RULES: { pattern: RegExp; files: string[]; score: number }[] =
     score: 7,
   },
   {
-    pattern: /리서치|조사|research|crawl|크롤|osint|웹|url|출처|cpi|주식|뉴스|ipo|상장/i,
-    files: ['research-pipeline.md'],
+    pattern: /리서치|조사|research|crawl|크롤|osint|웹|url|출처|cpi|주식|주가|뉴스|ipo|상장/i,
+    files: ['research-pipeline.md', 'stock-research.md'],
     score: 9,
   },
   {
@@ -115,8 +115,8 @@ const MEMORY_DOMAIN_RULES: { pattern: RegExp; titlePatterns: RegExp[]; score: nu
     score: 8,
   },
   {
-    pattern: /리서치|조사|research|cpi|주식|뉴스|ipo|상장|스페이스/i,
-    titlePatterns: [/^\[Research:/i, /KnowledgeLearned: research/i],
+    pattern: /리서치|조사|research|cpi|주식|주가|뉴스|ipo|상장|스페이스/i,
+    titlePatterns: [/^\[Research:/i, /KnowledgeLearned: research/i, /StockResearch/i],
     score: 9,
   },
   {
