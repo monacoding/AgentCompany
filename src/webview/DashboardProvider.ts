@@ -63,6 +63,7 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
   private async refreshQuick(): Promise<void> {
     if (!this.view) return;
     try {
+      await this.service.ensureReady();
       const payload = await this.service.getDashboardDataAsync();
       payload.companyLogoUrl = await this.buildCompanyLogoUrl(payload.companyInfo.updatedAt);
       this.postDashboardData(payload);
@@ -123,6 +124,7 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
   private async refreshAsync(): Promise<void> {
     if (!this.view) return;
     try {
+      await this.service.ensureReady();
       await this.service.reloadEnv();
       await this.service.refreshLlmConnection();
       const payload = await this.service.getDashboardDataAsync();

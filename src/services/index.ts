@@ -21,6 +21,7 @@ import { inferRoleFromTitle } from '../agent-folders/title-inference';
 import { AgentManager, isInProgressTask, isReviewReadyTask, resolveAgentDisplayStatus } from '../agents';
 import { AgentDescriptionRequiredError, AgentDuplicateNameError } from '../agents/errors';
 import { ChatService, detectSpeakerEmotion, resolveThreadForCommand } from '../chat';
+import { Database } from '../database';
 import { prepareRelease, readWorkspacePackageVersion, type ReleaseProgress } from './release-pipeline';
 import { ExternalApiRegistrySync } from '../external-api/registry';
 import { AgentGramEngine, AgentGramService } from '../agentgram';
@@ -81,7 +82,7 @@ import {
   AppSettings,
   CompanyInfoInput,
   CreateAgentInput,
-  LlmStatus,
+  LlmConnectionStatus,
   OwnerInfoInput,
 } from '../types';
 import { formatAgentLabel } from '../utils/agent-display';
@@ -138,7 +139,7 @@ export class AgentCompanyService {
   private dashboardRefresh?: () => void;
   private dashboardNavigate?: (tab: string) => void;
   private initialized = false;
-  private cachedLlmStatus: LlmStatus | null = null;
+  private cachedLlmStatus: LlmConnectionStatus | null = null;
   private partialTranscriptTimer?: ReturnType<typeof setInterval>;
   private partialTranscriptBusy = false;
   private partialTranscriptSessionId: string | null = null;
@@ -701,7 +702,7 @@ export class AgentCompanyService {
       await this.env.load();
     }
   }
-  async refreshLlmConnection(): Promise<LlmStatus> {
+  async refreshLlmConnection(): Promise<LlmConnectionStatus> {
     await this.llmStatus.refreshProviderConnections(
       this.agents.getAll().map((a) => a.provider)
     );

@@ -7,6 +7,15 @@
 
 ---
 
+## [1.8.14] - 2026-06-11
+
+### Fixed
+
+- **확장 활성화 실패** — `services/index.ts`에서 `Database` import 누락으로 `ReferenceError: Database is not defined` 발생 → 대시보드·AgentCompany 전체 미표시
+- **초기화 전 refresh** — DB 준비 전 `getDashboardData` 호출로 `prepare` null 오류 → `ensureReady()` 후 refresh
+
+---
+
 ## [1.8.13] - 2026-06-11
 
 ### Fixed
