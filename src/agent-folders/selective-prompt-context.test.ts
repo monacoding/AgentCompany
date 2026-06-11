@@ -33,6 +33,19 @@ describe('selective-prompt-context', () => {
     it('scoreKnowledgeTitle은 readme 제외', () => {
       expect(scoreKnowledgeTitle('readme.md', 'test', 'pm')).toBe(-1);
     });
+
+    it('DART 업무 시 dart-elestock 파일이 suneung보다 우선', () => {
+      const dartTitles = [
+        ...titles,
+        { filename: 'dart-elestock-pdf-download.md' },
+      ];
+      const hint = '삼성전자 DART 임원 주요주주 PDF 다운받아줘';
+      const dartScore = scoreKnowledgeTitle('dart-elestock-pdf-download.md', hint, 'backend');
+      const suneungScore = scoreKnowledgeTitle('suneung-pdf-download.md', hint, 'backend');
+      expect(dartScore).toBeGreaterThan(suneungScore);
+      const { picked } = pickKnowledgeFilenames(dartTitles, hint, 'backend');
+      expect(picked).toContain('dart-elestock-pdf-download.md');
+    });
   });
 
   describe('parseMemorySections / selectMemoryForTask', () => {

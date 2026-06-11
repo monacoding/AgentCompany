@@ -33,12 +33,22 @@ export class ExternalApiService {
     const raw = this.context.globalState.get<ExternalApi[]>(STORAGE_KEY, []);
     let fixed = 0;
     const next = raw.map((api) => {
+      const before = JSON.stringify({
+        baseUrl: api.baseUrl,
+        authType: api.authType,
+        authQueryParam: api.authQueryParam,
+      });
       const normalized = normalizeStoredApi({
         ...api,
         authHeaderName: api.authHeaderName ?? 'X-API-Key',
         authQueryParam: api.authQueryParam ?? 'appid',
       });
-      if (normalized.baseUrl !== api.baseUrl) fixed++;
+      const after = JSON.stringify({
+        baseUrl: normalized.baseUrl,
+        authType: normalized.authType,
+        authQueryParam: normalized.authQueryParam,
+      });
+      if (before !== after) fixed++;
       return normalized;
     });
     if (fixed > 0) await this.context.globalState.update(STORAGE_KEY, next);

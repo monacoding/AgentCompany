@@ -31,6 +31,13 @@ export function getClineKnowledgeBody(agentSlug: string): string {
 - 다운: \`fileDown.do?fileSeq=\` + Python urllib
 - 템플릿: \`src/team/templates/download_suneung_pdfs.py\`
 
+## DART 임원·주요주주 소유보고 PDF
+- knowledge: \`agent/${agentSlug}/knowledge/dart-elestock-pdf-download.md\`
+- 스크립트: \`agent/${agentSlug}/outputs/scripts/download_dart_elestock_pdfs.py\`
+- 실행: \`elestock.json\` → \`document.xml\` → reportlab PDF 변환
+- API Key: 워크스페이스 \`.env\`의 \`DART_API_KEY\` (AgentCompany API 탭과 동일 키)
+- ⚠️ 새 스크립트를 만들지 말고 위 스크립트를 실행·인자만 조정
+
 ## AgentCompany 구조 수정
 버그·기능 추가는 **src/** 코드를 직접 수정합니다.
 - 오케스트레이터: \`src/orchestrator/index.ts\`

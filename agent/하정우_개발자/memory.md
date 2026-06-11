@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T01:08:29.607Z_
+_마지막 동기화: 2026-06-11T01:16:01.809Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -3716,15 +3716,6 @@ P1 … / P2 … / P3 …
 - 산출물을 `company/projects/{sessionId}/files/` 경로에 저장.
 - Python urllib/curl 등 사용해 실제 다운로드 및 %PDF 헤더 검증 수행.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
-   - URL: https://opendart.fss.or.kr/api
-   - 설명: (없음)
-   - 인증: query-param (appid)
-
 [KnowledgeLearned: dart-elestock-pdf-download.md@a337cc91]
 # DART 임원·주요주주 소유보고 PDF 다운로드
 
@@ -3757,3 +3748,138 @@ GET https://opendart.fss.or.kr/api/elestock.json
 ```
 - `status=000` 이면 정상
 - 주요 필드: `rcept_no`(14자리), `rcept_dt`, `repror`(보고자), `isu_exctv_ofcps`
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (appid)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1bcddcbe]
+# 에이전트 간 파일 이동 규칙
+
+## 주요 규칙
+
+- **완료 전 금지**
+  - 파일이 시스템에서 실제로 이동 또는 저장이 완료되기 전에는 "저장했어요", "옮겼어요" 등의 완료 표현 사용 금지.
+  - 지시 후에는 "요청해볼게요", "진행할게요" 같은 예정 표현 사용.
+
+- **완료 시 경로 필수**
+  - 실제 복사가 확인된 경우에만 완료를 언급.
+  - 반드시 저장된 파일 경로를 모두 명시.
+  - 형식 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일을 찾지 못했거나 복사에 실패 시 "완료" 언급 금지.
+  - 찾은 위치, 조건, 다음 조치 명확하게 안내.
+
+- **허위 보고 금지**
+  - 경로를 제시하지 않은 채 "옮겼다", "저장했다" 언급 금지.
+  - 경로는 작업 완료의 증거로 반드시 필요.
+
+이 규칙을 통해 파일 이동의 정확성과 신뢰성을 유지하며, 에이전트 간 협력의 투명성을 높입니다.
+
+[KnowledgeLearned: owner-data-path.md@402ca01f]
+# 사장님 데이터 경로 요약
+
+## 데이터 위치
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준**: `company/owner`
+
+## 주요 파일
+- **프로필**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 이름, 성격 등
+- **페르소나**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 대화 및 보고 시 참고 사항
+- **사진**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+
+## 유의사항
+- 에이전트는 사장님 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용
+- 다른 위치를 추측하거나 사용하지 않음
+
+[KnowledgeLearned: project-playbook.md@500b353c]
+# 프로젝트 협업 플레이북
+
+## AgentCompany 프로젝트 표준 절차 (필수)
+
+- 사장님 지시에 따라 PM이 업무를 수행할 때, 다음 **5단계**를 따릅니다.
+
+### 1. 목표 설정
+- 사장님의 지시로부터 **한 문장 목표**를 설정하고, 산출물, 범위, 제외 항목을 명확히 규정합니다.
+
+### 2. 계획 수립
+- 프로젝트를 페이즈(리서치 → 구현/실행 → 검증 → PM 보고)로 나눕니다.
+- 각 태스크는 최대 5회의 **작업 → 검토 루프**를 가집니다 (FINISHED 키워드 사용).
+
+### 3. 작업 분배
+- **번호 + @에이전트명: 할 일** 형식으로 계획을 작성합니다.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **회사 정규 에이전트 roster만** 사용합니다 (가상 직함·외부 인력 금지).
+- 역할·타이틀·능력치로 매칭 (리서치→researcher, 자동화→backend, 도메인→전문가).
+
+### 5. 프로젝트 승인 및 실행
+- PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
+- 승인되면: 프로젝트 채팅방 생성, Projects 탭에 등록, 에이전트 순차 협업 시작.
+- 산출물 저장 경로: `company/projects/{sessionId}/` (tasks/, files/, PM_REPORT.md)
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
+
+## PM 1:1 대화 출력 형식 (권장사항)
+
+```
+## 목표
+(한 문장 목표)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Proje
+
+[KnowledgeLearned: dart-elestock-pdf-download.md@8b3f354c]
+# DART 임원·주요주주 소유보고 PDF 다운로드
+
+[DartElestockPdfPlaybook v1]
+
+## 역할
+Open DART API로 **임원·주요주주 특정증권등 소유상황보고서** 목록을 조회하고, 접수번호(`rcept_no`)별 **공시 원문을 PDF**로 저장합니다.
+
+## 사전 조건
+- AgentCompany **API 탭**에 `다트 (전자공시 시스템)` 등록
+- Base URL: `https://opendart.fss.or.kr/api`
+- 인증: **query-param**, 파라미터명 **`crtfc_key`** (Bearer 아님)
+- API Key: 40자 (opendart.fss.or.kr 발급)
+- 스크립트 실행 시 환경변수 `DART_API_KEY` 또는 `CRTFC_KEY` 사용 (워크스페이스 `.env`에 저장 권장)
+
+## corp_code(고유번호) 구하기
+| 방법 | URL/경로 |
+|------|----------|
+| 공식 ZIP | `GET /api/corpCode.xml?crtfc_key=KEY` → ZIP 내 `CORPCODE.xml`에서 `stock_code` 검색 |
+| 공시검색 | `GET /api/list.json?crtfc_key=KEY&corp_code=...` |
+| 예시 | 삼성전자 `00126380`, SK하이닉스 `00164779` |
+
+## 3단계 파이프라인
+
+### 1) 소유보고 목록 — `elestock.json`
+```
+GET https://opendart.fss.or.kr/api/elestock.json
+  ?crtfc_key={KEY}
+  &corp_code={8자리 고유번호}
+```
+- `status=000` 이면 정상
+- 주요 필드: `rcept_no`(14자리), `rcept_dt`, `repror`(

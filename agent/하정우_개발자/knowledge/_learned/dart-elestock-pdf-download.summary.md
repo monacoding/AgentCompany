@@ -1,7 +1,7 @@
 # Learned: dart-elestock-pdf-download.md
 
-_hash: a337cc913ad8d6ff_  
-_learned: 2026-06-11T01:08:29.550Z_
+_hash: 8b3f354cee6be8c9_  
+_learned: 2026-06-11T01:16:01.642Z_
 
 # DART 임원·주요주주 소유보고 PDF 다운로드
 
@@ -15,7 +15,7 @@ Open DART API로 **임원·주요주주 특정증권등 소유상황보고서** 
 - Base URL: `https://opendart.fss.or.kr/api`
 - 인증: **query-param**, 파라미터명 **`crtfc_key`** (Bearer 아님)
 - API Key: 40자 (opendart.fss.or.kr 발급)
-- 스크립트 실행 시 환경변수 `DART_API_KEY` 또는 `CRTFC_KEY` 사용
+- 스크립트 실행 시 환경변수 `DART_API_KEY` 또는 `CRTFC_KEY` 사용 (워크스페이스 `.env`에 저장 권장)
 
 ## corp_code(고유번호) 구하기
 | 방법 | URL/경로 |

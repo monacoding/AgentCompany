@@ -1,6 +1,14 @@
 import { CreateExternalApiInput, ExternalApi } from '../types/external-api';
 
 export const OPENWEATHER_API_BASE = 'https://api.openweathermap.org/data/2.5';
+export const OPENDART_API_BASE = 'https://opendart.fss.or.kr/api';
+
+export function isOpenDartApi(
+  api: Pick<ExternalApi, 'name' | 'baseUrl'> & { description?: string }
+): boolean {
+  const hint = `${api.name} ${api.description ?? ''} ${api.baseUrl}`.toLowerCase();
+  return /opendart|dart\.fss|전자공시|elestock|다트/.test(hint);
+}
 
 export function isOpenWeatherApi(
   api: Pick<ExternalApi, 'name' | 'baseUrl'> & { description?: string }
@@ -52,15 +60,42 @@ export function normalizeApiInput(input: CreateExternalApiInput): CreateExternal
 
 export function normalizeStoredApi(api: ExternalApi): ExternalApi {
   const hint = `${api.name} ${api.description}`;
-  const baseUrl = normalizeBaseUrl(api.baseUrl, hint);
-  if (baseUrl === api.baseUrl) return api;
-  return { ...api, baseUrl, updatedAt: new Date().toISOString() };
+  let next = normalizeOpenDartApi(api);
+  const baseUrl = normalizeBaseUrl(next.baseUrl, hint);
+  if (baseUrl !== next.baseUrl) {
+    next = { ...next, baseUrl, updatedAt: new Date().toISOString() };
+  }
+  return next;
+}
+
+/** Open DART — bearer가 아닌 crtfc_key 쿼리 인증 */
+export function normalizeOpenDartApi(api: ExternalApi): ExternalApi {
+  if (!isOpenDartApi(api)) return api;
+  const baseUrl = api.baseUrl.replace(/\/$/, '') || OPENDART_API_BASE;
+  if (
+    api.authType === 'query-param' &&
+    api.authQueryParam === 'crtfc_key' &&
+    api.baseUrl === baseUrl
+  ) {
+    return api;
+  }
+  return {
+    ...api,
+    baseUrl,
+    authType: 'query-param',
+    authQueryParam: 'crtfc_key',
+    authHeaderName: api.authHeaderName || 'X-API-Key',
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 /** 연결 테스트용 실제 API 경로 */
 export function getTestProbePath(api: ExternalApi): string {
   if (isOpenWeatherApi(api)) {
     return '/weather?q=London,uk&units=metric';
+  }
+  if (isOpenDartApi(api)) {
+    return '/list.json?page_no=1&page_count=1&corp_code=00126380';
   }
   return '';
 }
@@ -73,6 +108,13 @@ export function formatApiError(
   const snippet = data.slice(0, 180).replace(/\s+/g, ' ');
 
   if (status === 401) {
+    if (isOpenDartApi(api ?? { name: '', description: '', baseUrl: '' })) {
+      return (
+        'Open DART API Key가 유효하지 않습니다 (HTTP 401).\n' +
+        '• API 탭 인증: query-param, 파라미터명 crtfc_key\n' +
+        '• 발급: https://opendart.fss.or.kr/'
+      );
+    }
     if (isOpenWeatherApi(api ?? { name: '', description: '', baseUrl: '' })) {
       return (
         'API Key가 유효하지 않습니다.\n' +

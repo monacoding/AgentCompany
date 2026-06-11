@@ -14,6 +14,10 @@ export function autoDetectAuth(input: CreateExternalApiInput): {
     return { authType: 'query-param', authHeaderName: 'X-API-Key', authQueryParam: 'appid' };
   }
 
+  if (/opendart\.fss\.or\.kr|dart\.fss\.or\.kr\/api/.test(url) || /dart|다트|전자공시|elestock|crtfc_key/.test(hint)) {
+    return { authType: 'query-param', authHeaderName: 'X-API-Key', authQueryParam: 'crtfc_key' };
+  }
+
   if (/newsapi\.org|alphavantage|finnhub/.test(url)) {
     return { authType: 'query-param', authHeaderName: 'X-API-Key', authQueryParam: 'apiKey' };
   }
@@ -93,7 +97,10 @@ export function isCodeDevTask(command: string): boolean {
 
 /** 리서치·다운로드 — 전용 파이프라인 우선 */
 export function isResearchPipelineTask(command: string): boolean {
-  return /다운|download|\.pdf|크롤|crawl|리서치|기출|수능\s*pdf/i.test(command);
+  return (
+    /다운|download|\.pdf|크롤|crawl|리서치|기출|수능\s*pdf/i.test(command) ||
+    /dart|다트|opendart|elestock|임원.*주요주주|주요주주.*(소유|보고)|전자공시.*pdf/i.test(command)
+  );
 }
 
 /** 날씨·환율 등 정보 조회 — 파일 전달·PM 계획과 분리 */

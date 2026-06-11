@@ -1,27 +1,21 @@
 # Learned: owner-data-path.md
 
-_hash: 0f11b77186ab6908_  
-_learned: 2026-06-11T01:01:40.359Z_
+_hash: 402ca01f98c0684f_  
+_learned: 2026-06-11T01:12:19.434Z_
 
 # 사장님 데이터 경로 요약
 
-## 데이터 저장 위치
-
+## 데이터 위치
 - **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준 경로**: `company/owner`
+- **워크스페이스 기준**: `company/owner`
 
-## 주요 파일 설명
+## 주요 파일
+- **프로필**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 이름, 성격 등
+- **페르소나**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 대화 및 보고 시 참고 사항
+- **사진**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
 
-- **사장님 프로필**
-  - 파일 경로: `profile.json`
-  - 내용: 이름, 성격 등 기본 정보
-- **사장님 페르소나**
-  - 파일 경로: `persona.md`
-  - 내용: 대화 및 보고 시 필요한 페르소나 정보
-- **사장님 사진**
-  - 폴더 경로: `photo/`
-  - 내용: 사장님 개인 사진들
-
-## 중요 사항
-
-- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 지정된 경로**를 사용해야 하며, 다른 경로를 추측하지 않고 이 경로가 유일한 참고 지점입니다.
+## 유의사항
+- 에이전트는 사장님 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용
+- 다른 위치를 추측하거나 사용하지 않음

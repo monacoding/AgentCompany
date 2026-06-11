@@ -21,6 +21,26 @@ USER_AGENT = "AgentCompany/1.0 (dart-elestock-pdf)"
 SLEEP_SEC = 0.35
 
 
+def load_env_file(path: Path) -> None:
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def bootstrap_env() -> None:
+    cwd = Path.cwd()
+    for candidate in (cwd / ".env", cwd / "company" / ".env"):
+        load_env_file(candidate)
+
+
 def api_key() -> str:
     key = os.environ.get("DART_API_KEY") or os.environ.get("CRTFC_KEY") or ""
     if not key:
@@ -152,6 +172,7 @@ def is_pdf(path: Path) -> bool:
 
 
 def main() -> int:
+    bootstrap_env()
     parser = argparse.ArgumentParser(description="DART 임원·주요주주 소유보고 PDF 다운로드")
     parser.add_argument("--corp-code", help="공시대상회사 고유번호 8자리")
     parser.add_argument("--stock-code", help="종목코드 6자리 (corp_code 자동 조회)")

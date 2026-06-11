@@ -5,6 +5,20 @@
 
 ---
 
+## [1.8.9] - 2026-06-11
+
+**파일:** `agent-company-1.8.9.vsix`
+
+### Added
+
+- DART 임원·주요주주 소유보고 PDF 다운로드 (하정우 knowledge + Python 스크립트)
+
+### Fixed
+
+- 하정우 DART 업무 knowledge 선별·Cline 컨텍스트·Open DART `crtfc_key` 인증
+
+---
+
 ## [1.8.8] - 2026-06-10
 
 **파일:** `agent-company-1.8.8.vsix`

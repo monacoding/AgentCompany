@@ -46,12 +46,17 @@ const MEMORY_BASELINE_TITLE_PATTERNS: RegExp[] = [
 /** 업무 키워드 → knowledge 파일 가중치 */
 const DOMAIN_FILE_RULES: { pattern: RegExp; files: string[]; score: number }[] = [
   {
-    pattern: /수능|기출|pdf|suneung|평가원|다운(?:로드|받)/i,
+    pattern: /dart|다트|opendart|elestock|전자공시|임원|주요주주|소유보고|공시.*pdf|crtfc/i,
+    files: ['dart-elestock-pdf-download.md'],
+    score: 14,
+  },
+  {
+    pattern: /수능|기출|suneung|평가원/i,
     files: ['suneung-pdf-download.md'],
     score: 12,
   },
   {
-    pattern: /수능|기출|pdf|suneung|평가원|다운(?:로드|받)/i,
+    pattern: /수능|기출|suneung|평가원|다운(?:로드|받)/i,
     files: ['research-auto-download.md'],
     score: 10,
   },
@@ -89,6 +94,11 @@ const DOMAIN_FILE_RULES: { pattern: RegExp; files: string[]; score: number }[] =
 
 /** memory 섹션 제목 ↔ 업무 키워드 */
 const MEMORY_DOMAIN_RULES: { pattern: RegExp; titlePatterns: RegExp[]; score: number }[] = [
+  {
+    pattern: /dart|다트|opendart|elestock|전자공시|임원|주요주주|소유보고/i,
+    titlePatterns: [/DartElestock|dart-elestock|elestock|KnowledgeLearned: dart-elestock/i],
+    score: 14,
+  },
   {
     pattern: /수능|pdf|다운|suneung|기출/i,
     titlePatterns: [/suneung|download|수능|pdf/i, /KnowledgeLearned: suneung/i],

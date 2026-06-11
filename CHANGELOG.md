@@ -7,6 +7,25 @@
 
 ---
 
+## [1.8.9] - 2026-06-11
+
+### Added
+
+- **DART 임원·주요주주 PDF** — 하정우 knowledge·`download_dart_elestock_pdfs.py` 스크립트, Open DART 3단계 파이프라인 (`elestock` → `document.xml` → PDF)
+
+### Fixed
+
+- **하정우 DART 업무 오동작** — knowledge 선별 시 수능 PDF playbook이 우선되던 문제, Cline이 agent knowledge 미로드 문제
+- **Open DART API 인증** — `bearer` → `query-param` + `crtfc_key` 자동 보정, 연결 테스트 경로 추가
+- **DART PDF 라우팅** — External API 자동 호출과 충돌하지 않도록 분리
+
+### Changed
+
+- Cline 내부 엔진에 agent knowledge·memory 컨텍스트 주입
+- DART 스크립트가 워크스페이스 `.env`의 `DART_API_KEY` 자동 로드
+
+---
+
 ## [1.8.8] - 2026-06-10
 
 ### Added

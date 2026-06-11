@@ -50,6 +50,10 @@ export class ClineInternalEngine {
     const contextParts: string[] = [];
     if (this.agentFolders) {
       contextParts.push(buildPlatformStructurePromptBlock(this.agentFolders, agent));
+      const folderContext = await this.agentFolders.buildPromptContext(agent, { taskHint: task });
+      if (folderContext?.trim()) {
+        contextParts.push(folderContext);
+      }
     }
     const collab = buildCollaborationPromptBlock(priorContext);
     if (collab) contextParts.push(collab);
