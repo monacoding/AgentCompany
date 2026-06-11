@@ -1,103 +1,24 @@
 # Learned: owner-data-path.md
 
-_hash: b045773343e70a19_  
-_learned: 2026-06-11T02:12:19.598Z_
+_hash: 6c45fad24e130f68_  
+_learned: 2026-06-11T03:11:55.347Z_
 
-# 사장님 데이터 경로
+# 사장님 데이터 경로 요약
 
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
+## 데이터 경로 정보
 - **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
 
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+## 주요 파일 및 폴더
+- **프로필 파일:** `profile.json`  
+  - 내용: 사장님 이름, 성격 등 프로필 정보 포함
+- **페르소나 파일:** `persona.md`  
+  - 내용: 대화 및 보고 시 참고할 사장님의 페르소나 정보
+- **사진 폴더:** `photo/`  
+  - 내용: 사장님 관련 사진들 저장
 
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+## 유의사항
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 반드시 위의 경로를 사용
+- 다른 위치는 추측하지 않고 사용하지 않도록 주의
 
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
-
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
-
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
-
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
-
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
-
-에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
-
-## 사장님(Owner) 데이터 위치 (필수 인지)
-
-사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
-
-- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
-- **워크스페이스 기준:** `company/owner`
-
-### 주요 파일
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
-- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/o
-
-...(truncated)
+이 문서는 사장님의 데이터 접근 및 관리를 명확히 이해하기 위한 필수 정보입니다.

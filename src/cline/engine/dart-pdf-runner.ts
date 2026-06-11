@@ -11,6 +11,32 @@ import { WorkspaceEngine } from '../../workspace';
 
 export { isDartPdfTask };
 
+const DART_SCRIPT_NAME = 'download_dart_elestock_pdfs.py';
+
+/** 에이전트 slug·하정우 폴더 등 후보 경로에서 번들 스크립트 탐색 */
+export function resolveDartScriptPath(root: string, agent: Agent): string | null {
+  const slug = resolveAgentSlug(agent);
+  const candidates = [
+    path.join(root, 'agent', slug, 'outputs', 'scripts', DART_SCRIPT_NAME),
+    path.join(root, 'agent', '하정우_개발자', 'outputs', 'scripts', DART_SCRIPT_NAME),
+  ];
+
+  if (agent.name.includes('하정우')) {
+    const agentRoot = path.join(root, 'agent');
+    if (fs.existsSync(agentRoot)) {
+      for (const dir of fs.readdirSync(agentRoot)) {
+        if (!dir.includes('하정우')) continue;
+        candidates.push(path.join(agentRoot, dir, 'outputs', 'scripts', DART_SCRIPT_NAME));
+      }
+    }
+  }
+
+  for (const abs of candidates) {
+    if (fs.existsSync(abs)) return abs;
+  }
+  return null;
+}
+
 export interface DartPdfRunOutcome {
   success: boolean;
   command: string;
@@ -47,16 +73,17 @@ export async function runDartPdfPipeline(
   const root = workspace.getWorkspaceRoot();
   if (!root) return null;
 
-  const slug = resolveAgentSlug(agent);
-  const scriptRel = path.join('agent', slug, 'outputs', 'scripts', 'download_dart_elestock_pdfs.py');
-  const scriptAbs = path.join(root, scriptRel);
+  const scriptAbs = resolveDartScriptPath(root, agent);
+  const scriptRel = scriptAbs
+    ? path.relative(root, scriptAbs).replace(/\\/g, '/')
+    : `agent/${resolveAgentSlug(agent)}/outputs/scripts/${DART_SCRIPT_NAME}`;
 
-  if (!fs.existsSync(scriptAbs)) {
+  if (!scriptAbs) {
     return {
       success: false,
       command: '',
       stdout: '',
-      stderr: `스크립트 없음: ${scriptRel.replace(/\\/g, '/')}`,
+      stderr: `스크립트 없음: ${scriptRel}`,
       exitCode: 1,
       pdfFiles: [],
       outDir: '',

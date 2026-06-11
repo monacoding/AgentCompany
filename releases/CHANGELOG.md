@@ -5,6 +5,17 @@
 
 ---
 
+## [1.8.17] - 2026-06-11
+
+**파일:** `agent-company-1.8.17.vsix`
+
+### Added / Fixed
+
+- DART PDF 오케스트레이터 직접 실행(LLM 우회), knowledge v2 자동 실행 규칙
+- Cline CLI/LLM 폴백 차단, 스크립트 경로 탐색 강화
+
+---
+
 ## [1.8.16] - 2026-06-11
 
 **파일:** `agent-company-1.8.16.vsix`

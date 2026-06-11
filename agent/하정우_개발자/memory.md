@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T02:45:12.558Z_
+_마지막 동기화: 2026-06-11T03:19:07.219Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -4275,15 +4275,6 @@ P1 … / P2 … / P3 …
 - 산출물 저장 경로: `company/projects/{sessionId}/files/`
 - Python urllib/curl로 다운로드 후 %PDF 헤더 검증.
 
-[ExternalApiRegistry v2]
-CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
-API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
-
-1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
-   - URL: https://opendart.fss.or.kr/api
-   - 설명: (없음)
-   - 인증: query-param (crtfc_key)
-
 [KnowledgeLearned: cross-agent-file-transfer.md@11c33eb5]
 # 에이전트 간 파일 이동 규칙
 
@@ -4442,3 +4433,254 @@ GET https://opendart.fss.or.kr/api/elestock.json
 ```
 - `status=000` 이면 정상
 - 주요 필드: `rcept_no`(14자리), `rcept_dt`, `repror`(
+
+[KnowledgeLearned: cross-agent-file-transfer.md@6acdd042]
+# 에이전트 간 파일 이동
+
+## 규칙 요약
+
+- **완료 전 금지**
+  - 파일 복사·이동이 완료되기 전까지 완료 표현 사용 금지.
+  - 진행 단계에서는 "요청해볼게요", "여쭤볼게요", "진행할게요" 등의 예정 표현만 사용.
+
+- **완료 시 경로 필수**
+  - 복사가 확인된 후에만 완료를 표시하며, 반드시 파일 경로를 제공.
+  - 예시 형식:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 실패 시에는 "완료"라 하지 않고, 현재 상태와 조치 계획을 설명.
+
+- **허위 보고 금지**
+  - 파일 이동이나 저장 시 경로 제시 없이 완료라고 보고하는 것을 금지. 경로 제시는 증거로 사용됨.
+
+이 규칙들은 파일 이동 프로세스에서 정확성과 투명성 유지를 목표로 하며, 허위 보고를 방지하여 책임감을 강화합니다.
+
+[KnowledgeLearned: owner-data-path.md@1ebea084]
+# 사장님 데이터 경로
+
+## 경로 정보
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+
+## 주요 파일 및 역할
+
+- **Profile 파일**  
+  - 위치: `profile.json`
+  - 정보: 사장님 이름, 성격 등 프로필 정보 포함
+
+- **Persona 파일**  
+  - 위치: `persona.md`
+  - 정보: 대화 및 보고에 참고하는 사장님 페르소나 정보 포함
+
+- **사진 폴더**  
+  - 위치: `photo/`
+  - 정보: 사장님 사진 저장
+
+## 관리를 위한 지침
+
+- 에이전트는 **반드시 지정된 경로**를 사용하여 사장님 관련 정보를 찾거나 저장해야 합니다.
+- 다른 위치에 대한 추측이나 사용을 지양합니다.
+
+이 자료는 에이전트가 사장님 관련 데이터 접근 및 관리 시 필수적으로 확인해야 하는 경로 정보를 제공합니다. 데이터의 정확한 관리와 제공을 위해 항시 손쉽게 참고할 수 있도록 합니다.
+
+[KnowledgeLearned: project-playbook.md@e9aaf3e4]
+# 프로젝트 협업 플레이북
+
+## AgentCompany 프로젝트 표준 절차 (필수)
+
+사장님이 PM에게 업무를 지시하면 아래 **5단계**를 따른다.
+
+### 1. 목표
+- 사장님의 지시에서 **한 문장 목표**와 산출물, 범위, 제외 항목을 명확히 정의합니다.
+
+### 2. 계획
+- 각 프로젝트를 Phase 단위로 나눈다: 
+  - 리서치 → 구현/실행 → 검증 → PM 보고
+- 각 태스크는 **작업 → 검토 루프**로 최대 5회 반복, FINISHED 상태가 된다.
+
+### 3. 작업 분배
+- 계획을 **번호 + @에이전트명: 할 일** 형식으로 작성합니다.
+  - 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **실제 회사 에이전트 roster**만 사용하며, 가상 직함 또는 외부 인력 사용은 금지됩니다.
+- role, title, capabilities를 기준으로 매칭(리서치→researcher, 자동화→backend, 도메인→전문가).
+
+### 5. 승인 후 프로젝트 실행
+- PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
+- 승인 후, Project 채팅방을 생성하고, Projects 탭에 등록한 후 에이전트 순차 협업을 진행합니다.
+- 산출물은 `company/projects/{sessionId}/`에 위치합니다: (tasks/, files/, PM_REPORT.md).
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (crtfc_key)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@88f8c603]
+# 에이전트 간 파일 이동
+
+## 파일 이동 규칙
+
+- **완료 전 금지**
+  - 파일 복사 및 이동이 실제로 완료되기 전까지 "저장했어요", "옮겼어요" 등 완료 표현 사용 금지.
+  - 요청 직후는 "진행할게요" 등 예정 표현 사용.
+
+- **완료 시 경로 필수**
+  - 파일 복사 완료 후에만 완료 선언 가능.
+  - 반드시 저장된 파일 경로 전부 기재.
+  - 경로 형식 예시 제공:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히**
+  - 파일 찾기 실패나 복사 실패 시, "완료"라고 하지 않음.
+  - 찾은 위치, 조건 및 다음 조치를 반드시 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 완료 보고 금지.
+  - 경로가 증거로 작용하므로 반드시 포함.
+
+[KnowledgeLearned: owner-data-path.md@6c45fad2]
+# 사장님 데이터 경로 요약
+
+## 데이터 경로 정보
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+
+## 주요 파일 및 폴더
+- **프로필 파일:** `profile.json`  
+  - 내용: 사장님 이름, 성격 등 프로필 정보 포함
+- **페르소나 파일:** `persona.md`  
+  - 내용: 대화 및 보고 시 참고할 사장님의 페르소나 정보
+- **사진 폴더:** `photo/`  
+  - 내용: 사장님 관련 사진들 저장
+
+## 유의사항
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 반드시 위의 경로를 사용
+- 다른 위치는 추측하지 않고 사용하지 않도록 주의
+
+이 문서는 사장님의 데이터 접근 및 관리를 명확히 이해하기 위한 필수 정보입니다.
+
+[KnowledgeLearned: project-playbook.md@0c980058]
+# Project 협업 플레이북 요약
+
+## AgentCompany Project 표준 절차
+
+### 1. 목표 설정
+- 사장님 지시에서 **한 문장 목표** 명시
+- 산출물, 범위, 제외 항목 명확화
+
+### 2. 계획 수립
+- Phase(리서치, 구현·실행, 검증, PM 보고)로 나누기
+- 각 태스크는 **작업→검토 루프** 운영 (최대 5회, FINISHED 키워드)
+
+### 3. 작업 분배
+- **번호 + @에이전트명: 할 일** 형식으로 계획 작성
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **실제 회사 에이전트 roster만** 사용 (가상 직함·외부 인력 금지)
+- 역할에 따라 매칭 (리서치→researcher, 자동화→backend 등)
+
+### 5. 승인 후 Project 실행
+- PM이 계획을 사장님께 제시 후 **"진행하세요"** 승인 요청
+- 승인 시: Project 채팅방 생성, Projects 탭 등록, 에이전트 순차 협업
+- 산출물 저장 위치: `company/projects/{sessionId}/` (tasks/, files/, PM_REPORT.md)
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전파
+
+## PM 1:1 대화 출력 형식 (권장)
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## @하정우 — Project 자동화 역할
+- carry_data의 URL·fileSeq 기반 스크립트 구현
+- 산출물 `company/projects/{sessio
+
+[Cline act: @하정우 삼성전자 corp_code 00126380 기준 Open DART elestock 최근 3건 PDF 저장해줘]
+To accomplish the task of fetching and saving the latest 3 disclosures for Samsung Electronics (corp_code 00126380) from Open DART in PDF format, we will develop a Python script. This script will interact with the Open DART API, retrieve the necessary disclosures, and convert them into PDFs using the ReportLab library. Below is the implementation:
+
+
+
+### Instructions for Execution
+1. **Environment Setup**: Ensure that you have Python installed. You would also need the `requests` and `reportlab` 
+
+[KnowledgeLearned: dart-elestock-pdf-download.md@e67322b8]
+# DART 임원·주요주주 소유보고 PDF 다운로드
+
+[DartElestockPdfPlaybook v2]
+
+## ⚡ 자동 실행 (최우선 — 새 코드 작성 금지)
+
+CEO·PM이 DART·elestock·PDF 저장을 지시하면 **아래 번들 스크립트만** 터미널에서 실행합니다.  
+`requests`·`reportlab` 새 스크립트 작성, `npm test`, Cline 코드 생성 **모두 금지**.
+
+```bash
+python3 agent/하정우_개발자/outputs/scripts/download_dart_elestock_pdfs.py \
+  --corp-code {8자리} \
+  --limit {건수} \
+  --pdf \
+  --out company/projects/dart_test/files/pdfs/DART_임원주요주주
+```
+
+| 지시에서 추출 | 인자 예시 |
+|---------------|-----------|
+| corp_code 00126380 / 삼성전자 | `--corp-code 00126380` |
+| 종목코드 005930 | `--stock-code 005930` |
+| 최근 3건 | `--limit 3` |
+| PDF 저장 | `--pdf` (필수) |
+
+- API Key: 워크스페이스 `.env`의 `DART_API_KEY` (스크립트가 자동 로드)
+- 한글 PDF: `AppleGothic.ttf` 자동 등록 (ReportLab)
+- 완료 보고: **저장 경로 전체** + PDF **파일 개수** + 파일명 목록
+
+## 역할
+Open DART API로 **임원·주요주주 특정증권등 소유상황보고서** 목록을 조회하고, 접수번호(`rcept_no`)별 **공시 원문을 PDF**로 저장합니다.
+
+## 사전 조건
+- AgentCompany **API 탭**에 `다트

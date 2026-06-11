@@ -61,6 +61,8 @@ import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
 import { ProviderEngine, runWithLlmAgent } from '../providers';
 import { ClineAgent, isClineAgent, isClineDevTask, isCollaborativeDevTask } from '../cline';
+import { runDartPdfPipeline } from '../cline/engine/dart-pdf-runner';
+import { isDartPdfTask } from '../team/script-runner';
 import {
   buildPlatformInquiryReply,
   detectPlatformInquiry,
@@ -1382,6 +1384,14 @@ ${pmBlock}${devBlock}
         }
       }
 
+      if (isClineAgent(agent) && isDartPdfTask(command)) {
+        if (commandNeedsKnowledgeLearning(command)) {
+          void this.knowledgeLearner.syncAgent(agent, { force: true });
+        }
+        const handled = await this.runDartPdfTask(agent, task, command);
+        if (handled) return;
+      }
+
       if (isClineAgent(agent) && isClineDevTask(command)) {
         if (commandNeedsKnowledgeLearning(command)) {
           void this.knowledgeLearner.syncAgent(agent, { force: true });
@@ -1548,6 +1558,62 @@ Complete this task. If code/files are needed, output them in the specified file 
       this.agentManager.setStatus(agentId, 'failed');
       this.notifications.showError(`${agent.name} failed: ${message}`);
       this.agentSay(agent, `오류: ${message}`, 'agent', 'failed');
+    }
+  }
+
+  /**
+   * DART elestock PDF — Cline/LLM 없이 번들 Python 스크립트 직접 실행 (검증된 파이프라인).
+   * @returns true면 처리 완료(성공·실패 모두), false면 다른 파이프라인으로 위임
+   */
+  private async runDartPdfTask(agent: Agent, task: Task, command: string): Promise<boolean> {
+    if (!isDartPdfTask(command)) return false;
+
+    this.agentWorking(
+      agent,
+      'DART PDF 스크립트 실행 중…',
+      undefined,
+      this.buildWorkingDetail(agent, 'DART PDF', '스크립트 실행', command, [
+        'download_dart_elestock_pdfs.py',
+        'elestock.json → document.xml → PDF',
+      ])
+    );
+
+    try {
+      const outcome = await runDartPdfPipeline(this.workspace, agent, command);
+      if (!outcome) return false;
+
+      const chatReply = formatChatReply(outcome.summary) || outcome.summary;
+      this.taskEngine.setResult(task.id, chatReply);
+      this.memory.logActivity(
+        agent.id,
+        task.id,
+        outcome.success
+          ? `${agent.name} DART PDF ${outcome.pdfFiles.length}건 완료`
+          : `${agent.name} DART PDF 실패 (exit ${outcome.exitCode})`
+      );
+      this.memory.appendAgentMemory(
+        agent.id,
+        `[DART PDF: ${command.slice(0, 120)}]\n${outcome.summary.slice(0, 600)}`
+      );
+
+      if (outcome.success) {
+        this.taskEngine.transition(task.id, 'completed');
+        this.agentManager.setStatus(agent.id, 'idle');
+        this.agentSay(agent, chatReply, 'agent', 'done');
+        this.notifications.showTaskComplete(task.title);
+      } else {
+        this.taskEngine.transition(task.id, 'failed');
+        this.agentManager.setStatus(agent.id, 'idle');
+        this.agentSay(agent, chatReply, 'agent', 'failed');
+        this.notifications.showError(`${agent.name} DART PDF 실패`);
+      }
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.taskEngine.transition(task.id, 'failed');
+      this.agentManager.setStatus(agent.id, 'failed');
+      this.agentSay(agent, `DART PDF 오류: ${message}`, 'agent', 'failed');
+      return true;
     }
   }
 

@@ -6,7 +6,7 @@ import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
 import { ClineCliAdapter } from './adapters/cline-cli';
 import { buildCollaborationPromptBlock } from './collaboration-context';
-import { runDartPdfPipeline } from './engine/dart-pdf-runner';
+import { isDartPdfTask, runDartPdfPipeline } from './engine/dart-pdf-runner';
 import { ClineInternalEngine } from './engine/internal-engine';
 import { ClineReportGenerator } from './engine/report-generator';
 import {
@@ -81,11 +81,27 @@ export class ClineAgent {
         );
         return dartResult;
       }
-      emit(
-        'DART PDF Runner',
-        'done',
-        dartOutcome ? 'Bundled script failed — continuing' : 'Not a DART PDF task'
-      );
+      if (dartOutcome && !dartOutcome.success) {
+        emit('DART PDF Runner', 'failed', dartOutcome.summary.slice(0, 200));
+        const failedResult: ClineExecutionResult = {
+          mode,
+          plan: {
+            mode,
+            objective: task,
+            steps: ['Run download_dart_elestock_pdfs.py'],
+            filesToModify: [],
+          },
+          output: dartOutcome.summary,
+          filesModified: [],
+          terminalOutput: `Command: ${dartOutcome.command}\nExit: ${dartOutcome.exitCode}\n${dartOutcome.stderr || dartOutcome.stdout}`,
+          selfCheckPassed: false,
+          usedCli: false,
+        };
+        failedResult.reportPath = await this.reportGenerator.save(task, failedResult, agent);
+        this.memory.appendAgentMemory(agent.id, `[Cline DART failed: ${task}]\n${dartOutcome.summary.slice(0, 400)}`);
+        return failedResult;
+      }
+      emit('DART PDF Runner', 'done', 'Not a DART PDF task');
     }
 
     emit('Cline CLI', 'running', 'Checking Cline CLI...');
@@ -94,7 +110,7 @@ export class ClineAgent {
       new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
     ]);
 
-    if (cliAvailable && mode !== 'plan') {
+    if (cliAvailable && mode !== 'plan' && !isDartPdfTask(task)) {
       const cliResult = await this.cli.execute(enrichedTask, priorContext);
       if (cliResult) {
         emit('Cline CLI', 'done', 'Executed via cline -y');

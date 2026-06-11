@@ -34,10 +34,21 @@ function buildRunCommand(absPath: string, workspaceRoot: string): string {
 /** Open DART elestock → PDF 파이프라인 업무 */
 export function isDartPdfTask(command: string): boolean {
   const text = command.trim();
-  if (!/dart|다트|opendart|elestock|임원.*주요주주|document\.xml|전자공시|소유보고/i.test(text)) {
-    return false;
+  const hasDartSignal =
+    /dart|다트|opendart|elestock|임원.*주요주주|document\.xml|전자공시|소유보고|crtfc_key/i.test(
+      text
+    );
+  const wantsPdf =
+    /pdf|다운(?:로드|받)?|저장|실행|만들|생성|스크립트|변환|reportlab|가져와|추출/i.test(text);
+
+  if (hasDartSignal && wantsPdf) return true;
+
+  // "삼성전자 corp_code … elestock … PDF" 등 Open DART 생략 표현
+  if (/corp[_\s-]?code\s*[=:]?\s*\d{8}/i.test(text) && /elestock|소유보고|임원/i.test(text) && wantsPdf) {
+    return true;
   }
-  return /pdf|다운(?:로드|받)?|저장|실행|만들|생성|스크립트|변환|reportlab/i.test(text);
+
+  return false;
 }
 
 /** DART PDF 스크립트 CLI 인자 추론 */

@@ -32,11 +32,11 @@ export function getClineKnowledgeBody(agentSlug: string): string {
 - 템플릿: \`src/team/templates/download_suneung_pdfs.py\`
 
 ## DART 임원·주요주주 소유보고 PDF
-- knowledge: \`agent/${agentSlug}/knowledge/dart-elestock-pdf-download.md\`
+- knowledge: \`agent/${agentSlug}/knowledge/dart-elestock-pdf-download.md\` (DartElestockPdfPlaybook v2)
 - 스크립트: \`agent/${agentSlug}/outputs/scripts/download_dart_elestock_pdfs.py\`
-- **Cline이 PDF 지시를 받으면 위 스크립트를 자동 실행** (elestock → document.xml → reportlab PDF, 한글 AppleGothic)
-- API Key: 워크스페이스 \`.env\`의 \`DART_API_KEY\` (AgentCompany API 탭과 동일 키)
-- ⚠️ 새 스크립트를 만들지 말고 위 스크립트 실행·인자만 조정. 저장 경로에 \`테스트\` 폴더명은 npm test 오인 방지를 위해 \`dart_test\` 권장
+- **오케스트레이터가 PDF 지시 시 위 스크립트를 LLM 없이 자동 실행** — 새 Python/npm 코드 작성 금지
+- 실행: \`python3 …/download_dart_elestock_pdfs.py --corp-code … --limit N --pdf --out company/projects/dart_test/files/pdfs/DART_임원주요주주\`
+- API Key: \`.env\`의 \`DART_API_KEY\` · 한글 PDF: AppleGothic 자동
 
 ## AgentCompany 구조 수정
 버그·기능 추가는 **src/** 코드를 직접 수정합니다.

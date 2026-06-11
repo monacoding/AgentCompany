@@ -28,3 +28,7 @@ console.assert(
   'folder 테스트 must not trigger npm test'
 );
 console.assert(shouldRunExplicitNpmCommand('npm test 돌려줘') === 'test', 'explicit npm test');
+console.assert(
+  isDartPdfTask('@하정우 삼성전자 corp_code 00126380 elestock 최근 3건 PDF 저장해줘'),
+  'corp_code elestock pdf'
+);

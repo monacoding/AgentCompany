@@ -7,6 +7,21 @@
 
 ---
 
+## [1.8.17] - 2026-06-11
+
+### Added
+
+- **DART PDF 오케스트레이터 직접 실행** — `@하정우` DART·elestock·PDF 지시 시 Cline/LLM 없이 `download_dart_elestock_pdfs.py` 즉시 실행
+- **하정우 knowledge v2** — DartElestockPdfPlaybook 자동 실행 규칙(새 코드 작성 금지) 학습
+
+### Fixed
+
+- DART 스크립트 실패 후 Cline CLI·LLM이 빈 Python 코드만 생성하던 문제 → 실패 시에도 번들 스크립트 경로 유지, LLM 폴백 차단
+- 에이전트 slug 불일치 시 스크립트 미발견 → `하정우_개발자` 등 후보 경로 탐색
+- Cline CLI가 DART PDF 업무를 가로채 계획만 출력하던 문제
+
+---
+
 ## [1.8.16] - 2026-06-11
 
 ### Added

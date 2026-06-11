@@ -1,6 +1,30 @@
 # DART 임원·주요주주 소유보고 PDF 다운로드
 
-[DartElestockPdfPlaybook v1]
+[DartElestockPdfPlaybook v2]
+
+## ⚡ 자동 실행 (최우선 — 새 코드 작성 금지)
+
+CEO·PM이 DART·elestock·PDF 저장을 지시하면 **아래 번들 스크립트만** 터미널에서 실행합니다.  
+`requests`·`reportlab` 새 스크립트 작성, `npm test`, Cline 코드 생성 **모두 금지**.
+
+```bash
+python3 agent/하정우_개발자/outputs/scripts/download_dart_elestock_pdfs.py \
+  --corp-code {8자리} \
+  --limit {건수} \
+  --pdf \
+  --out company/projects/dart_test/files/pdfs/DART_임원주요주주
+```
+
+| 지시에서 추출 | 인자 예시 |
+|---------------|-----------|
+| corp_code 00126380 / 삼성전자 | `--corp-code 00126380` |
+| 종목코드 005930 | `--stock-code 005930` |
+| 최근 3건 | `--limit 3` |
+| PDF 저장 | `--pdf` (필수) |
+
+- API Key: 워크스페이스 `.env`의 `DART_API_KEY` (스크립트가 자동 로드)
+- 한글 PDF: `AppleGothic.ttf` 자동 등록 (ReportLab)
+- 완료 보고: **저장 경로 전체** + PDF **파일 개수** + 파일명 목록
 
 ## 역할
 Open DART API로 **임원·주요주주 특정증권등 소유상황보고서** 목록을 조회하고, 접수번호(`rcept_no`)별 **공시 원문을 PDF**로 저장합니다.

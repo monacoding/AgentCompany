@@ -7,7 +7,7 @@ import { WorkspaceActionExecutor } from '../../workspace/action-executor';
 import { CodePlanner } from './code-planner';
 import { FileEditor } from './file-editor';
 import { SelfChecker } from './self-checker';
-import { runDartPdfPipeline } from './dart-pdf-runner';
+import { isDartPdfTask, runDartPdfPipeline } from './dart-pdf-runner';
 import { TerminalRunner } from './terminal-runner';
 import { detectDevPlanMode } from './planner-types';
 import { buildCollaborationPromptBlock } from '../collaboration-context';
@@ -97,11 +97,43 @@ export class ClineInternalEngine {
         usedCli: false,
       };
     }
+    if (dartOutcome && !dartOutcome.success && isDartPdfTask(task)) {
+      emit('DART PDF Runner', 'failed', dartOutcome.summary.slice(0, 200));
+      return {
+        mode,
+        plan: {
+          mode,
+          objective: plan.objective,
+          steps: ['Run download_dart_elestock_pdfs.py'],
+          filesToModify: [],
+        },
+        output: dartOutcome.summary,
+        filesModified: [],
+        terminalOutput: `Command: ${dartOutcome.command}\nExit: ${dartOutcome.exitCode}\n${dartOutcome.stderr || dartOutcome.stdout}`,
+        selfCheckPassed: false,
+        usedCli: false,
+      };
+    }
     emit(
       'DART PDF Runner',
       'done',
       dartOutcome ? 'Bundled script failed — continuing with code generation' : 'Not a DART PDF task'
     );
+
+    if (isDartPdfTask(task)) {
+      emit('File Editor', 'done', 'Skipped — DART PDF는 번들 스크립트만 사용');
+      return {
+        mode,
+        plan: { mode, objective: plan.objective, steps: plan.steps, filesToModify: plan.filesToModify },
+        output: dartOutcome?.summary ?? 'DART PDF 스크립트 실행에 실패했습니다.',
+        filesModified: [],
+        terminalOutput: dartOutcome
+          ? `Command: ${dartOutcome.command}\nExit: ${dartOutcome.exitCode}`
+          : undefined,
+        selfCheckPassed: false,
+        usedCli: false,
+      };
+    }
 
     emit('File Editor', 'running', 'Generating code...');
     const { summary, filesModified } = await this.fileEditor.generateAndApply(
