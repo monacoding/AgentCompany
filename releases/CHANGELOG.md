@@ -5,6 +5,16 @@
 
 ---
 
+## [1.8.10] - 2026-06-11
+
+**파일:** `agent-company-1.8.10.vsix`
+
+### Fixed
+
+- VSIX에 `.env`가 포함되지 않도록 `.vscodeignore` 수정
+
+---
+
 ## [1.8.9] - 2026-06-11
 
 **파일:** `agent-company-1.8.9.vsix`

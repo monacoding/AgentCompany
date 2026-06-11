@@ -1,5 +1,8 @@
 .vscode/**
 .vscode-test/**
+.env
+.env.*
+!.env.example
 src/**
 webview/**
 node_modules/**
