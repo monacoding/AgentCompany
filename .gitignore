@@ -8,3 +8,15 @@ webview/dist/
 .DS_Store
 *.log
 .env
+
+# Local cleanup (recovered AI/Cursor artifacts — not part of the extension)
+trash/*
+!trash/README.md
+
+# Cursor/AI accidental files at repo root (language tag used as filename)
+/bash
+/shell
+/json
+/python
+/typescript
+plaintext:*
