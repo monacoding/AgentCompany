@@ -1,6 +1,6 @@
 # 하정우 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:54:52.697Z_
+_마지막 동기화: 2026-06-11T01:08:29.607Z_
 
 [[하정우] 정우야]
 아, 반갑습니다! 하정우입니다. 프로젝트나 특정 작업을 도와드릴 수 있는지 말씀해 주세요. 코드 작성이나 파일 작업 등 필요한 작업이 있으면 언제든지 말씀해 주세요. 새로운 기술이나 문제 해결 관련 질문도 환영합니다. 😊
@@ -3522,8 +3522,6 @@ P1 … / P2 … / P3 …
 - 이전 태스크(carry_data)의 URL, fileSeq를 바탕으로 스크립트 구현
 - 산출물 파일은 `company/projects/{sessionId}
 
-[ExternalApiRegistry] 등록된 External API 없음
-
 [KnowledgeLearned: cross-agent-file-transfer.md@8f53c319]
 # 에이전트 간 파일 이동 요약
 
@@ -3620,3 +3618,142 @@ P1 … / P2 … / P3 …
 
 
 ##
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1a01310c]
+# 에이전트 간 파일 이동 규칙
+
+## 기본 규칙
+
+- **완료 전 완료 표현 절대 금지**
+  - 파일 이동이나 복사가 시스템 상에서 완전히 끝나기 전까지 "저장했어요", "옮겼어요" 등의 표현 금지.
+  - 대신 "요청해볼게요", "진행할게요" 등의 예정 표현 사용.
+
+- **완료 시 경로 작성 필수**
+  - 이동이 완료된 후 반드시 파일의 저장 경로를 명확하게 작성.
+  - 파일 경로 형식 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직한 보고**
+  - 실패 시 "완료"라고 거짓말하지 말고, 찾은 위치, 실패 조건, 다음 조치 사항을 명확하게 안내.
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다"는 등의 보고 금지. 경로는 증거임.
+
+[KnowledgeLearned: owner-data-path.md@0f11b771]
+# 사장님 데이터 경로 요약
+
+## 데이터 저장 위치
+
+- **절대 경로**: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로**: `company/owner`
+
+## 주요 파일 설명
+
+- **사장님 프로필**
+  - 파일 경로: `profile.json`
+  - 내용: 이름, 성격 등 기본 정보
+- **사장님 페르소나**
+  - 파일 경로: `persona.md`
+  - 내용: 대화 및 보고 시 필요한 페르소나 정보
+- **사장님 사진**
+  - 폴더 경로: `photo/`
+  - 내용: 사장님 개인 사진들
+
+## 중요 사항
+
+- 에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 지정된 경로**를 사용해야 하며, 다른 경로를 추측하지 않고 이 경로가 유일한 참고 지점입니다.
+
+[KnowledgeLearned: project-playbook.md@2cac9b99]
+# Project 협업 플레이북 요약
+
+## Project 표준 절차
+
+### 1. 목표 설정
+- 사장님 지시 내용을 바탕으로 **한 문장 목표**를 설정.
+- 산출물, 범위, 제외 항목 명시.
+
+### 2. 계획 단계
+- 리서치, 구현/실행, 검증, PM 보고의 Phase로 나눔.
+- 태스크마다 **작업 → 검토 루프**(최대 5회, "FINISHED" 키워드).
+
+### 3. 작업 분배
+- `번호 + @에이전트명: 할 일` 형식으로 작업 정리.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`.
+
+### 4. 에이전트 선별
+- 회사의 실제 에이전트 명단만 사용.
+- 역할, 직책, 능력에 기반한 매칭.
+
+### 5. Project 실행 승인
+- PM이 계획을 사장님께 제시하여 승인 요청.
+- 승인 시, Project 채팅방 생성 및 Projects 탭 등록, 순차적 에이전트 협업.
+
+## PM 1:1 대화 출력 형식
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시작합니다.
+```
+
+## 하정우 — Project 자동화 역할
+- 이전 태스크의 URL, fileSeq 이용하여 스크립트 개발.
+- 산출물을 `company/projects/{sessionId}/files/` 경로에 저장.
+- Python urllib/curl 등 사용해 실제 다운로드 및 %PDF 헤더 검증 수행.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (appid)
+
+[KnowledgeLearned: dart-elestock-pdf-download.md@a337cc91]
+# DART 임원·주요주주 소유보고 PDF 다운로드
+
+[DartElestockPdfPlaybook v1]
+
+## 역할
+Open DART API로 **임원·주요주주 특정증권등 소유상황보고서** 목록을 조회하고, 접수번호(`rcept_no`)별 **공시 원문을 PDF**로 저장합니다.
+
+## 사전 조건
+- AgentCompany **API 탭**에 `다트 (전자공시 시스템)` 등록
+- Base URL: `https://opendart.fss.or.kr/api`
+- 인증: **query-param**, 파라미터명 **`crtfc_key`** (Bearer 아님)
+- API Key: 40자 (opendart.fss.or.kr 발급)
+- 스크립트 실행 시 환경변수 `DART_API_KEY` 또는 `CRTFC_KEY` 사용
+
+## corp_code(고유번호) 구하기
+| 방법 | URL/경로 |
+|------|----------|
+| 공식 ZIP | `GET /api/corpCode.xml?crtfc_key=KEY` → ZIP 내 `CORPCODE.xml`에서 `stock_code` 검색 |
+| 공시검색 | `GET /api/list.json?crtfc_key=KEY&corp_code=...` |
+| 예시 | 삼성전자 `00126380`, SK하이닉스 `00164779` |
+
+## 3단계 파이프라인
+
+### 1) 소유보고 목록 — `elestock.json`
+```
+GET https://opendart.fss.or.kr/api/elestock.json
+  ?crtfc_key={KEY}
+  &corp_code={8자리 고유번호}
+```
+- `status=000` 이면 정상
+- 주요 필드: `rcept_no`(14자리), `rcept_dt`, `repror`(보고자), `isu_exctv_ofcps`

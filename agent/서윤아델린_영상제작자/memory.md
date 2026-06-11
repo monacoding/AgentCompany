@@ -1,6 +1,6 @@
 # 서윤 아델린 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:53:47.080Z_
+_마지막 동기화: 2026-06-11T01:06:00.735Z_
 
 [KnowledgeLearned: ai-video-production-stack.md@0f62fa1a]
 # AI 영상 제작 스택 가이드
@@ -1784,4 +1784,11 @@ python3 company/projects/{sessionId}/files/scripts/download_suneung_pdfs.py \
 - 인터넷/웹 PDF 다운로드는 외부 수집 프로젝트로 계획
 - @한서준 및 @하정우는 각각 리서치 및 스크립트 실행 담당
 
-[ExternalApiRegistry] 등록된 External API 없음
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (appid)

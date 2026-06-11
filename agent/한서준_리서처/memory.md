@@ -1,6 +1,6 @@
 # 한서준 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:55:52.928Z_
+_마지막 동기화: 2026-06-11T01:06:01.245Z_
 
 [KnowledgeLearned: suneung-pdf-download.md@e91c75b8]
 [DownloadKnowledge v1]
@@ -4373,8 +4373,6 @@ P1 … / P2 … / P3 …
 - roster에 없는 인물·역할 생성 금지
 - PDF/
 
-[ExternalApiRegistry] 등록된 External API 없음
-
 [KnowledgeLearned: cross-agent-file-transfer.md@8f53c319]
 # 에이전트 간 파일 이동 규칙
 
@@ -4507,3 +4505,114 @@ P2. 각 주식의 이슈 및 관련 배경 조사
 - 시장에서 대두되는 중요한 이슈로는 "Cryptocurrency", "Cybersecurity", 및 "Market Structure Analytics"가 포함되어 있습니다. [출처: SEC.gov](https://www.sec.gov/edgar/searchedgar/companysearch.html)
 
 **
+
+[KnowledgeLearned: cross-agent-file-transfer.md@1a01310c]
+# 에이전트 간 파일 이동 규칙 요약
+
+- **완료 전 금지 표현**  
+  - 실제 파일 이동이 완료되기 전, 완료 표현 사용 금지
+  - 사용 가능한 표현: "요청해볼게요", "진행할게요" 등 예정 표현
+
+- **완료 시 저장 경로 보고**  
+  - 파일 이동 완료 후, 반드시 저장 경로를 포함하여 보고
+  - 경로 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf
+      /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 솔직히 보고**  
+  - 파일 이동 실패 시, 솔직히 상황 설명 및 조치 계획 제시
+  - "완료"라는 표현 대신 실패 원인과 다음 단계 설명
+
+- **허위 보고 금지**  
+  - 경로 없이 이동 완료 보고 금지
+  - 경로 제시는 성공 증거
+
+이 규칙들은 파일 이동 과정의 투명성과 신뢰성을 높이고, 오류를 줄이기 위한 지침입니다. 모든 과정이 완료되기 전까지는 항상 정확한 정보를 제공하는 것이 중요합니다.
+
+[KnowledgeLearned: owner-data-path.md@0f11b771]
+# 사장님 데이터 경로 요약
+
+## 데이터 경로
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준 경로:** `company/owner`
+
+## 주요 파일
+
+- **프로필 파일:** `profile.json`  
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
+  - 내용: 사장님의 이름과 성격 등 기본적인 정보 포함
+
+- **페르소나 파일:** `persona.md`  
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
+  - 내용: 사장님과의 대화 및 보고 시 참고할 페르소나 정보
+
+- **사진 디렉토리:** `photo/`
+  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
+  - 내용: 사장님의 사진 저장
+
+## 중요 사항
+
+- 에이전트가 사장님에 관한 정보를 찾거나 저장할 때는 **반드시 지정된 경로**를 사용해야 함.
+- **다른 위치를 추측하거나 사용하지 않음.**
+
+데이터 경로는 프로젝트의 올바른 정보 사용과 관리를 위해 꼭 필요한 요소입니다. 올바른 위치에서 파일을 참조해야 할 프로세스와 사용자 간의 일관성을 유지할 수 있습니다.
+
+[KnowledgeLearned: project-playbook.md@9ca31b43]
+# 프로젝트 협업 플레이북 요약
+
+## 표준 절차
+
+- 프로젝트는 5단계로 진행:
+  1. **목표 설정**: 명확한 한 문장 목표 설정 및 산출물, 범위, 제외 항목 명시.
+  2. **계획 수립**: 단계별 구분 (리서치 → 구현/실행 → 검증 → PM 보고).
+  3. **작업 분배**: 번호 + @에이전트명 형식으로 구체적인 작업 지시.
+  4. **에이전트 선별**: 실제 회사 roster에 있는 인물만 사용.
+  5. **승인 후 실행**: 프로젝트 채팅방 생성 및 순차적 협업.
+
+## PM 대화 출력 형식
+
+- 각 섹션은 다음과 같음:
+  ```
+  ## 목표
+  (한 문장 목표)
+  
+  ## 계획
+  각 단계 계획
+  
+  ## 작업 분배
+  1. @에이전트명: 할 일
+  
+  ## 참여 에이전트
+  에이전트 리스트
+  ```
+- "진행하세요"라고 하면 프로젝트 시작.
+
+## 오케스트레이션 지침
+
+- 프로젝트의 목표, 계획, 분배, 에이전트를 사장님 지시 수신 후 바로 제시.
+- Roster에 없는 인물 생성 금지.
+- PDF 및 수집 업무: @한서준(출처), @하정우(스크립트), 도메인 전문가.
+
+## 승인 및 실행
+
+- PM은 계획 제시 후 사장님의 "진행하세요" 명령 기달.
+- 승인 후 프로젝트 채팅방을 열고 프로젝트 등록 후 실행.
+
+## 추가 지침
+
+- 웹 PDF 직접 다운로드 금지, 외부 수집 프로젝트로 계획 필요.
+- 계획 확정 전까지 프로젝트 채팅방 개설 금지.
+- 프로젝트 승인은 "진행하세요", "시작하세요", "프로젝트 진행"이라는 키워드로 확인.
+
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (appid)

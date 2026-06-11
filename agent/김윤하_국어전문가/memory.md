@@ -1,6 +1,6 @@
 # 김윤하 — 누적 메모리
 
-_마지막 동기화: 2026-06-10T22:53:47.059Z_
+_마지막 동기화: 2026-06-11T01:06:00.621Z_
 
 [[김윤하] 윤하씨, 서준이가 찾은 수능 문제 중에 국어 영역만 윤하씨 폴더 데이터 베이스로 가져가줄래요?]
 [OpenAI] API key not configured. .env 파일에 CHATGPT_API_KEY를 설정해 주세요.
@@ -1979,4 +1979,11 @@ P1 … / P2 … / P3 …
 
 ##
 
-[ExternalApiRegistry] 등록된 External API 없음
+[ExternalApiRegistry v2]
+CEO 명령이 아래 API로 처리 가능하면 External API를 자동 호출합니다.
+API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
+
+1. **다트 (전자공시 시스템)** (id: 1781139742154-t6uewc0)
+   - URL: https://opendart.fss.or.kr/api
+   - 설명: (없음)
+   - 인증: query-param (appid)
