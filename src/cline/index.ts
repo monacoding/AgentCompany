@@ -6,6 +6,7 @@ import { Agent } from '../types';
 import { WorkspaceEngine } from '../workspace';
 import { ClineCliAdapter } from './adapters/cline-cli';
 import { buildCollaborationPromptBlock } from './collaboration-context';
+import { runDartPdfPipeline } from './engine/dart-pdf-runner';
 import { ClineInternalEngine } from './engine/internal-engine';
 import { ClineReportGenerator } from './engine/report-generator';
 import {
@@ -53,6 +54,39 @@ export class ClineAgent {
     const mode = detectClineMode(task);
     emit('Mode Router', 'running', 'Detecting mode...');
     emit('Mode Router', 'done', `${CLINE_MODES[mode].label} mode selected`);
+
+    if (mode !== 'plan') {
+      emit('DART PDF Runner', 'running', 'Checking bundled DART script...');
+      const dartOutcome = await runDartPdfPipeline(this.workspace, agent, task);
+      if (dartOutcome?.success) {
+        emit('DART PDF Runner', 'done', `${dartOutcome.pdfFiles.length} PDF files created`);
+        const dartResult: ClineExecutionResult = {
+          mode,
+          plan: {
+            mode,
+            objective: task,
+            steps: ['Run download_dart_elestock_pdfs.py'],
+            filesToModify: [],
+          },
+          output: dartOutcome.summary,
+          filesModified: [],
+          terminalOutput: `Command: ${dartOutcome.command}\nExit: ${dartOutcome.exitCode}\n${dartOutcome.stdout}`,
+          selfCheckPassed: true,
+          usedCli: false,
+        };
+        dartResult.reportPath = await this.reportGenerator.save(task, dartResult, agent);
+        this.memory.appendAgentMemory(
+          agent.id,
+          `[Cline DART: ${task}]\n${dartOutcome.summary.slice(0, 500)}`
+        );
+        return dartResult;
+      }
+      emit(
+        'DART PDF Runner',
+        'done',
+        dartOutcome ? 'Bundled script failed — continuing' : 'Not a DART PDF task'
+      );
+    }
 
     emit('Cline CLI', 'running', 'Checking Cline CLI...');
     const cliAvailable = await Promise.race([

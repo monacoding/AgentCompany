@@ -7,6 +7,21 @@
 
 ---
 
+## [1.8.16] - 2026-06-11
+
+### Added
+
+- **DART PDF 자동 실행** — 하정우 Cline이 DART·elestock·PDF 지시를 받으면 `download_dart_elestock_pdfs.py`를 LLM 코드 생성 없이 즉시 실행해 PDF까지 완료
+- **TerminalRunner 개선** — 생성된 `.py` 스크립트 자동 실행, DART 인자(`--corp-code`, `--limit`, `--pdf`, `--out`) 추론
+
+### Fixed
+
+- **한글 PDF** — ReportLab `AppleGothic` TTF 등록으로 DART 공시 PDF 한글 깨짐 수정
+- **npm test 오실행** — 저장 경로 `projects/테스트` 등에 `테스트`가 포함돼 `npm test`가 돌던 문제 제거
+- **Self-check만 통과** — 스크립트 미실행·빈 완료 처리되던 Cline act 파이프라인 보완
+
+---
+
 ## [1.8.15] - 2026-06-11
 
 ### Fixed

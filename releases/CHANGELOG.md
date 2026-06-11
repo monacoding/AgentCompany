@@ -5,6 +5,17 @@
 
 ---
 
+## [1.8.16] - 2026-06-11
+
+**파일:** `agent-company-1.8.16.vsix`
+
+### Added / Fixed
+
+- DART PDF 명령 시 번들 스크립트 자동 실행·PDF 생성까지 완료
+- 한글 PDF 폰트(AppleGothic), TerminalRunner Python 실행, npm test 오인 수정
+
+---
+
 ## [1.8.15] - 2026-06-11
 
 **파일:** `agent-company-1.8.15.vsix`

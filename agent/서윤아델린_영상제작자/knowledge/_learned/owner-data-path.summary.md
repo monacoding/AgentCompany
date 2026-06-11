@@ -1,24 +1,103 @@
 # Learned: owner-data-path.md
 
-_hash: b829bd347c186d6a_  
-_learned: 2026-06-10T22:26:10.989Z_
+_hash: b045773343e70a19_  
+_learned: 2026-06-11T02:12:19.174Z_
 
 # 사장님 데이터 경로
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
 
 - **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
 - **워크스페이스 기준:** `company/owner`
 
-## 주요 파일
-- **프로필 파일:** `profile.json`
-  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json`
-  - 내용: 사장님의 이름, 성격 등 프로필 정보
-- **페르소나 파일:** `persona.md`
-  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md`
-  - 내용: 사장님의 페르소나 정보 (대화 및 보고 시 참고)
-- **사진 폴더:** 
-  - 위치: `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/`
-  - 내용: 사장님 사진
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
 
-## 주의사항
-- 모든 사장님 관련 정보의 저장 및 조회는 반드시 위에 명시된 경로를 통해야 합니다.
-- 다른 위치를 사용하거나 경로를 추측하지 않습니다.
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/o
+
+...(truncated)

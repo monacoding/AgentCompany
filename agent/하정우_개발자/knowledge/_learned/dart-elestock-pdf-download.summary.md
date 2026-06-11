@@ -1,7 +1,7 @@
 # Learned: dart-elestock-pdf-download.md
 
-_hash: 8b3f354cee6be8c9_  
-_learned: 2026-06-11T01:16:01.642Z_
+_hash: 01de8dd22b1ade7b_  
+_learned: 2026-06-11T02:45:12.501Z_
 
 # DART 임원·주요주주 소유보고 PDF 다운로드
 
@@ -51,6 +51,7 @@ GET https://opendart.fss.or.kr/api/document.xml
 ### 3) XML → PDF 변환
 - **권장:** `agent/하정우_개발자/outputs/scripts/download_dart_elestock_pdfs.py` 실행 (`--pdf`)
 - `reportlab` 설치 시 XML 테이블·텍스트를 PDF로 렌더링
+- **한글 폰트 필수** — ReportLab 기본 Helvetica는 한글 깨짐 → macOS `AppleGothic.ttf` 자동 등록. 없으면 `DART_PDF_FONT=/path/to/font.ttf` 지정
 - `reportlab` 미설치 시 XML/ZIP만 저장하고 PDF 단계는 스킵
 - ⚠️ `dart.fss.or.kr/pdf/download/pdf.do` 웹 URL은 세션·쿠키 없으면 **빈 파일** — 주 경로로 쓰지 않음
 

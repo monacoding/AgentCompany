@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import io
 import json
 import os
@@ -106,24 +107,106 @@ def safe_filename(text: str) -> str:
     return cleaned[:80] or "unknown"
 
 
+KOREAN_FONT_NAME = "DartKorean"
+
+
+def resolve_korean_font_path() -> Path:
+    """macOS / Linux / Windows에서 한글 TTF 후보 탐색."""
+    env_font = os.environ.get("DART_PDF_FONT", "").strip()
+    if env_font:
+        path = Path(env_font).expanduser()
+        if path.is_file():
+            return path
+
+    candidates = [
+        Path("/System/Library/Fonts/Supplemental/AppleGothic.ttf"),
+        Path("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
+        Path("/Library/Fonts/NanumGothic.ttf"),
+        Path("/usr/share/fonts/truetype/nanum/NanumGothic.ttf"),
+        Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+        Path("C:/Windows/Fonts/malgun.ttf"),
+        Path("C:/Windows/Fonts/malgunsl.ttf"),
+    ]
+    for path in candidates:
+        if path.is_file():
+            return path
+    raise RuntimeError(
+        "한글 PDF 폰트를 찾지 못했습니다. "
+        "macOS: AppleGothic, Windows: malgun.ttf, Linux: NanumGothic 설치 또는 DART_PDF_FONT 환경변수 지정"
+    )
+
+
+def register_korean_font():
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    font_path = resolve_korean_font_path()
+    if KOREAN_FONT_NAME not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(KOREAN_FONT_NAME, str(font_path)))
+    return font_path
+
+
+def build_pdf_styles():
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+
+    register_korean_font()
+    base = getSampleStyleSheet()
+    return {
+        "title": ParagraphStyle(
+            "DartTitle",
+            parent=base["Title"],
+            fontName=KOREAN_FONT_NAME,
+            fontSize=14,
+            leading=18,
+        ),
+        "heading": ParagraphStyle(
+            "DartHeading",
+            parent=base["Heading2"],
+            fontName=KOREAN_FONT_NAME,
+            fontSize=11,
+            leading=14,
+        ),
+        "body": ParagraphStyle(
+            "DartBody",
+            parent=base["Normal"],
+            fontName=KOREAN_FONT_NAME,
+            fontSize=9,
+            leading=12,
+        ),
+        "cell": ParagraphStyle(
+            "DartCell",
+            parent=base["Normal"],
+            fontName=KOREAN_FONT_NAME,
+            fontSize=7,
+            leading=9,
+        ),
+    }
+
+
+def pdf_paragraph(text: str, style) -> "Paragraph":
+    from reportlab.platypus import Paragraph
+
+    safe = html.escape(text or " ", quote=False).replace("\n", "<br/>")
+    return Paragraph(safe, style)
+
+
 def xml_to_pdf(xml_bytes: bytes, dest: Path) -> None:
     try:
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+        from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle
     except ImportError as exc:
         raise RuntimeError("PDF 변환에 reportlab 필요: pip install reportlab") from exc
 
+    styles = build_pdf_styles()
     root = ET.fromstring(xml_bytes)
     doc_name = root.findtext(".//DOCUMENT-NAME") or "DART 공시"
     company = root.findtext(".//COMPANY-NAME") or ""
 
     story: list = []
-    styles = getSampleStyleSheet()
-    story.append(Paragraph(doc_name, styles["Title"]))
+    story.append(pdf_paragraph(doc_name, styles["title"]))
     if company:
-        story.append(Paragraph(company, styles["Heading2"]))
+        story.append(pdf_paragraph(company, styles["heading"]))
     story.append(Spacer(1, 12))
 
     for table in root.iter("TABLE"):
@@ -141,13 +224,19 @@ def xml_to_pdf(xml_bytes: bytes, dest: Path) -> None:
             continue
         col_count = max(len(r) for r in rows)
         norm = [r + [""] * (col_count - len(r)) for r in rows]
-        tbl = Table(norm, repeatRows=1)
+        table_data = [
+            [pdf_paragraph(cell, styles["cell"]) for cell in row] for row in norm
+        ]
+        tbl = Table(table_data, repeatRows=1)
         tbl.setStyle(
             TableStyle(
                 [
                     ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
                 ]
             )
         )
@@ -157,7 +246,7 @@ def xml_to_pdf(xml_bytes: bytes, dest: Path) -> None:
     for p in root.iter("P"):
         text = "".join(p.itertext()).strip()
         if text:
-            story.append(Paragraph(text, styles["Normal"]))
+            story.append(pdf_paragraph(text, styles["body"]))
             story.append(Spacer(1, 4))
 
     doc = SimpleDocTemplate(str(dest), pagesize=A4)

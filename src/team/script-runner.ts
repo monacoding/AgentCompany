@@ -31,6 +31,83 @@ function buildRunCommand(absPath: string, workspaceRoot: string): string {
   return quoted;
 }
 
+/** Open DART elestock → PDF 파이프라인 업무 */
+export function isDartPdfTask(command: string): boolean {
+  const text = command.trim();
+  if (!/dart|다트|opendart|elestock|임원.*주요주주|document\.xml|전자공시|소유보고/i.test(text)) {
+    return false;
+  }
+  return /pdf|다운(?:로드|받)?|저장|실행|만들|생성|스크립트|변환|reportlab/i.test(text);
+}
+
+/** DART PDF 스크립트 CLI 인자 추론 */
+export function inferDartScriptArgs(command: string): string {
+  const args: string[] = [];
+
+  const corpExplicit =
+    command.match(/corp[_\s-]?code\s*[=:]?\s*(\d{8})/i) ??
+    command.match(/\bcorp[_\s-]?code\b[^0-9]*(\d{8})/i);
+  const stockMatch =
+    command.match(/종목코드\s*[=:]?\s*(\d{6})/i) ?? command.match(/\b(0\d{5})\b/);
+
+  if (corpExplicit) {
+    args.push('--corp-code', corpExplicit[1]);
+  } else if (stockMatch) {
+    args.push('--stock-code', stockMatch[1]);
+  } else if (/삼성/i.test(command)) {
+    args.push('--corp-code', '00126380');
+  } else if (/하이닉스|sk\s*하이닉스/i.test(command)) {
+    args.push('--corp-code', '00164779');
+  } else {
+    args.push('--stock-code', '005930');
+  }
+
+  const limitMatch = command.match(/최근\s*(\d+)\s*건/) ?? command.match(/(\d+)\s*건/);
+  args.push('--limit', limitMatch ? limitMatch[1] : '3');
+  args.push('--pdf');
+
+  const outPathMatch = command.match(/company\/projects\/[^\s\n]+/i);
+  if (outPathMatch) {
+    args.push('--out', outPathMatch[0]);
+  } else {
+    const session = command.match(/projects\/([a-zA-Z0-9_-]+)/)?.[1];
+    const folder = session && !/^test$/i.test(session) ? session : 'dart_test';
+    args.push('--out', `company/projects/${folder}/files/pdfs/DART_임원주요주주`);
+  }
+
+  const since = command.match(/(\d{4}-\d{2}-\d{2})/)?.[1];
+  if (since) {
+    args.push('--since', since);
+  }
+
+  return args.map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ');
+}
+
+/** npm test/build/lint — 경로 속 '테스트' 폴더명과 구분 */
+export function shouldRunExplicitNpmCommand(command: string): 'test' | 'build' | 'lint' | null {
+  const stripped = command
+    .toLowerCase()
+    .replace(/company\/projects\/[^\s]+/g, ' ')
+    .replace(/projects\/[^\s]+/g, ' ');
+
+  if (/\bnpm\s+test\b|npm test|유닛\s*테스트|단위\s*테스트/.test(stripped)) return 'test';
+  if (/\b테스트\s*(?:실행|해|하|돌려|run)\b/.test(stripped) && !/pdf|dart|python|프로젝트/i.test(stripped)) {
+    return 'test';
+  }
+  if (/\bnpm\s+run\s+build\b|npm run build|빌드\s*검증/.test(stripped) && !/pdf|dart|python/i.test(stripped)) {
+    return 'build';
+  }
+  if (/\bnpm\s+run\s+lint\b|npm run lint|린트\s*(?:실행|해)/.test(stripped)) return 'lint';
+  return null;
+}
+
+/** 생성된 스크립트를 터미널에서 돌려야 하는 업무 */
+export function taskRequiresScriptExecution(command: string): boolean {
+  return /실행|run\b|돌려|생성해|만들고\s*실행|다운(?:로드|받).*(?:해|하|줘)|pdf.*(?:저장|생성)|스크립트.*실행|조회해|가져와/i.test(
+    command
+  );
+}
+
 function inferScriptArgs(command: string, warehouseFolder: string): string {
   const lower = command.toLowerCase();
   const args: string[] = [];

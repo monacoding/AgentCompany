@@ -1,6 +1,6 @@
 # 김윤하 — 누적 메모리
 
-_마지막 동기화: 2026-06-11T02:08:50.090Z_
+_마지막 동기화: 2026-06-11T02:12:35.896Z_
 
 [[김윤하] 윤하씨, 서준이가 찾은 수능 문제 중에 국어 영역만 윤하씨 폴더 데이터 베이스로 가져가줄래요?]
 [OpenAI] API key not configured. .env 파일에 CHATGPT_API_KEY를 설정해 주세요.
@@ -1987,3 +1987,108 @@ API 탭에서 추가·수정 시 이 목록이 자동 갱신됩니다.
    - URL: https://opendart.fss.or.kr/api
    - 설명: (없음)
    - 인증: query-param (crtfc_key)
+
+[KnowledgeLearned: cross-agent-file-transfer.md@6d1cb804]
+# 에이전트 간 파일 이동 규칙
+
+## 기본 규칙
+
+- **완료 전 표현 금지**
+  - 파일 복사나 이동이 실제로 완료되기 전까지는 "저장했어요", "옮겼어요" 등의 완료 표현 불가
+  - 대신 "요청해볼게요", "진행할게요" 같은 예정 표현 사용
+
+- **완료 시 경로 필수**
+  - 파일 복사 완료 후에만 완료 보고 가능
+  - 파일 저장 경로 반드시 포함
+  - 예시:
+    ```
+    📁 저장 경로:
+    · 파일명.pdf /워크스페이스/agent/에이전트명_직책/outputs/downloads/from-한서준/파일명.pdf
+    ```
+
+- **실패 시 암시적 솔직함 요구**
+  - 파일 찾을 수 없거나 복사 실패 시 "완료" 표현 금지
+  - 찾은 위치나 조건, 다음 조치 명확히 안내
+
+- **허위 보고 금지**
+  - 경로 없이 "옮겼다", "저장했다" 등의 보고 금지
+  - 경로가 보고의 증거임
+
+## 중요성 강조
+
+- 각 규칙은 에이전트 간의 신뢰성을 강화하고, 파일 이동 과정의 투명성을 유지하는 데 필수적임.
+- 명확한 보고는 파일 관리의 혼란을 줄이고 업무 효율성을 높이는 데 기여.
+
+[KnowledgeLearned: owner-data-path.md@b0457733]
+# 사장님 데이터 경로
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르소나 (대화·보고 시 참고)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/photo/` — 사장님 사진
+
+에이전트는 사장님 관련 정보를 찾거나 저장할 때 **반드시 위 경로**를 사용합니다. 다른 위치를 추측하지 않습니다.
+
+## 사장님(Owner) 데이터 위치 (필수 인지)
+
+사장님의 프로필·페르소나·사진은 아래 폴더에 있습니다.
+
+- **절대 경로:** `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner`
+- **워크스페이스 기준:** `company/owner`
+
+### 주요 파일
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/profile.json` — 사장님 프로필 (이름·성격 등)
+- `/Users/gimtaehyeong/Desktop/coding/1. Monaedu/company/owner/persona.md` — 사장님 페르
+
+[KnowledgeLearned: project-playbook.md@1868ec7f]
+# Project 협업 플레이북
+
+## AgentCompany Project 표준 절차 (필수)
+
+사장님이 PM에게 업무를 지시하면 아래 **5단계**를 따릅니다.
+
+### 1. 목표
+- 사장님 지시에서 **한 문장 목표** + 산출물·범위·제외 항목을 명확히 합니다.
+
+### 2. 계획
+- Phase 단위로 나눕니다 (리서치 → 구현/실행 → 검증 → PM 보고).
+- 각 태스크마다 **작업 → 검토 루프**(최대 5회, FINISHED 키워드)가 돌아갑니다.
+
+### 3. 작업 분배
+- 계획을 **번호 + @에이전트명: 할 일** 형식으로 작성합니다.
+- 예: `1. @한서준: 공식 PDF 출처 URL 조사`
+
+### 4. 에이전트 선별
+- **실제 회사 에이전트 roster만** 사용 (가상 직함·외부 인력 금지).
+- role·title·capabilities로 매칭 (리서치→researcher, 자동화→backend, 도메인→전문가).
+
+### 5. 승인 후 Project 실행
+- PM이 계획을 사장님께 제시하고 **"진행하세요"** 승인을 요청합니다.
+- 승인 시: Project 채팅방 생성 → Projects 탭 등록 → 에이전트 순차 협업.
+- 산출물: `company/projects/{프로젝트폴더}/` (tasks/, files/, `{프로젝트명}_{날짜}_{작성자}.md` 최종 보고)
+- 이전 태스크 산출물은 **carry_data**로 다음 태스크에 전달됩니다.
+
+## PM 1:1 대화 출력 형식 (권장)
+
+```
+## 목표
+(한 문장)
+
+## 계획
+P1 … / P2 … / P3 …
+
+## 작업 분배
+1. @에이전트명: 할 일
+2. @에이전트명: 할 일
+
+## 참여 에이전트
+@박준호 · @한서준 · …
+
+확정되시면 "진행하세요"라고 말씀해 주시면 Project를 시

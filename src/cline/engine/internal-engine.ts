@@ -7,6 +7,7 @@ import { WorkspaceActionExecutor } from '../../workspace/action-executor';
 import { CodePlanner } from './code-planner';
 import { FileEditor } from './file-editor';
 import { SelfChecker } from './self-checker';
+import { runDartPdfPipeline } from './dart-pdf-runner';
 import { TerminalRunner } from './terminal-runner';
 import { detectDevPlanMode } from './planner-types';
 import { buildCollaborationPromptBlock } from '../collaboration-context';
@@ -77,6 +78,31 @@ export class ClineInternalEngine {
       };
     }
 
+    emit('DART PDF Runner', 'running', 'Checking bundled DART script...');
+    const dartOutcome = await runDartPdfPipeline(this.workspace, agent, task);
+    if (dartOutcome?.success) {
+      emit('DART PDF Runner', 'done', `${dartOutcome.pdfFiles.length} PDF files created`);
+      return {
+        mode,
+        plan: {
+          mode,
+          objective: plan.objective,
+          steps: ['Run download_dart_elestock_pdfs.py'],
+          filesToModify: [],
+        },
+        output: dartOutcome.summary,
+        filesModified: [],
+        terminalOutput: `Command: ${dartOutcome.command}\nExit: ${dartOutcome.exitCode}\n${dartOutcome.stdout}`,
+        selfCheckPassed: true,
+        usedCli: false,
+      };
+    }
+    emit(
+      'DART PDF Runner',
+      'done',
+      dartOutcome ? 'Bundled script failed — continuing with code generation' : 'Not a DART PDF task'
+    );
+
     emit('File Editor', 'running', 'Generating code...');
     const { summary, filesModified } = await this.fileEditor.generateAndApply(
       task,
@@ -88,8 +114,8 @@ export class ClineInternalEngine {
     );
     emit('File Editor', 'done', `${filesModified.length} files modified`);
 
-    emit('Terminal Runner', 'running', 'Checking terminal...');
-    const terminalOutput = await this.terminal.runIfNeeded(task);
+    emit('Terminal Runner', 'running', 'Running scripts...');
+    const terminalOutput = await this.terminal.runAfterEdit(task, agent, filesModified);
     emit('Terminal Runner', 'done', terminalOutput ? 'Command executed' : 'Skipped');
 
     emit('Self-Checker', 'running', 'Reviewing work...');
