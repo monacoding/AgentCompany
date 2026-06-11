@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { ExternalApiPublic, postMessage } from './vscode';
 
 const AUTH_TYPES = [
-  { value: 'none', label: 'None' },
-  { value: 'query-param', label: 'Query Param (OpenWeather appid 등)' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'api-key', label: 'API Key (Header)' },
-  { value: 'basic', label: 'Basic Auth' },
+  { value: 'bearer', label: 'Bearer Token (Authorization 헤더)' },
+  { value: 'api-key', label: 'API Key (커스텀 헤더)' },
+  { value: 'query-param', label: 'Query Param (URL ?appid=…)' },
+  { value: 'basic', label: 'Basic Auth (user:pass)' },
+  { value: 'none', label: '인증 없음 (공개 API)' },
 ] as const;
 
 interface ApiForm {
@@ -21,17 +21,65 @@ interface ApiForm {
   enabled: boolean;
 }
 
+function detectAuth(name: string, description: string, baseUrl: string): {
+  authType: string;
+  authHeaderName: string;
+  authQueryParam: string;
+} {
+  const hint = `${name} ${description} ${baseUrl}`.toLowerCase();
+  const url = baseUrl.toLowerCase();
+
+  if (/openweather|openweathermap|weather\.gov/.test(url) || /날씨|weather|기상/.test(hint)) {
+    return { authType: 'query-param', authHeaderName: 'X-API-Key', authQueryParam: 'appid' };
+  }
+  if (/newsapi\.org|alphavantage|finnhub/.test(url)) {
+    return { authType: 'query-param', authHeaderName: 'X-API-Key', authQueryParam: 'apiKey' };
+  }
+  if (/stripe\.com|api\.notion|api\.openai|api\.anthropic|github\.com\/api/.test(url)) {
+    return { authType: 'bearer', authHeaderName: 'Authorization', authQueryParam: 'appid' };
+  }
+  return { authType: 'bearer', authHeaderName: 'Authorization', authQueryParam: 'appid' };
+}
+
 const emptyForm = (): ApiForm => ({
   name: '',
   description: '',
   baseUrl: 'https://',
-  authType: 'none',
-  authHeaderName: 'X-API-Key',
+  authType: 'bearer',
+  authHeaderName: 'Authorization',
   authQueryParam: 'appid',
   apiKey: '',
   defaultHeaders: '{}',
   enabled: true,
 });
+
+function apiKeyLabel(authType: string): string {
+  switch (authType) {
+    case 'basic':
+      return 'Credentials (username:password) *';
+    case 'query-param':
+      return 'API Key *';
+    case 'bearer':
+      return 'Bearer Token / API Key *';
+    case 'api-key':
+      return 'API Key *';
+    default:
+      return 'API Key (선택 — 인증 없음 API)';
+  }
+}
+
+function apiKeyPlaceholder(authType: string): string {
+  switch (authType) {
+    case 'basic':
+      return 'username:password';
+    case 'query-param':
+      return 'OpenWeather appid, NewsAPI key 등';
+    case 'bearer':
+      return 'sk-... 또는 Bearer 토큰';
+    default:
+      return '키가 필요 없으면 비워두세요';
+  }
+}
 
 interface ApiTabProps {
   apis: ExternalApiPublic[];
@@ -41,6 +89,8 @@ export function ApiTab({ apis }: ApiTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ApiForm>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -62,9 +112,22 @@ export function ApiTab({ apis }: ApiTabProps) {
     return () => window.removeEventListener('message', handler);
   }, []);
 
+  const applyUrlAutoDetect = useCallback((next: ApiForm): ApiForm => {
+    if (!next.baseUrl.trim() || next.baseUrl === 'https://') return next;
+    const detected = detectAuth(next.name, next.description, next.baseUrl);
+    return {
+      ...next,
+      authType: detected.authType,
+      authHeaderName: detected.authHeaderName,
+      authQueryParam: detected.authQueryParam,
+    };
+  }, []);
+
   const startCreate = useCallback(() => {
     setEditingId(null);
     setForm(emptyForm());
+    setFormError(null);
+    setShowAdvanced(false);
     setShowForm(true);
   }, []);
 
@@ -81,6 +144,8 @@ export function ApiTab({ apis }: ApiTabProps) {
       defaultHeaders: api.defaultHeaders || '{}',
       enabled: api.enabled,
     });
+    setFormError(null);
+    setShowAdvanced(false);
     setShowForm(true);
   }, []);
 
@@ -88,10 +153,24 @@ export function ApiTab({ apis }: ApiTabProps) {
     setShowForm(false);
     setEditingId(null);
     setForm(emptyForm());
+    setFormError(null);
   }, []);
 
   const handleSave = useCallback(() => {
-    if (!form.name.trim() || !form.baseUrl.trim()) return;
+    setFormError(null);
+
+    if (!form.name.trim()) {
+      setFormError('API 이름을 입력해 주세요.');
+      return;
+    }
+    if (!form.baseUrl.trim() || form.baseUrl === 'https://') {
+      setFormError('Base URL을 입력해 주세요.');
+      return;
+    }
+    if (form.authType !== 'none' && !form.apiKey.trim() && !editingId) {
+      setFormError('API Key / Token을 입력해 주세요.');
+      return;
+    }
 
     const payload = {
       name: form.name.trim(),
@@ -102,7 +181,7 @@ export function ApiTab({ apis }: ApiTabProps) {
       authQueryParam: form.authQueryParam.trim() || 'appid',
       defaultHeaders: form.defaultHeaders.trim() || '{}',
       enabled: form.enabled,
-      ...(form.apiKey ? { apiKey: form.apiKey } : {}),
+      ...(form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
     };
 
     if (editingId) {
@@ -128,6 +207,8 @@ export function ApiTab({ apis }: ApiTabProps) {
     postMessage('toggleExternalApi', { id, enabled });
   }, []);
 
+  const needsKey = form.authType !== 'none';
+
   return (
     <div className="api-tab">
       <div className="section-header">
@@ -138,36 +219,44 @@ export function ApiTab({ apis }: ApiTabProps) {
       </div>
 
       <p className="api-tab-desc">
-        REST API를 등록하면 에이전트가 <strong>자동으로 연동</strong>합니다.
-        OpenWeather는 <code>home.</code> URL 입력 시{' '}
-        <code>api.openweathermap.org/data/2.5</code>로 자동 보정됩니다.
-        연결 테스트는 실제 API 경로(<code>/weather</code>)로 검증합니다.
+        REST API를 등록하면 에이전트가 자동으로 호출합니다. <strong>Base URL</strong>과{' '}
+        <strong>API Key</strong>를 입력한 뒤 연결 테스트로 확인하세요.
       </p>
 
       {showForm && (
         <section className="settings-section api-form-section">
-          <h3>{editingId ? 'API 수정' : '새 API 추가'}</h3>
+          <h3>{editingId ? 'API 수정' : 'API 연결 설정'}</h3>
           <div className="form-panel">
-            <label className="field-label">이름 *</label>
+            <label className="field-label">API 이름 *</label>
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="예: Notion API, Slack Webhook"
-            />
-
-            <label className="field-label">설명</label>
-            <input
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="용도 설명 (선택)"
+              placeholder="예: OpenWeather, NewsAPI, Notion"
             />
 
             <label className="field-label">Base URL *</label>
             <input
               value={form.baseUrl}
               onChange={(e) => setForm({ ...form, baseUrl: e.target.value })}
+              onBlur={() => setForm((prev) => applyUrlAutoDetect(prev))}
               placeholder="https://api.openweathermap.org/data/2.5"
             />
+            <p className="api-field-hint">
+              URL 입력 후 포커스를 벗어나면 인증 방식을 자동 추천합니다. OpenWeather는{' '}
+              <code>home.</code> URL도 자동 보정됩니다.
+            </p>
+
+            <label className="field-label">{apiKeyLabel(form.authType)}</label>
+            <input
+              type="password"
+              autoComplete="off"
+              value={form.apiKey}
+              onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+              placeholder={apiKeyPlaceholder(form.authType)}
+            />
+            {editingId && needsKey && (
+              <p className="api-field-hint">비워두면 저장된 기존 키를 유지합니다.</p>
+            )}
 
             <label className="field-label">인증 방식</label>
             <select
@@ -200,31 +289,37 @@ export function ApiTab({ apis }: ApiTabProps) {
                   onChange={(e) => setForm({ ...form, authQueryParam: e.target.value })}
                   placeholder="appid"
                 />
-                <p className="api-field-hint">OpenWeatherMap: appid · 기타 API 문서 참고</p>
+                <p className="api-field-hint">
+                  OpenWeatherMap: <code>appid</code> · NewsAPI: <code>apiKey</code>
+                </p>
               </>
             )}
 
-            {form.authType !== 'none' && (
+            <label className="field-label">설명 (선택)</label>
+            <input
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="에이전트가 참고할 용도 설명"
+            />
+
+            <button
+              type="button"
+              className="btn-link api-advanced-toggle"
+              onClick={() => setShowAdvanced((v) => !v)}
+            >
+              {showAdvanced ? '▾ 고급 설정 숨기기' : '▸ 고급 설정 (추가 Headers)'}
+            </button>
+
+            {showAdvanced && (
               <>
-                <label className="field-label">
-                  {form.authType === 'basic' ? 'Credentials (user:pass)' : 'API Key / Token'}
-                  {editingId && ' — 비워두면 기존 키 유지'}
-                </label>
+                <label className="field-label">추가 Headers (JSON)</label>
                 <input
-                  type="password"
-                  value={form.apiKey}
-                  onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
-                  placeholder={form.authType === 'basic' ? 'username:password' : 'sk-...'}
+                  value={form.defaultHeaders}
+                  onChange={(e) => setForm({ ...form, defaultHeaders: e.target.value })}
+                  placeholder='{"Accept-Language": "ko"}'
                 />
               </>
             )}
-
-            <label className="field-label">추가 Headers (JSON)</label>
-            <input
-              value={form.defaultHeaders}
-              onChange={(e) => setForm({ ...form, defaultHeaders: e.target.value })}
-              placeholder='{"Accept-Language": "ko"}'
-            />
 
             <div className="toggle-row">
               <label className="field-label">활성화</label>
@@ -235,9 +330,11 @@ export function ApiTab({ apis }: ApiTabProps) {
               />
             </div>
 
+            {formError && <p className="api-form-error">{formError}</p>}
+
             <div className="form-actions">
               <button className="btn-primary" type="button" onClick={handleSave}>
-                {editingId ? '저장' : '추가'}
+                {editingId ? '저장' : '연결 추가'}
               </button>
               <button className="btn-secondary" type="button" onClick={cancelForm}>
                 취소
@@ -277,8 +374,10 @@ export function ApiTab({ apis }: ApiTabProps) {
 
               <code className="api-card-url">{api.baseUrl}</code>
 
-              {api.hasApiKey && (
-                <div className="api-card-key">Key: {api.maskedApiKey}</div>
+              {api.authType !== 'none' && (
+                <div className="api-card-key">
+                  Key: {api.hasApiKey ? api.maskedApiKey : '⚠️ 미설정'}
+                </div>
               )}
 
               {testResults[api.id] && (

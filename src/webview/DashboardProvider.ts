@@ -497,6 +497,10 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
           this.service.notifications.showWarning('API 이름과 Base URL은 필수입니다.');
           break;
         }
+        if (input.authType && input.authType !== 'none' && !input.apiKey?.trim()) {
+          this.service.notifications.showWarning('API Key / Token을 입력해 주세요.');
+          break;
+        }
         const created = await this.service.externalApis.create(input);
         this.service.syncExternalApiRegistry();
         this.service.notifications.showInfo(`API "${created.name}" added (인증: ${created.authType})`);
