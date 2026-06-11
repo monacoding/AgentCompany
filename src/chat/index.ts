@@ -44,6 +44,7 @@ export {
   detectFolderPathInquiry,
   detectOwnFolderFileRequest,
   isExternalResourceFetchTask,
+  isImplementationTask,
 } from './cross-agent-file';
 export type { FolderPathScope, OwnFolderFileRequest } from './cross-agent-file';
 export {

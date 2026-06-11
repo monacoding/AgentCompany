@@ -59,7 +59,7 @@ export function isClineDevTask(query: string): boolean {
   if (/스택|도구|알려줘|설명만|추천해/i.test(text) && !/구현|자동화|작성/i.test(text)) {
     return false;
   }
-  return /구현|자동화|스크립트|코드|개발|빌드|ffmpeg|remotion|파일|작성해|만들어|다운|저장|수집|실행|python|curl|수정|고쳐|버그/i.test(
+  return /구현|자동화|스크립트|코드|개발|빌드|ffmpeg|remotion|작성해|만들어|다운(?:로드|받|스크립트)?|저장(?:해|하|스크립트)?|수집|실행|python|curl|수정|고쳐|버그|elestock|document\.xml|crtfc|reportlab/i.test(
     text
   );
 }

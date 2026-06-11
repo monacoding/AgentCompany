@@ -61,6 +61,32 @@ function isLocalFileTransferCommand(text: string): boolean {
 }
 
 /**
+ * 코드·스크립트·자동화 등 **새로 구현**하는 업무.
+ * 다른 에이전트 산출물을 *참고*해도 파일 복사만 하면 안 됨.
+ */
+export function isImplementationTask(command: string): boolean {
+  const text = command.trim();
+  if (!text) return false;
+  if (isExternalResourceFetchTask(text)) return true;
+
+  const hasBuildIntent =
+    /구현|자동화|스크립트|코드|개발|작성(?:해|하|해줘|해주)|만들어|python|curl|수정|고쳐|버그|빌드|ffmpeg|remotion|실행(?:해|하)|개발해|작업해/i.test(
+      text
+    );
+  if (!hasBuildIntent) return false;
+
+  // "파일만 전달/복사"처럼 순수 전달만 요청한 경우는 구현 업무가 아님
+  if (
+    /(?:파일|pdf|자료).{0,24}(?:만\s*)?(?:전달|복사|옮겨|가져(?:와|다)|보내|줘|드려)/i.test(text) &&
+    !/구현|스크립트|코드|자동화|작성|만들/i.test(text)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * 인터넷·공식 사이트 등 외부에서 PDF/자료를 수집·다운로드하는 업무.
  * "다운받아서 저장"은 로컬 폴더 전달이 아님.
  */
@@ -152,7 +178,7 @@ export function detectCrossAgentFileRequest(
   const text = command.trim();
   if (!text || detectFolderOpenRequest(text) || isInquiryOrApiCommand(text) || !FILE_SIGNAL.test(text))
     return null;
-  if (isExternalResourceFetchTask(text))
+  if (isExternalResourceFetchTask(text) || isImplementationTask(text))
     return null;
   const hasTransferIntent = TRANSFER_SIGNAL.test(text) || AGENT_REQUEST_SIGNAL.test(text) || CROSS_AGENT_FILE_SIGNAL.test(text);
   if (!hasTransferIntent)
@@ -205,7 +231,7 @@ export function detectOwnFolderFileRequest(
   const text = command.trim();
   if (!text || detectFolderOpenRequest(text) || isInquiryOrApiCommand(text) || !FILE_SIGNAL.test(text))
     return null;
-  if (isExternalResourceFetchTask(text))
+  if (isExternalResourceFetchTask(text) || isImplementationTask(text))
     return null;
   if (detectCrossAgentFileRequest(command, currentAgent, () => null, allAgents)) {
     return null;

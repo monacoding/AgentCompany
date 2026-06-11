@@ -34,6 +34,7 @@ import {
   detectChatEmotion,
   detectCrossAgentFileRequest,
   isExternalResourceFetchTask,
+  isImplementationTask,
   detectDelegationSuggestion,
   formatChatReply,
   formatResearchChatReply,
@@ -59,7 +60,7 @@ import type { CeoChatMessage, ChatWorkingDetail } from '../chat/types';
 import { MemoryEngine } from '../memory';
 import { NotificationEngine } from '../notifications';
 import { ProviderEngine, runWithLlmAgent } from '../providers';
-import { ClineAgent, isClineAgent, isClineDevTask } from '../cline';
+import { ClineAgent, isClineAgent, isClineDevTask, isCollaborativeDevTask } from '../cline';
 import {
   buildPlatformInquiryReply,
   detectPlatformInquiry,
@@ -480,6 +481,16 @@ export class Orchestrator {
     return resolveCommandWithContext(command, this.chat.getMessages(agentId));
   }
 
+  /** 하정우 등 Cline 에이전트가 코드·스크립트를 구현해야 할 때 파일 전달 가로채기 방지 */
+  private shouldPrioritizeDevWork(agent: Agent, command: string): boolean {
+    if (!isClineAgent(agent)) return false;
+    return (
+      isClineDevTask(command) ||
+      isImplementationTask(command) ||
+      isCollaborativeDevTask(command)
+    );
+  }
+
   private async tryOfferFileTransferFromCommand(
     agent: Agent,
     resolved: ResolvedCommand,
@@ -493,7 +504,7 @@ export class Orchestrator {
       return null;
     }
 
-    if (isExternalResourceFetchTask(effective)) {
+    if (isExternalResourceFetchTask(effective) || this.shouldPrioritizeDevWork(agent, effective)) {
       return null;
     }
 
@@ -626,23 +637,25 @@ export class Orchestrator {
       ...resolved,
       effective: interpretation.understoodTask?.trim() || resolved.effective,
     };
-    const fileLate = await this.tryOfferFileTransferFromCommand(
-      agent,
-      fileResolved,
-      command,
-      interpretation
-    );
-    if (fileLate) return fileLate;
-
-    if (interpretation.suggestedAction === 'cross_agent_file') {
-      const crossOnly = detectCrossAgentFileRequest(
-        fileResolved.effective,
+    if (!this.shouldPrioritizeDevWork(agent, fileResolved.effective)) {
+      const fileLate = await this.tryOfferFileTransferFromCommand(
         agent,
-        (mention) => this.agentManager.findByMention(mention),
-        this.agentManager.getAll()
+        fileResolved,
+        command,
+        interpretation
       );
-      if (crossOnly) {
-        return await this.offerCrossAgentFileTransfer(agent, crossOnly, command, interpretation);
+      if (fileLate) return fileLate;
+
+      if (interpretation.suggestedAction === 'cross_agent_file') {
+        const crossOnly = detectCrossAgentFileRequest(
+          fileResolved.effective,
+          agent,
+          (mention) => this.agentManager.findByMention(mention),
+          this.agentManager.getAll()
+        );
+        if (crossOnly) {
+          return await this.offerCrossAgentFileTransfer(agent, crossOnly, command, interpretation);
+        }
       }
     }
 
@@ -1092,18 +1105,21 @@ ${pmBlock}${devBlock}
     personaAckSent = false
   ): Promise<OrchestratorResult> {
     const resolved = this.resolveCeoCommandForAgent(agent.id, command);
-    if (!personaAckSent) {
+    const skipFileForDev = this.shouldPrioritizeDevWork(agent, resolved.effective);
+    if (!personaAckSent && !skipFileForDev) {
       const fileEarly = await this.tryOfferFileTransferFromCommand(agent, resolved, command);
       if (fileEarly) return fileEarly;
     }
 
     const allAgents = this.agentManager.getAll();
-    const fileReq = detectCrossAgentFileRequest(
-      resolved.effective,
-      agent,
-      (mention) => this.agentManager.findByMention(mention),
-      allAgents
-    );
+    const fileReq = skipFileForDev
+      ? null
+      : detectCrossAgentFileRequest(
+          resolved.effective,
+          agent,
+          (mention) => this.agentManager.findByMention(mention),
+          allAgents
+        );
     if (fileReq) {
       let interpretation: CeoCommandInterpretation | undefined;
       if (!personaAckSent) {
@@ -1366,40 +1382,49 @@ ${pmBlock}${devBlock}
         }
       }
 
-      if (isExternalResourceFetchTask(resolved.effective)) {
-        // 외부 다운로드 업무 — 폴더 검색 생략, PM/리서치 등 실제 작업으로 진행
-      } else if (!isInquiryOrApiCommand(command)) {
-      const ownFileReq = detectOwnFolderFileRequest(resolved.effective, agent, allAgents);
-      if (ownFileReq) {
-        this.memory.logActivity(
-          agentId,
-          taskId,
-          `Own-folder file delivery — LLM 작업 생략 (${agent.name} → 사장님)`
-        );
-        this.taskEngine.setResult(taskId, '');
-        this.taskEngine.transition(taskId, 'completed');
-        this.agentManager.setStatus(agentId, 'idle');
-        void this.offerOwnFolderFileMatch(agent, ownFileReq, command);
+      if (isClineAgent(agent) && isClineDevTask(command)) {
+        if (commandNeedsKnowledgeLearning(command)) {
+          void this.knowledgeLearner.syncAgent(agent, { force: true });
+        }
+        await this.runClineTask(agent, task);
         return;
       }
 
-      const fileReq = detectCrossAgentFileRequest(
-        resolved.effective,
-        agent,
-        (mention) => this.agentManager.findByMention(mention),
-        allAgents
-      );
-      if (fileReq) {
-        this.memory.logActivity(
-          agentId,
-          taskId,
-          `Cross-agent file transfer — LLM/workspace 작업 생략 (${fileReq.fileOwner.name} → ${agent.name})`
+      if (isExternalResourceFetchTask(resolved.effective)) {
+        // 외부 다운로드 업무 — 폴더 검색 생략, PM/리서치 등 실제 작업으로 진행
+      } else if (!isInquiryOrApiCommand(command) && !this.shouldPrioritizeDevWork(agent, resolved.effective)) {
+        const ownFileReq = detectOwnFolderFileRequest(resolved.effective, agent, allAgents);
+        if (ownFileReq) {
+          this.memory.logActivity(
+            agentId,
+            taskId,
+            `Own-folder file delivery — LLM 작업 생략 (${agent.name} → 사장님)`
+          );
+          this.taskEngine.setResult(taskId, '');
+          this.taskEngine.transition(taskId, 'completed');
+          this.agentManager.setStatus(agentId, 'idle');
+          void this.offerOwnFolderFileMatch(agent, ownFileReq, command);
+          return;
+        }
+
+        const fileReq = detectCrossAgentFileRequest(
+          resolved.effective,
+          agent,
+          (mention) => this.agentManager.findByMention(mention),
+          allAgents
         );
-        this.taskEngine.setResult(taskId, '');
-        this.taskEngine.transition(taskId, 'completed');
-        this.agentManager.setStatus(agentId, 'idle');
-        return;
-      }
+        if (fileReq) {
+          this.memory.logActivity(
+            agentId,
+            taskId,
+            `Cross-agent file transfer — LLM/workspace 작업 생략 (${fileReq.fileOwner.name} → ${agent.name})`
+          );
+          this.taskEngine.setResult(taskId, '');
+          this.taskEngine.transition(taskId, 'completed');
+          this.agentManager.setStatus(agentId, 'idle');
+          void this.offerCrossAgentFileTransfer(agent, fileReq, command);
+          return;
+        }
       }
 
       if (isResearchAgent(agent)) {
@@ -1412,14 +1437,6 @@ ${pmBlock}${devBlock}
 
       if (isProductionAgent(agent) && isProductionTaskQuery(command)) {
         await this.runProductionTask(agent, task);
-        return;
-      }
-
-      if (isClineAgent(agent) && isClineDevTask(command)) {
-        if (commandNeedsKnowledgeLearning(command)) {
-          void this.knowledgeLearner.syncAgent(agent, { force: true });
-        }
-        await this.runClineTask(agent, task);
         return;
       }
 
@@ -1956,7 +1973,7 @@ ${templateBlock}
           (mention) => this.agentManager.findByMention(mention),
           this.agentManager.getAll()
         );
-        if (fileReq && !this.chat.getPending()) {
+        if (fileReq && !this.chat.getPending() && !this.shouldPrioritizeDevWork(agent, recentCeo)) {
           void (async () => {
             const interpretation = await this.interpretCeoCommandWithPersona(agent, recentCeo);
             if (interpretation.acknowledgment.trim()) {
