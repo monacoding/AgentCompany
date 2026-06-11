@@ -5,6 +5,17 @@
 
 ---
 
+## [1.8.12] - 2026-06-11
+
+**파일:** `agent-company-1.8.12.vsix`
+
+### Fixed
+
+- ↻ 버튼이 릴리스+Reload를 실행해 대시보드/Extension Host가 깨지던 문제
+- 릴리스 self-install 크래시 방지, 초기화 전 refresh 수정
+
+---
+
 ## [1.8.11] - 2026-06-11
 
 **파일:** `agent-company-1.8.11.vsix`

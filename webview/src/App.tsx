@@ -205,6 +205,10 @@ export default function App() {
             setData((prev) => ({ ...prev, version: payload.version! }));
           }
         }
+        if (payload.status === 'done') {
+          setReleasing(false);
+          setReleaseMessage('');
+        }
       }
     };
     window.addEventListener('message', handler);
@@ -335,13 +339,7 @@ export default function App() {
         </div>
         <div className="header-right">
           <HeaderStatusBar foundedAt={data.companyInfo?.foundedAt} />
-          <button
-            className={`btn-icon${releasing ? ' btn-icon--spin' : ''}`}
-            onClick={() => postMessage('refresh')}
-            title="패치 버전 +1 → CHANGELOG → npm run release → Reload"
-            disabled={releasing}
-            aria-busy={releasing}
-          >
+          <button className="btn-icon" onClick={() => postMessage('refresh')} title="Refresh">
             ↻
           </button>
         </div>

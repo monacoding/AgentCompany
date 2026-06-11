@@ -758,7 +758,8 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
       }
 
       case 'refresh':
-        await this.handleReleaseRefresh();
+        await this.service.reloadEnv();
+        this.refresh();
         break;
     }
   }

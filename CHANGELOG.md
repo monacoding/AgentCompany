@@ -7,6 +7,34 @@
 
 ---
 
+## [1.8.13] - 2026-06-11
+
+### Fixed
+
+- **↻ 새로고침** — 릴리스·releaseStatus 연동 이전의 단순 새로고침(`reloadEnv` + 데이터 갱신)으로 복원
+- 새로고침 실패 시 `releasing` 상태가 풀리지 않아 버튼·대시보드가 멈추던 문제
+
+### Changed
+
+- 헤더 ⬆ 릴리스 버튼 제거 (릴리스는 터미널 `npm run release` 사용)
+
+---
+
+## [1.8.12] - 2026-06-11
+
+### Fixed
+
+- **대시보드 ↻ 버튼** — 릴리스(`npm run release` + Reload)와 혼동되어 Extension Host 크래시·대시보드 미표시가 발생하던 문제. ↻는 **데이터 새로고침만** 수행
+- **릴리스 안전화** — 실행 중 self-install 대신 `INSTALL_EXTENSION=0` 빌드 후 분리 프로세스로 VSIX 설치
+- **대시보드 초기화** — `ensureReady()` 완료 전 refresh로 스플래시가 멈추던 문제
+- **`personaAckSent` ReferenceError** — External API 경로 크래시 수정
+
+### Changed
+
+- 릴리스는 헤더 **⬆** 버튼 + 확인 대화상자로 분리
+
+---
+
 ## [1.8.11] - 2026-06-11
 
 ### Fixed

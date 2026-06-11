@@ -573,7 +573,7 @@ export class Orchestrator {
 
     const enabledApis = this.externalApis.getEnabled();
     if (enabledApis.length > 0 && shouldTryExternalApi(command, enabledApis)) {
-      return this.executeDirectCommandFlat(agent, command, fullCommand, personaAckSent);
+      return this.executeDirectCommandFlat(agent, command, fullCommand, false);
     }
 
     // 경량 대화: 분류 LLM 없이 1회 호출로 바로 답변

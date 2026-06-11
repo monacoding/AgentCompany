@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { spawn } from 'child_process';
 import * as vscode from 'vscode';
 import {
   AgentFolderEngine,
@@ -283,6 +284,10 @@ export class AgentCompanyService {
     this.photoWatcher = new AgentPhotoWatcher();
     this.photoWatcher.start(context, () => this.dashboardRefresh?.());
   }
+  async ensureReady(): Promise<void> {
+    await this.initialize();
+  }
+
   async initialize() {
     if (this.initialized)
       return;
@@ -635,7 +640,8 @@ export class AgentCompanyService {
       version: prepared.newVersion,
     });
 
-    const result = await this.workspace.executeTerminal('npm run release', 600_000);
+    // 실행 중인 Extension Host에서 self-install하면 크래시·무한 Reload가 날 수 있어 VSIX 설치는 분리
+    const result = await this.workspace.executeTerminal('INSTALL_EXTENSION=0 npm run release', 600_000);
     if (result.exitCode !== 0) {
       const detail = (result.stderr || result.stdout || '').trim().slice(-800);
       return {
@@ -645,11 +651,25 @@ export class AgentCompanyService {
       };
     }
 
+    const vsixPath = path.join(root, 'releases', `agent-company-${prepared.newVersion}.vsix`);
+    try {
+      await fs.access(vsixPath);
+    } catch {
+      return {
+        success: false,
+        message: `VSIX를 찾을 수 없습니다: ${vsixPath}`,
+        newVersion: prepared.newVersion,
+      };
+    }
+
     onProgress?.({
       step: 'reload',
-      message: 'Reload Window…',
+      message: 'VSIX 설치 후 Reload…',
       version: prepared.newVersion,
     });
+
+    this.scheduleVsixInstall(vsixPath);
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
     await vscode.commands.executeCommand('workbench.action.reloadWindow');
     return {
@@ -658,6 +678,23 @@ export class AgentCompanyService {
       newVersion: prepared.newVersion,
     };
   }
+
+  /** Extension Host 밖에서 VSIX 설치 — self-install 크래시 방지 */
+  private scheduleVsixInstall(vsixPath: string): void {
+    const cursorBin =
+      process.env.CURSOR_BIN ?? '/Applications/Cursor.app/Contents/Resources/app/bin/cursor';
+    try {
+      const child = spawn(cursorBin, ['--install-extension', vsixPath, '--force'], {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.memory.logActivity(null, null, `VSIX install spawn failed: ${message}`);
+    }
+  }
+
   /** 대시보드 연결 표시와 채팅 LLM 호출이 같은 키를 쓰도록 보장 */
   async ensureEnvForLlm(): Promise<void> {
     if (!this.env.isEnvLoaded()) {
